@@ -1,8 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models.application import Application
-from app.models.asset_field import AssetFieldDefinition
+from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.library import Library
 from app.models.operating_system import OperatingSystem
 from app.schemas.managed_asset import ManagedAssetCreate, ManagedAssetUpdate
@@ -166,11 +166,9 @@ def delete_asset(db: Session, asset_type: str, asset):
     config = get_asset_config(asset_type)
 
     db.execute(
-        __import__("sqlalchemy").delete(
-            __import__("app.models.asset_field", fromlist=["AssetFieldValue"]).AssetFieldValue
-        ).where(
-            __import__("app.models.asset_field", fromlist=["AssetFieldValue"]).AssetFieldValue.asset_type == asset_type,
-            __import__("app.models.asset_field", fromlist=["AssetFieldValue"]).AssetFieldValue.asset_id == asset.id,
+        delete(AssetFieldValue).where(
+            AssetFieldValue.asset_type == asset_type,
+            AssetFieldValue.asset_id == asset.id,
         )
     )
 
