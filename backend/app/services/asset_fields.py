@@ -286,34 +286,54 @@ def get_asset_field(
     )
 
 
+def _generate_field_key(
+    db: Session,
+    asset_type: str,
+    label: str,
+) -> str:
+    key = re.sub(
+        r"[^a-z0-9]+",
+        "_",
+        label.lower().strip(),
+    ).strip("_")
+
+    if not key:
+        key = "custom_field"
+
+    if not key[0].isalpha():
+        key = f"field_{key}"
+
+    base_key = key
+    counter = 2
+
+    while db.scalar(
+        select(AssetFieldDefinition).where(
+            AssetFieldDefinition.asset_type == asset_type,
+            AssetFieldDefinition.field_key == key,
+        )
+    ):
+        key = f"{base_key}_{counter}"
+        counter += 1
+
+    return key
+
+
 def create_asset_field(
     db: Session,
     field_data: AssetFieldDefinitionCreate,
 ):
-    if (
-        field_data.field_type
-        not in ALLOWED_FIELD_TYPES
-    ):
-        raise ValueError(
-            "Unsupported field type."
-        )
-
-    if not re.match(
-        r"^[a-z][a-z0-9_]*$",
-        field_data.field_key,
-    ):
-        raise ValueError(
-            "Field key must use lowercase letters, "
-            "numbers and underscores, and must start "
-            "with a letter."
-        )
+    field_key = _generate_field_key(
+        db=db,
+        asset_type=field_data.asset_type,
+        label=field_data.label,
+    )
 
     existing = db.scalar(
         select(AssetFieldDefinition).where(
             AssetFieldDefinition.asset_type
             == field_data.asset_type,
             AssetFieldDefinition.field_key
-            == field_data.field_key,
+            == field_key,
         )
     )
 
@@ -324,17 +344,15 @@ def create_asset_field(
 
     field = AssetFieldDefinition(
         asset_type=field_data.asset_type,
-        field_key=field_data.field_key,
+        field_key=field_key,
         label=field_data.label,
-        field_type=field_data.field_type,
+        field_type="text",
         required=field_data.required,
         visible=field_data.visible,
         system_field=False,
         editable=True,
         deletable=True,
-        options=_serialize_options(
-            field_data.options
-        ),
+        options=None,
         description=field_data.description,
     )
 
