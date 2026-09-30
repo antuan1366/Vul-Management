@@ -412,12 +412,7 @@ async function loadAssets() {
 
         if (equipmentCount) {
 
-            equipmentCount.textContent =
-                `${equipments.length} ${
-                    equipments.length === 1
-                        ? "item"
-                        : "items"
-                }`;
+            equipmentCount.textContent = `${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}`;
 
         }
 
@@ -430,7 +425,7 @@ async function loadAssets() {
                 <tr>
 
                     <td
-                        colspan="9"
+                        colspan="10"
                         class="empty-cell"
                     >
                         No equipment available.
@@ -568,7 +563,7 @@ async function loadAssets() {
             <tr>
 
                 <td
-                    colspan="9"
+                    colspan="10"
                     class="error-cell"
                 >
 
