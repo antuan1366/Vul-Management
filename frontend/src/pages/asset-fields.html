@@ -169,8 +169,8 @@
                 </div>
 
                 <form id="field-form">
-                    <div class="form-grid">
-                        <div class="form-field">
+                    <div class="form-grid field-form-grid">
+                        <div class="form-field form-full-width">
                             <label for="field_label">Field Name *</label>
                             <input
                                 id="field_label"
@@ -180,17 +180,21 @@
                             >
                         </div>
 
-                        <div class="form-field checkbox-field">
-                            <label class="checkbox-label">
+                        <div class="field-checkbox-group">
+                            <label class="checkbox-card">
                                 <input id="field_required" type="checkbox">
-                                Required
+                                <span>
+                                    <strong>Required</strong>
+                                    <small>Users must provide a value for this field.</small>
+                                </span>
                             </label>
-                        </div>
 
-                        <div class="form-field checkbox-field">
-                            <label class="checkbox-label">
+                            <label class="checkbox-card">
                                 <input id="field_visible" type="checkbox" checked>
-                                Visible
+                                <span>
+                                    <strong>Visible</strong>
+                                    <small>Show this field in asset forms and lists.</small>
+                                </span>
                             </label>
                         </div>
                     </div>
