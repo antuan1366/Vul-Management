@@ -179,6 +179,9 @@ frontend/
 
 The frontend is a lightweight HTML/CSS/JavaScript application.
 
+Equipment and Asset Field forms use shared modal-overlay/dialog patterns for
+consistent Add/Edit interaction.
+
 Responsibilities:
 
 - Page rendering
