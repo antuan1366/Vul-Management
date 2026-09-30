@@ -586,56 +586,48 @@ async function loadAssets() {
 
 
 function openEquipmentForm() {
-
     editingEquipmentId = null;
-
 
     document.getElementById(
         "equipment-form-title"
-    ).textContent =
-        "Add Equipment";
-
+    ).textContent = "Add Equipment";
 
     renderEquipmentForm();
 
-
-    document.getElementById(
+    const modal = document.getElementById(
         "equipment-form-container"
-    ).style.display =
-        "block";
+    );
 
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
 
-    document.getElementById(
-        "equipment-form-container"
-    ).scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
+    setTimeout(() => {
+        const firstInput = modal.querySelector(
+            "input, select, textarea"
+        );
 
+        firstInput?.focus();
+    }, 50);
 }
 
 
 function closeEquipmentForm() {
-
-    document.getElementById(
+    const modal = document.getElementById(
         "equipment-form-container"
-    ).style.display =
-        "none";
+    );
 
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
 
     editingEquipmentId = null;
 
-
-    const form =
-        document.getElementById(
-            "equipment-form"
-        );
-
+    const form = document.getElementById(
+        "equipment-form"
+    );
 
     if (form) {
         form.reset();
     }
-
 }
 
 
@@ -654,27 +646,24 @@ async function editEquipment(id) {
 
         document.getElementById(
             "equipment-form-title"
-        ).textContent =
-            "Edit Equipment";
+        ).textContent = "Edit Equipment";
 
+        renderEquipmentForm(equipment);
 
-        renderEquipmentForm(
-            equipment
+        const modal = document.getElementById(
+            "equipment-form-container"
         );
 
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
 
-        document.getElementById(
-            "equipment-form-container"
-        ).style.display =
-            "block";
+        setTimeout(() => {
+            const firstInput = modal.querySelector(
+                "input, select, textarea"
+            );
 
-
-        document.getElementById(
-            "equipment-form-container"
-        ).scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
+            firstInput?.focus();
+        }, 50);
 
 
     } catch (error) {
@@ -936,6 +925,16 @@ document.addEventListener(
                 "cancel-equipment-button"
             );
 
+        const closeButton =
+            document.getElementById(
+                "close-equipment-modal"
+            );
+
+        const modal =
+            document.getElementById(
+                "equipment-form-container"
+            );
+
 
         const form =
             document.getElementById(
@@ -954,14 +953,41 @@ document.addEventListener(
 
 
         if (cancelButton) {
-
             cancelButton.addEventListener(
                 "click",
                 closeEquipmentForm
             );
-
         }
 
+        if (closeButton) {
+            closeButton.addEventListener(
+                "click",
+                closeEquipmentForm
+            );
+        }
+
+        if (modal) {
+            modal.addEventListener(
+                "click",
+                (event) => {
+                    if (event.target === modal) {
+                        closeEquipmentForm();
+                    }
+                }
+            );
+        }
+
+        document.addEventListener(
+            "keydown",
+            (event) => {
+                if (
+                    event.key === "Escape" &&
+                    modal?.classList.contains("is-open")
+                ) {
+                    closeEquipmentForm();
+                }
+            }
+        );
 
         if (form) {
 
