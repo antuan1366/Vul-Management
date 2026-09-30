@@ -427,9 +427,15 @@
                     <div
                         id="administration-menu"
                         class="sidebar-submenu"
+                        ${currentPage === "asset-fields.html" ? "open" : ""}
                     >
 
-                        
+                        <a
+                            href="asset-fields.html"
+                            class="sidebar-subitem ${currentPage === "asset-fields.html" ? "active" : ""}"
+                        >
+                            Asset Fields
+                        </a>
 
                     </div>
 
