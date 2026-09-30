@@ -4,6 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
 from app.api.health import router as health_router
+from app.api.managed_assets import (
+    application_router,
+    library_router,
+    operating_system_router,
+)
 from app.core.config import settings
 from app.database import (
     Base,
@@ -16,10 +21,16 @@ from app.models.asset_field import (
     AssetFieldDefinition,
     AssetFieldValue,
 )
+from app.models.application import Application
 from app.models.equipment import Equipment
+from app.models.library import Library
+from app.models.operating_system import OperatingSystem
 
 from app.services.asset_fields import (
     seed_default_fields,
+)
+from app.services.managed_asset_fields import (
+    seed_managed_asset_fields,
 )
 
 
@@ -33,6 +44,7 @@ def initialize_database():
 
     try:
         seed_default_fields(db)
+    seed_managed_asset_fields(db)
 
     finally:
         db.close()
