@@ -17,9 +17,9 @@ from app.services.managed_assets import (
 )
 
 
-def build_router(asset_type: str, title: str) -> APIRouter:
+def build_router(asset_type: str, title: str, path_name: str) -> APIRouter:
     router = APIRouter(
-        prefix=f"/api/{asset_type.replace('_', '-')}s",
+        prefix=f"/api/{path_name}",
         tags=[title],
     )
 
@@ -124,6 +124,6 @@ def build_router(asset_type: str, title: str) -> APIRouter:
     return router
 
 
-operating_system_router = build_router("operating_system", "Operating Systems")
-application_router = build_router("application", "Applications")
-library_router = build_router("library", "Libraries")
+operating_system_router = build_router("operating_system", "Operating Systems", "operating-systems")
+application_router = build_router("application", "Applications", "applications")
+library_router = build_router("library", "Libraries", "libraries")
