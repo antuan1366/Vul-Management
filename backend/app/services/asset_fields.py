@@ -564,6 +564,9 @@ def validate_and_save_custom_fields(
 
     for field in fields:
 
+        if field.system_field:
+            continue
+
         value = values.get(
             field.field_key
         )
