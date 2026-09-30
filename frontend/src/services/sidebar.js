@@ -139,9 +139,7 @@
                             sidebar-submenu
                             ${
                                 [
-                                    "assets.html",
-                                    "asset-fields.html"
-                                ].includes(currentPage)
+                                    "assets.html"].includes(currentPage)
                                     ? "open"
                                     : ""
                             }
