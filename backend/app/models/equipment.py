@@ -15,9 +15,9 @@ class Equipment(Base):
         index=True,
     )
 
-    name: Mapped[str] = mapped_column(
+    name: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
