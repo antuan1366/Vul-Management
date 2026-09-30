@@ -26,6 +26,7 @@ class AssetFieldDefinitionBase(BaseModel):
     required: bool = False
     visible: bool = True
     description: str | None = None
+    description: str | None = None
     options: list[str] = Field(default_factory=list)
 
 
