@@ -44,12 +44,7 @@
 
             <div class="table-actions">
 
-                <a
-                    href="asset-fields.html"
-                    class="secondary-button"
-                >
-                    Configure Fields
-                </a>
+                
 
 
                 <button
@@ -82,12 +77,7 @@
                 </div>
 
 
-                <div
-                    id="equipment-count"
-                    class="item-count"
-                >
-                    0 items
-                </div>
+                <div id="equipment-count" class="item-count">0 Assets</div>
 
             </div>
 
@@ -100,9 +90,9 @@
 
                         <tr>
 
-                            <th>
-                                Name
-                            </th>
+                            <th>#</th>
+
+                            <th>Name</th>
 
                             <th>
                                 Type
@@ -177,220 +167,10 @@
 
             <form id="equipment-form">
 
-                <div class="form-grid">
-
-                    <div class="form-field">
-
-                        <label for="name">
-                            Name *
-                        </label>
-
-                        <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            required
-                            placeholder="Example: FW-01"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="device_type">
-                            Device Type
-                        </label>
-
-                        <input
-                            id="device_type"
-                            name="device_type"
-                            type="text"
-                            placeholder="Firewall / Router / Switch"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="vendor">
-                            Vendor
-                        </label>
-
-                        <input
-                            id="vendor"
-                            name="vendor"
-                            type="text"
-                            placeholder="Fortinet / Cisco / F5"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="model">
-                            Model
-                        </label>
-
-                        <input
-                            id="model"
-                            name="model"
-                            type="text"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="version">
-                            Version / Firmware
-                        </label>
-
-                        <input
-                            id="version"
-                            name="version"
-                            type="text"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="ip_address">
-                            IP Address
-                        </label>
-
-                        <input
-                            id="ip_address"
-                            name="ip_address"
-                            type="text"
-                            placeholder="192.168.1.1"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="serial_number">
-                            Serial Number
-                        </label>
-
-                        <input
-                            id="serial_number"
-                            name="serial_number"
-                            type="text"
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="cpe">
-                            CPE
-                        </label>
-
-                        <input
-                            id="cpe"
-                            name="cpe"
-                            type="text"
-                            placeholder="cpe:2.3:..."
-                        >
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="criticality">
-                            Criticality
-                        </label>
-
-                        <select
-                            id="criticality"
-                            name="criticality"
-                        >
-
-                            <option value="Critical">
-                                Critical
-                            </option>
-
-                            <option value="High">
-                                High
-                            </option>
-
-                            <option
-                                value="Medium"
-                                selected
-                            >
-                                Medium
-                            </option>
-
-                            <option value="Low">
-                                Low
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-field">
-
-                        <label for="environment">
-                            Environment
-                        </label>
-
-                        <select
-                            id="environment"
-                            name="environment"
-                        >
-
-                            <option
-                                value="Production"
-                                selected
-                            >
-                                Production
-                            </option>
-
-                            <option value="DR">
-                                DR
-                            </option>
-
-                            <option value="Test">
-                                Test
-                            </option>
-
-                            <option value="Development">
-                                Development
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-field form-full-width">
-
-                        <label for="description">
-                            Description
-                        </label>
-
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="4"
-                            placeholder="Optional description..."
-                        ></textarea>
-
-                    </div>
-
-                </div>
+                <div
+                    id="equipment-dynamic-fields"
+                    class="form-grid"
+                ></div>
 
 
                 <div class="form-actions">
