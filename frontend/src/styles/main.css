@@ -1118,3 +1118,22 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* =========================================
+   EQUIPMENT MODAL
+   ========================================= */
+
+.equipment-modal-dialog {
+    width: min(900px, 100%);
+}
+
+.equipment-modal-dialog .form-grid {
+    margin-top: 0;
+}
+
+@media (max-width: 700px) {
+    .equipment-modal-dialog {
+        width: 100%;
+    }
+}
