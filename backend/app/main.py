@@ -5,7 +5,12 @@ from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
 from app.api.health import router as health_router
 from app.core.config import settings
-from app.database import Base, SessionLocal, engine
+from app.database import (
+    Base,
+    SessionLocal,
+    engine,
+    migrate_equipment_name_nullable,
+)
 
 from app.models.asset_field import (
     AssetFieldDefinition,
@@ -17,6 +22,8 @@ from app.services.asset_fields import (
     seed_default_fields,
 )
 
+
+migrate_equipment_name_nullable()
 
 Base.metadata.create_all(bind=engine)
 
