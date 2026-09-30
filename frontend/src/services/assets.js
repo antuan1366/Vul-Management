@@ -1,15 +1,386 @@
 let editingEquipmentId = null;
 
+let equipmentFields = [];
+
+
+async function loadEquipmentFields() {
+
+    equipmentFields = await apiRequest(
+        "/api/asset-fields?asset_type=equipment"
+    );
+
+}
+
+
+function getFieldValue(
+    field,
+    equipment
+) {
+
+    if (!equipment) {
+        return null;
+    }
+
+
+    if (field.system_field) {
+
+        return equipment[
+            field.field_key
+        ] ?? null;
+
+    }
+
+
+    return (
+        equipment.custom_fields?.[
+            field.field_key
+        ] ?? null
+    );
+
+}
+
+
+function createFieldHtml(
+    field,
+    value = null
+) {
+
+    const requiredAttribute =
+        field.required
+            ? "required"
+            : "";
+
+
+    const escapedValue =
+        value === null ||
+        value === undefined
+            ? ""
+            : escapeHtml(
+                String(value)
+            );
+
+
+    let inputHtml = "";
+
+
+    switch (field.field_type) {
+
+        case "textarea":
+
+            inputHtml = `
+                <textarea
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    rows="4"
+                    ${requiredAttribute}
+                >${escapedValue}</textarea>
+            `;
+
+            break;
+
+
+        case "number":
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="number"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+
+        case "date":
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="date"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+
+        case "ip":
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="text"
+                    placeholder="192.168.1.1"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+
+        case "url":
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="url"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+
+        case "email":
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="email"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+
+        case "boolean":
+
+            inputHtml = `
+                <select
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    ${requiredAttribute}
+                >
+
+                    <option value="">
+                        Select...
+                    </option>
+
+                    <option
+                        value="true"
+                        ${
+                            value === true
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        Yes
+                    </option>
+
+                    <option
+                        value="false"
+                        ${
+                            value === false
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        No
+                    </option>
+
+                </select>
+            `;
+
+            break;
+
+
+        case "select":
+
+            inputHtml = `
+                <select
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    ${requiredAttribute}
+                >
+
+                    <option value="">
+                        Select...
+                    </option>
+
+                    ${(field.options || [])
+                        .map(
+                            (option) => `
+                                <option
+                                    value="${escapeHtml(
+                                        option
+                                    )}"
+                                    ${
+                                        String(value) ===
+                                        String(option)
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    ${escapeHtml(
+                                        option
+                                    )}
+                                </option>
+                            `
+                        )
+                        .join("")}
+
+                </select>
+            `;
+
+            break;
+
+
+        case "multiselect":
+
+            inputHtml = `
+                <select
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    multiple
+                    ${requiredAttribute}
+                >
+
+                    ${(field.options || [])
+                        .map(
+                            (option) => `
+                                <option
+                                    value="${escapeHtml(
+                                        option
+                                    )}"
+                                    ${
+                                        Array.isArray(
+                                            value
+                                        ) &&
+                                        value.includes(
+                                            option
+                                        )
+                                            ? "selected"
+                                            : ""
+                                    }
+                                >
+                                    ${escapeHtml(
+                                        option
+                                    )}
+                                </option>
+                            `
+                        )
+                        .join("")}
+
+                </select>
+            `;
+
+            break;
+
+
+        default:
+
+            inputHtml = `
+                <input
+                    id="field_${field.field_key}"
+                    data-field-key="${field.field_key}"
+                    type="text"
+                    value="${escapedValue}"
+                    ${requiredAttribute}
+                >
+            `;
+
+            break;
+
+    }
+
+
+    return `
+        <div class="form-field">
+
+            <label
+                for="field_${field.field_key}"
+            >
+
+                ${escapeHtml(
+                    field.label
+                )}
+
+                ${
+                    field.required
+                        ? " *"
+                        : ""
+                }
+
+            </label>
+
+            ${inputHtml}
+
+        </div>
+    `;
+
+}
+
+
+function renderEquipmentForm(
+    equipment = null
+) {
+
+    const container =
+        document.getElementById(
+            "equipment-dynamic-fields"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const visibleFields =
+        equipmentFields.filter(
+            (field) =>
+                field.visible
+        );
+
+
+    container.innerHTML =
+        visibleFields
+            .map(
+                (field) => {
+
+                    const value =
+                        getFieldValue(
+                            field,
+                            equipment
+                        );
+
+
+                    return createFieldHtml(
+                        field,
+                        value
+                    );
+
+                }
+            )
+            .join("");
+
+}
+
 
 async function loadAssets() {
 
-    const tableBody = document.getElementById(
-        "assets-table-body"
-    );
+    const tableBody =
+        document.getElementById(
+            "assets-table-body"
+        );
 
-    const equipmentCount = document.getElementById(
-        "equipment-count"
-    );
+
+    const equipmentCount =
+        document.getElementById(
+            "equipment-count"
+        );
 
 
     if (!tableBody) {
@@ -19,18 +390,24 @@ async function loadAssets() {
 
     tableBody.innerHTML = `
         <tr>
-            <td colspan="9" class="loading-cell">
+
+            <td
+                colspan="9"
+                class="loading-cell"
+            >
                 Loading equipment...
             </td>
+
         </tr>
     `;
 
 
     try {
 
-        const equipments = await apiRequest(
-            "/api/equipments"
-        );
+        const equipments =
+            await apiRequest(
+                "/api/equipments"
+            );
 
 
         if (equipmentCount) {
@@ -45,16 +422,20 @@ async function loadAssets() {
         }
 
 
-        if (equipments.length === 0) {
+        if (
+            equipments.length === 0
+        ) {
 
             tableBody.innerHTML = `
                 <tr>
+
                     <td
                         colspan="9"
                         class="empty-cell"
                     >
                         No equipment available.
                     </td>
+
                 </tr>
             `;
 
@@ -62,97 +443,116 @@ async function loadAssets() {
         }
 
 
-        tableBody.innerHTML = equipments
-            .map(
-                (equipment) => {
+        tableBody.innerHTML =
+            equipments
+                .map(
+                    (equipment) => {
 
-                    return `
-                        <tr>
+                        const criticality =
+                            equipment.criticality ||
+                            "-";
 
-                            <td>
-                                ${escapeHtml(
-                                    equipment.name
-                                )}
-                            </td>
 
-                            <td>
-                                ${escapeHtml(
-                                    equipment.device_type || "-"
-                                )}
-                            </td>
+                        return `
+                            <tr>
 
-                            <td>
-                                ${escapeHtml(
-                                    equipment.vendor || "-"
-                                )}
-                            </td>
-
-                            <td>
-                                ${escapeHtml(
-                                    equipment.model || "-"
-                                )}
-                            </td>
-
-                            <td>
-                                ${escapeHtml(
-                                    equipment.version || "-"
-                                )}
-                            </td>
-
-                            <td>
-                                ${escapeHtml(
-                                    equipment.ip_address || "-"
-                                )}
-                            </td>
-
-                            <td>
-                                <span class="
-                                    criticality-badge
-                                    criticality-${String(
-                                        equipment.criticality
-                                    ).toLowerCase()}
-                                ">
+                                <td>
                                     ${escapeHtml(
-                                        equipment.criticality
+                                        equipment.name ||
+                                        "-"
                                     )}
-                                </span>
-                            </td>
+                                </td>
 
-                            <td>
-                                ${escapeHtml(
-                                    equipment.environment
-                                )}
-                            </td>
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.device_type ||
+                                        "-"
+                                    )}
+                                </td>
 
-                            <td>
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.vendor ||
+                                        "-"
+                                    )}
+                                </td>
 
-                                <div class="table-actions">
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.model ||
+                                        "-"
+                                    )}
+                                </td>
 
-                                    <button
-                                        type="button"
-                                        class="secondary-button small-button"
-                                        onclick="editEquipment(${equipment.id})"
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.version ||
+                                        "-"
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.ip_address ||
+                                        "-"
+                                    )}
+                                </td>
+
+                                <td>
+
+                                    <span
+                                        class="
+                                            criticality-badge
+                                            criticality-${String(
+                                                criticality
+                                            ).toLowerCase()}
+                                        "
                                     >
-                                        Edit
-                                    </button>
+                                        ${escapeHtml(
+                                            criticality
+                                        )}
+                                    </span>
 
-                                    <button
-                                        type="button"
-                                        class="danger-button small-button"
-                                        onclick="deleteEquipment(${equipment.id})"
-                                    >
-                                        Delete
-                                    </button>
+                                </td>
 
-                                </div>
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.environment ||
+                                        "-"
+                                    )}
+                                </td>
 
-                            </td>
+                                <td>
 
-                        </tr>
-                    `;
-                }
-            )
-            .join("");
+                                    <div class="table-actions">
+
+                                        <button
+                                            type="button"
+                                            class="secondary-button small-button"
+                                            onclick="editEquipment(${equipment.id})"
+                                        >
+                                            Edit
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            class="danger-button small-button"
+                                            onclick="deleteEquipment(${equipment.id})"
+                                        >
+                                            Delete
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        `;
+
+                    }
+                )
+                .join("");
 
 
     } catch (error) {
@@ -162,14 +562,22 @@ async function loadAssets() {
 
         tableBody.innerHTML = `
             <tr>
+
                 <td
                     colspan="9"
                     class="error-cell"
                 >
+
                     Failed to load equipment.
+
                     <br>
-                    ${escapeHtml(error.message)}
+
+                    ${escapeHtml(
+                        error.message
+                    )}
+
                 </td>
+
             </tr>
         `;
 
@@ -180,32 +588,27 @@ async function loadAssets() {
 
 function openEquipmentForm() {
 
-    const container = document.getElementById(
-        "equipment-form-container"
-    );
-
-    const title = document.getElementById(
-        "equipment-form-title"
-    );
-
-
     editingEquipmentId = null;
 
 
-    title.textContent =
+    document.getElementById(
+        "equipment-form-title"
+    ).textContent =
         "Add Equipment";
 
 
-    document
-        .getElementById("equipment-form")
-        .reset();
+    renderEquipmentForm();
 
 
-    container.style.display =
+    document.getElementById(
+        "equipment-form-container"
+    ).style.display =
         "block";
 
 
-    container.scrollIntoView({
+    document.getElementById(
+        "equipment-form-container"
+    ).scrollIntoView({
         behavior: "smooth",
         block: "start"
     });
@@ -215,21 +618,24 @@ function openEquipmentForm() {
 
 function closeEquipmentForm() {
 
-    const container = document.getElementById(
+    document.getElementById(
         "equipment-form-container"
-    );
-
-
-    container.style.display =
+    ).style.display =
         "none";
 
 
     editingEquipmentId = null;
 
 
-    document
-        .getElementById("equipment-form")
-        .reset();
+    const form =
+        document.getElementById(
+            "equipment-form"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
 
 }
 
@@ -238,9 +644,10 @@ async function editEquipment(id) {
 
     try {
 
-        const equipment = await apiRequest(
-            `/api/equipments/${id}`
-        );
+        const equipment =
+            await apiRequest(
+                `/api/equipments/${id}`
+            );
 
 
         editingEquipmentId = id;
@@ -252,83 +659,20 @@ async function editEquipment(id) {
             "Edit Equipment";
 
 
-        document.getElementById(
-            "name"
-        ).value =
-            equipment.name || "";
+        renderEquipmentForm(
+            equipment
+        );
 
 
         document.getElementById(
-            "device_type"
-        ).value =
-            equipment.device_type || "";
-
-
-        document.getElementById(
-            "vendor"
-        ).value =
-            equipment.vendor || "";
-
-
-        document.getElementById(
-            "model"
-        ).value =
-            equipment.model || "";
-
-
-        document.getElementById(
-            "version"
-        ).value =
-            equipment.version || "";
-
-
-        document.getElementById(
-            "ip_address"
-        ).value =
-            equipment.ip_address || "";
-
-
-        document.getElementById(
-            "serial_number"
-        ).value =
-            equipment.serial_number || "";
-
-
-        document.getElementById(
-            "cpe"
-        ).value =
-            equipment.cpe || "";
-
-
-        document.getElementById(
-            "criticality"
-        ).value =
-            equipment.criticality || "Medium";
-
-
-        document.getElementById(
-            "environment"
-        ).value =
-            equipment.environment || "Production";
-
-
-        document.getElementById(
-            "description"
-        ).value =
-            equipment.description || "";
-
-
-        const container =
-            document.getElementById(
-                "equipment-form-container"
-            );
-
-
-        container.style.display =
+            "equipment-form-container"
+        ).style.display =
             "block";
 
 
-        container.scrollIntoView({
+        document.getElementById(
+            "equipment-form-container"
+        ).scrollIntoView({
             behavior: "smooth",
             block: "start"
         });
@@ -337,6 +681,7 @@ async function editEquipment(id) {
     } catch (error) {
 
         console.error(error);
+
 
         alert(
             `Failed to load equipment.\n\n${error.message}`
@@ -347,82 +692,123 @@ async function editEquipment(id) {
 }
 
 
+function collectFormData() {
+
+    const equipmentData = {};
+
+    const customFields = {};
+
+
+    for (
+        const field
+        of equipmentFields
+    ) {
+
+        if (!field.visible) {
+            continue;
+        }
+
+
+        const element =
+            document.getElementById(
+                `field_${field.field_key}`
+            );
+
+
+        if (!element) {
+            continue;
+        }
+
+
+        let value;
+
+
+        if (
+            field.field_type ===
+            "multiselect"
+        ) {
+
+            value =
+                Array.from(
+                    element.selectedOptions
+                ).map(
+                    (option) =>
+                        option.value
+                );
+
+        } else {
+
+            value =
+                element.value.trim();
+
+        }
+
+
+        if (
+            value === ""
+            ||
+            (
+                Array.isArray(value)
+                &&
+                value.length === 0
+            )
+        ) {
+
+            value = null;
+
+        }
+
+
+        if (field.system_field) {
+
+            equipmentData[
+                field.field_key
+            ] = value;
+
+        } else {
+
+            customFields[
+                field.field_key
+            ] = value;
+
+        }
+
+    }
+
+
+    equipmentData.custom_fields =
+        customFields;
+
+
+    return equipmentData;
+
+}
+
+
 async function saveEquipment(event) {
 
     event.preventDefault();
 
 
-    const equipmentData = {
-
-        name:
-            document.getElementById(
-                "name"
-            ).value.trim(),
-
-        device_type:
-            document.getElementById(
-                "device_type"
-            ).value.trim() || null,
-
-        vendor:
-            document.getElementById(
-                "vendor"
-            ).value.trim() || null,
-
-        model:
-            document.getElementById(
-                "model"
-            ).value.trim() || null,
-
-        version:
-            document.getElementById(
-                "version"
-            ).value.trim() || null,
-
-        ip_address:
-            document.getElementById(
-                "ip_address"
-            ).value.trim() || null,
-
-        serial_number:
-            document.getElementById(
-                "serial_number"
-            ).value.trim() || null,
-
-        cpe:
-            document.getElementById(
-                "cpe"
-            ).value.trim() || null,
-
-        criticality:
-            document.getElementById(
-                "criticality"
-            ).value,
-
-        environment:
-            document.getElementById(
-                "environment"
-            ).value,
-
-        description:
-            document.getElementById(
-                "description"
-            ).value.trim() || null
-
-    };
+    const equipmentData =
+        collectFormData();
 
 
     try {
 
-        if (editingEquipmentId === null) {
+        if (
+            editingEquipmentId === null
+        ) {
 
             await apiRequest(
                 "/api/equipments",
                 {
                     method: "POST",
-                    body: JSON.stringify(
-                        equipmentData
-                    )
+
+                    body:
+                        JSON.stringify(
+                            equipmentData
+                        )
                 }
             );
 
@@ -432,9 +818,11 @@ async function saveEquipment(event) {
                 `/api/equipments/${editingEquipmentId}`,
                 {
                     method: "PUT",
-                    body: JSON.stringify(
-                        equipmentData
-                    )
+
+                    body:
+                        JSON.stringify(
+                            equipmentData
+                        )
                 }
             );
 
@@ -443,12 +831,14 @@ async function saveEquipment(event) {
 
         closeEquipmentForm();
 
+
         await loadAssets();
 
 
     } catch (error) {
 
         console.error(error);
+
 
         alert(
             `Failed to save equipment.\n\n${error.message}`
@@ -461,9 +851,10 @@ async function saveEquipment(event) {
 
 async function deleteEquipment(id) {
 
-    const confirmed = confirm(
-        "Are you sure you want to delete this equipment?"
-    );
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this equipment?"
+        );
 
 
     if (!confirmed) {
@@ -488,6 +879,7 @@ async function deleteEquipment(id) {
 
         console.error(error);
 
+
         alert(
             `Failed to delete equipment.\n\n${error.message}`
         );
@@ -500,11 +892,13 @@ async function deleteEquipment(id) {
 function escapeHtml(value) {
 
     const element =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
 
     element.textContent =
-        value;
+        value ?? "";
 
 
     return element.innerHTML;
@@ -514,7 +908,23 @@ function escapeHtml(value) {
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    async () => {
+
+        try {
+
+            await loadEquipmentFields();
+
+            await loadAssets();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to initialize assets page:",
+                error
+            );
+
+        }
+
 
         const addButton =
             document.getElementById(
@@ -562,9 +972,6 @@ document.addEventListener(
             );
 
         }
-
-
-        loadAssets();
 
     }
 );

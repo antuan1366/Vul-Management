@@ -69,10 +69,17 @@ def create_equipment_api(
     equipment_data: EquipmentCreate,
     db: Session = Depends(get_db),
 ):
-    return create_equipment(
-        db=db,
-        equipment_data=equipment_data,
-    )
+    try:
+        return create_equipment(
+            db=db,
+            equipment_data=equipment_data,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        )
 
 
 @router.put(
@@ -95,11 +102,18 @@ def update_equipment_api(
             detail="Equipment not found",
         )
 
-    return update_equipment(
-        db=db,
-        equipment=equipment,
-        equipment_data=equipment_data,
-    )
+    try:
+        return update_equipment(
+            db=db,
+            equipment=equipment,
+            equipment_data=equipment_data,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        )
 
 
 @router.delete(

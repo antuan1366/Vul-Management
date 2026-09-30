@@ -2,47 +2,107 @@
 
 ## Development Strategy
 
-Build the platform incrementally.
+Build Vul-Management incrementally.
 
-Do not implement the entire system at once.
+Do not implement the entire platform at once.
 
-Each major component should be:
-1. Designed
-2. Implemented
-3. Tested locally
-4. Reviewed in the UI/API
-5. Approved
-6. Committed to Git
+Every major component should follow:
+
+1. Design
+2. Implementation
+3. Local testing
+4. API testing
+5. UI review
+6. Documentation update
+7. Git commit
+
+Do not push unfinished functionality as a stable development checkpoint.
+
+## Current Version
+
+0.1.1
+
+The current version represents the first structured development
+checkpoint after establishing the initial Asset Management foundation.
 
 ## Phase 1 - Foundation
 
-Status: IN PROGRESS
+Status: COMPLETED
 
-Completed:
+Implemented:
+
 - Project structure
 - FastAPI
-- Database layer
 - Configuration
+- Database layer
+- SQLAlchemy
+- SQLite
 - Health endpoint
-- Equipment CRUD
-- Equipment frontend
+- Modular backend structure
+- Modular frontend structure
 
 ## Phase 2 - Asset Management
 
+Status: IN PROGRESS
+
+### Equipment
+
+Status: IMPLEMENTED
+
+Implemented:
+
+- Equipment model
+- Equipment CRUD
+- Equipment frontend
+- Generic Asset Field engine
+- System fields
+- Custom fields
+- Required / Optional
+- Visible / Hidden
+- Field validation
+- Asset Field Administration
+
+### Operating Systems
+
+Status: PLANNED
+
 Order:
 
-1. Equipment
-2. Operating Systems
-3. Applications
-4. Libraries
+1. Model
+2. Schema
+3. Service
+4. API
+5. Frontend
+6. Custom fields
+7. Equipment relationship
 
-Each asset type should have:
-- Database model
-- Pydantic schemas
-- Service layer
-- API routes
-- Frontend page
-- CRUD operations
+### Applications
+
+Status: PLANNED
+
+Order:
+
+1. Model
+2. Schema
+3. Service
+4. API
+5. Frontend
+6. Custom fields
+7. Asset relationships
+
+### Libraries
+
+Status: PLANNED
+
+Order:
+
+1. Model
+2. Schema
+3. Service
+4. API
+5. Frontend
+6. Custom fields
+7. Application relationships
 
 ## Phase 3 - Vulnerability Management
 
@@ -61,6 +121,11 @@ Implement:
 - Dates
 - References
 
+The vulnerability model should be independent from external intelligence
+providers.
+
+Manual vulnerability records must remain possible.
+
 ## Phase 4 - Vulnerability Intelligence
 
 Integrate:
@@ -68,23 +133,35 @@ Integrate:
 - NVD
 - CISA KEV
 
-The system should support importing/updating vulnerability information
-without destroying manually maintained information.
+External intelligence should be handled by dedicated integration
+services.
+
+Imported information must not blindly overwrite manually maintained
+information.
+
+The system should preserve source information and synchronization
+metadata.
 
 ## Phase 5 - Asset/Vulnerability Mapping
 
 Create relationships between:
 
-- Assets
-- Software
+- Equipment
+- Operating Systems
+- Applications
 - Libraries
 - Vulnerabilities
 
-The mapping should support applicability decisions.
+The mapping must support:
+
+- Applicability
+- Manual override
+- Evidence
+- Mapping status
 
 ## Phase 6 - Risk Management
 
-Implement risk prioritization using factors such as:
+Implement explainable risk prioritization using factors such as:
 
 - Severity
 - Exploitability
@@ -93,16 +170,21 @@ Implement risk prioritization using factors such as:
 - Environment
 - Exposure
 
-Risk logic must be explicit and explainable.
+Risk calculations should be explicit and auditable.
 
 ## Phase 7 - Nessus Integration
 
-Support importing Nessus findings and mapping them to:
+Support:
 
-- Assets
-- Vulnerabilities
-- Findings
-- Remediation status
+- Nessus file import
+- Finding normalization
+- Asset matching
+- Vulnerability matching
+- Finding status
+- Remediation tracking
+
+Nessus should be treated as an external source rather than the core
+vulnerability data model.
 
 ## Phase 8 - Dashboard and Reporting
 
@@ -114,6 +196,7 @@ Implement:
 - Remediation status
 - Trends
 - Reports
+- Export
 
 ## Phase 9 - Security
 
@@ -121,19 +204,27 @@ Implement:
 
 - Authentication
 - Authorization
+- Role-based access control
 - Audit logging
 - Secure configuration
 - API protection
+- Security review
+
+Security work becomes increasingly important as the application moves
+toward production use.
 
 ## Phase 10 - AI
 
-Only after the core platform is stable.
+AI should only be implemented after the core platform is stable.
 
-Possible future capabilities:
+Possible capabilities:
+
 - Vulnerability analysis
 - Natural language queries
 - Remediation assistance
 - Asset intelligence
 - Reporting assistance
 
-AI must not become a dependency for core application functionality.
+AI must remain optional.
+
+The platform must remain fully functional without AI.

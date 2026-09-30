@@ -1,74 +1,101 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>Vulnerabilities - Vul-Management</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<link rel="stylesheet" href="../styles/main.css">
-```
+    <title>
+        Vulnerabilities - Vul-Management
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="../styles/main.css"
+    >
 
 </head>
 
+
 <body>
 
-```
-<header class="app-header">
+    <main class="page-container">
 
-    <div class="app-brand">
-        Vul-Management
-    </div>
+        <section class="page-header">
 
-    <nav class="app-nav">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="assets.html">Assets</a>
-        <a href="vulnerabilities.html">Vulnerabilities</a>
-    </nav>
+            <div>
 
-</header>
+                <h1>
+                    Vulnerabilities
+                </h1>
 
-<main class="page-container">
+                <p>
+                    Manage discovered vulnerabilities.
+                </p>
 
-    <section class="page-header">
+            </div>
 
-        <div>
-            <h1>Vulnerabilities</h1>
-            <p>Manage discovered vulnerabilities.</p>
-        </div>
+        </section>
 
-    </section>
 
-    <section class="content-card">
+        <section class="content-card">
 
-        <div class="table-container">
+            <div class="table-container">
 
-            <table>
+                <table>
 
-                <thead>
-                    <tr>
-                        <th>CVE</th>
-                        <th>Severity</th>
-                        <th>Product</th>
-                        <th>Status</th>
-                        <th>Assets</th>
-                    </tr>
-                </thead>
+                    <thead>
 
-                <tbody id="vulnerabilities-table-body">
+                        <tr>
 
-                </tbody>
+                            <th>
+                                CVE
+                            </th>
 
-            </table>
+                            <th>
+                                Severity
+                            </th>
 
-        </div>
+                            <th>
+                                Product
+                            </th>
 
-    </section>
+                            <th>
+                                Status
+                            </th>
 
-</main>
-```
+                            <th>
+                                Assets
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="vulnerabilities-table-body">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="../services/api.js"></script>
+
+    <script src="../services/sidebar.js"></script>
 
 </body>
+
 </html>

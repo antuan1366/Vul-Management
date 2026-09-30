@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Asset Fields - Vul-Management
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="../styles/main.css"
+    >
+
+</head>
+
+
+<body>
+
+    <main class="page-container">
+
+        <section class="page-header">
+
+            <div>
+
+                <h1>
+                    Asset Field Configuration
+                </h1>
+
+                <p>
+                    Configure the fields used by asset management.
+                </p>
+
+            </div>
+
+
+            <div class="table-actions">
+
+                <a
+                    href="assets.html"
+                    class="secondary-button"
+                >
+                    Back to Assets
+                </a>
+
+
+                <button
+                    id="add-field-button"
+                    class="primary-button"
+                    type="button"
+                >
+                    Add Custom Field
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section class="content-card">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Equipment Fields
+                    </h2>
+
+                    <p class="section-description">
+                        Configure system and custom equipment fields.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Label
+                            </th>
+
+                            <th>
+                                Key
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Required
+                            </th>
+
+                            <th>
+                                Visible
+                            </th>
+
+                            <th>
+                                System
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="fields-table-body">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section
+            id="field-form-container"
+            class="content-card form-card"
+            style="display: none;"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2 id="field-form-title">
+                        Add Custom Field
+                    </h2>
+
+                    <p class="section-description">
+                        Create or configure an asset field.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form id="field-form">
+
+                <div class="form-grid">
+
+                    <div class="form-field">
+
+                        <label for="field_label">
+                            Label *
+                        </label>
+
+                        <input
+                            id="field_label"
+                            type="text"
+                            required
+                            placeholder="Example: Rack Number"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="field_key">
+                            Key *
+                        </label>
+
+                        <input
+                            id="field_key"
+                            type="text"
+                            required
+                            placeholder="rack_number"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="field_type">
+                            Type *
+                        </label>
+
+                        <select
+                            id="field_type"
+                            required
+                        >
+
+                            <option value="text">
+                                Text
+                            </option>
+
+                            <option value="textarea">
+                                Text Area
+                            </option>
+
+                            <option value="number">
+                                Number
+                            </option>
+
+                            <option value="ip">
+                                IP Address
+                            </option>
+
+                            <option value="date">
+                                Date
+                            </option>
+
+                            <option value="boolean">
+                                Boolean
+                            </option>
+
+                            <option value="select">
+                                Select
+                            </option>
+
+                            <option value="multiselect">
+                                Multi Select
+                            </option>
+
+                            <option value="url">
+                                URL
+                            </option>
+
+                            <option value="email">
+                                Email
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="field_options">
+                            Options
+                        </label>
+
+                        <textarea
+                            id="field_options"
+                            rows="5"
+                            placeholder="One option per line"
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label>
+
+                            <input
+                                id="field_required"
+                                type="checkbox"
+                            >
+
+                            Required
+
+                        </label>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label>
+
+                            <input
+                                id="field_visible"
+                                type="checkbox"
+                                checked
+                            >
+
+                            Visible
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Save Field
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="cancel-field-button"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <script src="../services/api.js"></script>
+
+    <script src="../services/asset-fields.js"></script>
+
+    <script src="../services/sidebar.js"></script>
+
+</body>
+
+</html>
