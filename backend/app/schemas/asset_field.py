@@ -31,13 +31,9 @@ class AssetFieldDefinitionBase(BaseModel):
 
 class AssetFieldDefinitionCreate(BaseModel):
     asset_type: str = "equipment"
-    field_key: str
     label: str
-    field_type: str
     required: bool = False
     visible: bool = True
-    description: str | None = None
-    options: list[str] = Field(default_factory=list)
 
 
 class AssetFieldDefinitionUpdate(BaseModel):
