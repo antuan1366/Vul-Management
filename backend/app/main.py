@@ -1,15 +1,44 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
 from app.api.health import router as health_router
 from app.core.config import settings
-from app.database import Base, engine
+from app.database import (
+    Base,
+    SessionLocal,
+    engine,
+    migrate_equipment_name_nullable,
+)
 
+from app.models.asset_field import (
+    AssetFieldDefinition,
+    AssetFieldValue,
+)
 from app.models.equipment import Equipment
 
+from app.services.asset_fields import (
+    seed_default_fields,
+)
+
+
+migrate_equipment_name_nullable()
 
 Base.metadata.create_all(bind=engine)
+
+
+def initialize_database():
+    db = SessionLocal()
+
+    try:
+        seed_default_fields(db)
+
+    finally:
+        db.close()
+
+
+initialize_database()
 
 
 app = FastAPI(
@@ -28,8 +57,17 @@ app.add_middleware(
 )
 
 
-app.include_router(health_router)
-app.include_router(equipment_router)
+app.include_router(
+    health_router
+)
+
+app.include_router(
+    equipment_router
+)
+
+app.include_router(
+    asset_fields_router
+)
 
 
 @app.get("/")

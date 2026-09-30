@@ -12,7 +12,7 @@
     >
 
     <title>
-        Assets - Vul-Management
+        Asset Fields - Vul-Management
     </title>
 
     <link
@@ -32,11 +32,11 @@
             <div>
 
                 <h1>
-                    Assets
+                    Asset Field Configuration
                 </h1>
 
                 <p>
-                    Manage infrastructure assets.
+                    Configure the fields used by asset management.
                 </p>
 
             </div>
@@ -44,15 +44,20 @@
 
             <div class="table-actions">
 
-                
+                <a
+                    href="assets.html"
+                    class="secondary-button"
+                >
+                    Back to Assets
+                </a>
 
 
                 <button
-                    id="add-asset-button"
+                    id="add-field-button"
                     class="primary-button"
                     type="button"
                 >
-                    Add Equipment
+                    Add Custom Field
                 </button>
 
             </div>
@@ -67,17 +72,10 @@
                 <div>
 
                     <h2>
-                        Equipment
+                        Equipment Fields
                     </h2>
 
-                    <p class="section-description">
-                        Network and infrastructure equipment.
-                    </p>
-
                 </div>
-
-
-                <div id="equipment-count" class="item-count">0 Assets</div>
 
             </div>
 
@@ -92,34 +90,22 @@
 
                             <th>#</th>
 
-                            <th>Name</th>
+                            <th>Label</th>
 
                             <th>
-                                Type
+                                Key
                             </th>
 
                             <th>
-                                Vendor
+                                Required
                             </th>
 
                             <th>
-                                Model
+                                Visible
                             </th>
 
                             <th>
-                                Version
-                            </th>
-
-                            <th>
-                                IP Address
-                            </th>
-
-                            <th>
-                                Criticality
-                            </th>
-
-                            <th>
-                                Environment
+                                System
                             </th>
 
                             <th>
@@ -131,7 +117,7 @@
                     </thead>
 
 
-                    <tbody id="assets-table-body">
+                    <tbody id="fields-table-body">
 
                     </tbody>
 
@@ -143,27 +129,27 @@
 
 
         <div
-            id="equipment-form-container"
+            id="field-modal"
             class="modal-overlay"
             aria-hidden="true"
         >
             <div
-                class="modal-dialog equipment-modal-dialog"
+                class="modal-dialog"
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="equipment-form-title"
+                aria-labelledby="field-form-title"
             >
                 <div class="modal-header">
                     <div>
-                        <h2 id="equipment-form-title">Add Equipment</h2>
+                        <h2 id="field-form-title">Add Custom Field</h2>
                         <p class="section-description">
-                            Enter equipment information.
+                            Define the field name and its behavior.
                         </p>
                     </div>
 
                     <button
                         type="button"
-                        id="close-equipment-modal"
+                        id="close-field-modal"
                         class="modal-close-button"
                         aria-label="Close"
                     >
@@ -171,23 +157,43 @@
                     </button>
                 </div>
 
-                <form id="equipment-form">
-                    <div
-                        id="equipment-dynamic-fields"
-                        class="form-grid"
-                    ></div>
+                <form id="field-form">
+                    <div class="form-grid field-form-grid">
+                        <div class="form-field form-full-width">
+                            <label for="field_label">Field Name *</label>
+                            <input
+                                id="field_label"
+                                type="text"
+                                required
+                                placeholder="Example: Rack Number"
+                            >
+                        </div>
+
+                        <div class="field-checkbox-group">
+                            <label class="checkbox-card">
+                                <input id="field_required" type="checkbox">
+                                <span>
+                                    <strong>Required</strong>
+                                </span>
+                            </label>
+
+                            <label class="checkbox-card">
+                                <input id="field_visible" type="checkbox" checked>
+                                <span>
+                                    <strong>Visible</strong>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
 
                     <div class="form-actions">
-                        <button
-                            type="submit"
-                            class="primary-button"
-                        >
-                            Save Equipment
+                        <button type="submit" class="primary-button">
+                            Save Field
                         </button>
 
                         <button
                             type="button"
-                            id="cancel-equipment-button"
+                            id="cancel-field-button"
                             class="secondary-button"
                         >
                             Cancel
@@ -202,7 +208,7 @@
 
     <script src="../services/api.js"></script>
 
-    <script src="../services/assets.js"></script>
+    <script src="../services/asset-fields.js"></script>
 
     <script src="../services/sidebar.js"></script>
 

@@ -1,29 +1,35 @@
 ﻿# STATE
 
 ## Version
-0.1.0
+0.1.1
 
 ## State
-LOCAL DEVELOPMENT BASELINE
+RELEASE CANDIDATE
 
-This document describes the current local project state.
-
-It does NOT mean the GitHub release has already been approved or pushed.
+This document describes the current state of the project at version 0.1.1.
 
 ## Backend
 
-Working:
+Implemented:
 
 - FastAPI application
 - Configuration system
 - SQLite database
 - SQLAlchemy
+- Pydantic schemas
 - Health API
 - Equipment CRUD API
+- Generic Asset Field API
+- Generic Asset Field validation
+- Custom Asset Field value storage
 
 ## Equipment
 
-Implemented fields:
+Equipment is the first implemented asset type.
+
+### System Fields
+
+Current Equipment system fields:
 
 - name
 - device_type
@@ -36,10 +42,12 @@ Implemented fields:
 - criticality
 - environment
 - description
-- created_at
-- updated_at
 
-Supported operations:
+System fields are stored directly in the Equipment table.
+
+### Equipment Operations
+
+Implemented:
 
 - Create
 - Read
@@ -47,66 +55,158 @@ Supported operations:
 - Update
 - Delete
 
+## Generic Asset Fields
+
+The generic Asset Field system is implemented.
+
+It supports:
+
+- Field definitions
+- Custom fields
+- Required / Optional
+- Visible / Hidden
+- Editable / Non-editable
+- Deletable / Non-deletable
+- Field types
+- Select options
+- Multiselect options
+- Value validation
+- Asset-specific field configuration
+
+### Supported Field Types
+
+Current supported field types include:
+
+- text
+- textarea
+- number
+- ip
+- date
+- boolean
+- select
+- multiselect
+- url
+- email
+
+## Asset Field Administration
+
+An Administration page exists for configuring Equipment fields.
+
+The current implementation supports:
+
+- Viewing field definitions
+- Creating custom fields
+- Editing configurable field properties
+- Required / Optional
+- Visible / Hidden
+- Field options
+- Deleting custom fields where permitted
+
+System fields are protected according to their configuration.
+
 ## Frontend
 
-Equipment management page implemented.
+The frontend currently contains:
 
-The following functionality exists:
+- Dashboard page
+- Equipment page
+- Asset Fields Administration page
+- Vulnerabilities initial/skeleton page
+- Shared API service
+- Shared sidebar
+- Shared styling
 
-- Equipment list
-- Equipment count
-- Add Equipment
-- Edit Equipment
-- Delete Equipment
-- Equipment form
-- Loading state
-- Empty state
-- Error handling
+The UI uses a dark sidebar/navigation structure.
 
-The Equipment UI has been manually reviewed and was considered acceptable
-for the current development stage.
+Equipment Add/Edit forms and Asset Field Add/Edit forms use floating modal
+windows with Save/Cancel, close, overlay-click, and Escape interactions.
 
 ## Vulnerabilities
 
-Only an initial/skeleton frontend page exists.
+Vulnerability Management backend is not implemented yet.
 
-The vulnerability management backend is not implemented yet.
+The frontend contains an initial page/skeleton only.
+
+Not yet implemented:
+
+- Vulnerability database model
+- Vulnerability CRUD
+- CVE management
+- Remediation workflow
+- Vulnerability status
+- Asset/Vulnerability mapping
+
+## Intelligence
+
+Not yet implemented:
+
+- NVD integration
+- CISA KEV integration
+- Automated CVE synchronization
+- Applicability engine
+
+## Nessus
+
+Not yet implemented:
+
+- Nessus import
+- Finding normalization
+- Asset matching
+- Vulnerability matching
+
+## Risk
+
+Not yet implemented:
+
+- Risk calculation
+- Asset criticality weighting
+- Exposure weighting
+- KEV weighting
+
+## Security
+
+Not yet implemented:
+
+- Authentication
+- Authorization
+- Audit logging
+- Production security hardening
+
+## AI
+
+AI/Mem0 functionality remains postponed.
+
+No AI dependency is required for the current application.
 
 ## Git
 
-Git repository has been initialized locally.
+The project uses:
 
-Current branch at the time this file was created:
-
-master
-
-No initial commit exists yet.
-
-The intended main branch is:
-
-main
-
-## GitHub
+- Git
+- main branch
+- GitHub remote
 
 Target repository:
 
 antuan1366/Vul-Management
 
-The first official version is intended to be:
-
-v0.1.0
-
-## AI
-
-AI/Mem0 functionality is postponed.
-
-Do not add AI dependencies or architecture requirements unless explicitly
-requested.
+Version 0.1.1 represents the current development checkpoint.
 
 ## Next Major Work
 
-Continue Asset Management with:
+The next major Asset Management work is:
 
 1. Operating Systems
 2. Applications
 3. Libraries
+
+After the core asset categories are established, development should move to:
+
+1. Vulnerability Management
+2. Vulnerability Intelligence
+3. Asset/Vulnerability Mapping
+4. Risk Management
+5. Nessus Integration
+6. Reporting
+7. Security
+8. AI
