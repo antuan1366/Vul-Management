@@ -21,7 +21,7 @@ async function loadAssetFields() {
         <tr>
 
             <td
-                colspan="7"
+                colspan="6"
                 class="loading-cell"
             >
                 Loading fields...
@@ -37,6 +37,11 @@ async function loadAssetFields() {
             await apiRequest(
                 "/api/asset-fields?asset_type=equipment"
             );
+
+        const fieldCount = document.getElementById("field-count");
+        if (fieldCount) {
+            fieldCount.textContent = currentFields.length + (currentFields.length === 1 ? " Field" : " Fields");
+        }
 
 
         if (
@@ -63,10 +68,12 @@ async function loadAssetFields() {
         tableBody.innerHTML =
             currentFields
                 .map(
-                    (field) => {
+                    (field, fieldIndex) => {
 
                         return `
                             <tr>
+
+                                <td>${fieldIndex + 1}</td>
 
                                 <td>
                                     ${escapeHtml(
@@ -77,12 +84,6 @@ async function loadAssetFields() {
                                 <td>
                                     ${escapeHtml(
                                         field.field_key
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        field.field_type
                                     )}
                                 </td>
 
@@ -364,10 +365,7 @@ async function saveField(event) {
         ).value.trim();
 
 
-    const fieldType =
-        document.getElementById(
-            "field_type"
-        ).value;
+    const fieldType = "text";
 
 
     const required =
