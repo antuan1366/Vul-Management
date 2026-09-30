@@ -142,60 +142,60 @@
         </section>
 
 
-        <section
+        <div
             id="equipment-form-container"
-            class="content-card form-card"
-            style="display: none;"
+            class="modal-overlay"
+            aria-hidden="true"
         >
-
-            <div class="section-header">
-
-                <div>
-
-                    <h2 id="equipment-form-title">
-                        Add Equipment
-                    </h2>
-
-                    <p class="section-description">
-                        Enter equipment information.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <form id="equipment-form">
-
-                <div
-                    id="equipment-dynamic-fields"
-                    class="form-grid"
-                ></div>
-
-
-                <div class="form-actions">
-
-                    <button
-                        type="submit"
-                        class="primary-button"
-                    >
-                        Save Equipment
-                    </button>
-
+            <div
+                class="modal-dialog equipment-modal-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="equipment-form-title"
+            >
+                <div class="modal-header">
+                    <div>
+                        <h2 id="equipment-form-title">Add Equipment</h2>
+                        <p class="section-description">
+                            Enter equipment information.
+                        </p>
+                    </div>
 
                     <button
                         type="button"
-                        id="cancel-equipment-button"
-                        class="secondary-button"
+                        id="close-equipment-modal"
+                        class="modal-close-button"
+                        aria-label="Close"
                     >
-                        Cancel
+                        &times;
                     </button>
-
                 </div>
 
-            </form>
+                <form id="equipment-form">
+                    <div
+                        id="equipment-dynamic-fields"
+                        class="form-grid"
+                    ></div>
 
-        </section>
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Save Equipment
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancel-equipment-button"
+                            class="secondary-button"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>>
 
     </main>
 
