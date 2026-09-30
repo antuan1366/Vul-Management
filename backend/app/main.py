@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.asset_fields import router as asset_fields_router
@@ -17,21 +17,14 @@ from app.database import (
     migrate_equipment_name_nullable,
 )
 
-from app.models.asset_field import (
-    AssetFieldDefinition,
-    AssetFieldValue,
-)
 from app.models.application import Application
+from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
 from app.models.library import Library
 from app.models.operating_system import OperatingSystem
 
-from app.services.asset_fields import (
-    seed_default_fields,
-)
-from app.services.managed_asset_fields import (
-    seed_managed_asset_fields,
-)
+from app.services.asset_fields import seed_default_fields
+from app.services.managed_asset_fields import seed_managed_asset_fields
 
 
 migrate_equipment_name_nullable()
@@ -44,8 +37,7 @@ def initialize_database():
 
     try:
         seed_default_fields(db)
-    seed_managed_asset_fields(db)
-
+        seed_managed_asset_fields(db)
     finally:
         db.close()
 
@@ -69,17 +61,12 @@ app.add_middleware(
 )
 
 
-app.include_router(
-    health_router
-)
-
-app.include_router(
-    equipment_router
-)
-
-app.include_router(
-    asset_fields_router
-)
+app.include_router(health_router)
+app.include_router(equipment_router)
+app.include_router(asset_fields_router)
+app.include_router(operating_system_router)
+app.include_router(application_router)
+app.include_router(library_router)
 
 
 @app.get("/")
