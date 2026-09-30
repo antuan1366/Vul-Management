@@ -896,29 +896,11 @@ function escapeHtml(value) {
 
 document.addEventListener(
     "DOMContentLoaded",
-    async () => {
-
-        try {
-
-            await loadEquipmentFields();
-
-            await loadAssets();
-
-        } catch (error) {
-
-            console.error(
-                "Failed to initialize assets page:",
-                error
-            );
-
-        }
-
-
+    () => {
         const addButton =
             document.getElementById(
                 "add-asset-button"
             );
-
 
         const cancelButton =
             document.getElementById(
@@ -935,22 +917,19 @@ document.addEventListener(
                 "equipment-form-container"
             );
 
-
         const form =
             document.getElementById(
                 "equipment-form"
             );
 
-
+        // Bind the form controls before any API call so the UI remains
+        // usable even if backend initialization or an API request fails.
         if (addButton) {
-
             addButton.addEventListener(
                 "click",
                 openEquipmentForm
             );
-
         }
-
 
         if (cancelButton) {
             cancelButton.addEventListener(
@@ -990,13 +969,23 @@ document.addEventListener(
         );
 
         if (form) {
-
             form.addEventListener(
                 "submit",
                 saveEquipment
             );
-
         }
 
+        // Load data after the controls are ready.
+        (async () => {
+            try {
+                await loadEquipmentFields();
+                await loadAssets();
+            } catch (error) {
+                console.error(
+                    "Failed to initialize assets page:",
+                    error
+                );
+            }
+        })();
     }
 );
