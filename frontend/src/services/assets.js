@@ -392,7 +392,7 @@ async function loadAssets() {
         <tr>
 
             <td
-                colspan="9"
+                colspan="10"
                 class="loading-cell"
             >
                 Loading equipment...
@@ -446,7 +446,7 @@ async function loadAssets() {
         tableBody.innerHTML =
             equipments
                 .map(
-                    (equipment) => {
+                    (equipment, equipmentRowIndex) => {
 
                         const criticality =
                             equipment.criticality ||
@@ -455,6 +455,10 @@ async function loadAssets() {
 
                         return `
                             <tr>
+
+                                <td>
+                                    ${equipmentRowIndex + 1}
+                                </td>
 
                                 <td>
                                     ${escapeHtml(
