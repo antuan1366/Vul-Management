@@ -43,7 +43,7 @@ Implemented:
 
 ## Phase 2 - Asset Management
 
-Status: IN PROGRESS
+Status: RELEASE CANDIDATE
 
 ### Equipment
 
@@ -61,6 +61,8 @@ Implemented:
 - Visible / Hidden
 - Field validation
 - Asset Field Administration
+- Floating modal UX for Equipment Add/Edit
+- Floating modal UX for Asset Field Add/Edit
 
 ### Operating Systems
 
