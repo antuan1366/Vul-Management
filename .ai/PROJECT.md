@@ -51,6 +51,10 @@ The Equipment asset type is implemented with:
 The project is currently focused on building the core platform before
 implementing advanced vulnerability intelligence and AI functionality.
 
+Version 0.1.1 is the first stable Asset Management checkpoint and includes
+the Equipment CRUD workflow, generic Asset Field administration, and the
+modal-based Add/Edit user interface.
+
 ## Technology
 
 ### Backend
