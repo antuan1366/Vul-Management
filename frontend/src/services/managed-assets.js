@@ -141,6 +141,32 @@ function renderAssetForm(asset = null) {
         .join("");
 }
 
+function getPrimaryFields() {
+    return assetFields
+        .filter(field => field.visible)
+        .slice(0, 6);
+}
+
+function renderTableHeader() {
+    const tableHead = document.getElementById("assets-table-head");
+
+    if (!tableHead) {
+        return getPrimaryFields();
+    }
+
+    const primaryFields = getPrimaryFields();
+
+    tableHead.innerHTML = `
+        <tr>
+            <th>#</th>
+            ${primaryFields.map(field => `<th>${escapeHtml(field.label)}</th>`).join("")}
+            <th>Actions</th>
+        </tr>
+    `;
+
+    return primaryFields;
+}
+
 async function loadAssets() {
     const tableBody = document.getElementById("assets-table-body");
     const count = document.getElementById("asset-count");
@@ -173,9 +199,7 @@ async function loadAssets() {
             return;
         }
 
-        const primaryFields = assetFields
-            .filter(field => field.visible)
-            .slice(0, 6);
+        const primaryFields = renderTableHeader();
 
         tableBody.innerHTML = assets.map((asset, index) => {
             const cells = primaryFields.map(field => {
