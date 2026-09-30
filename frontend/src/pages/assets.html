@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Assets - Vul-Management</title>
+
+    <link
+        rel="stylesheet"
+        href="../styles/main.css"
+    >
+
+</head>
+
+
+<body>
+
+    <header class="app-header">
+
+        <div class="app-brand">
+            Vul-Management
+        </div>
+
+
+        <nav class="app-nav">
+
+            <a href="dashboard.html">
+                Dashboard
+            </a>
+
+            <a
+                href="assets.html"
+                class="active"
+            >
+                Assets
+            </a>
+
+            <a href="vulnerabilities.html">
+                Vulnerabilities
+            </a>
+
+        </nav>
+
+    </header>
+
+
+    <main class="page-container">
+
+        <section class="page-header">
+
+            <div>
+
+                <h1>
+                    Assets
+                </h1>
+
+                <p>
+                    Manage infrastructure assets.
+                </p>
+
+            </div>
+
+
+            <button
+                id="add-asset-button"
+                class="primary-button"
+                type="button"
+            >
+                Add Equipment
+            </button>
+
+        </section>
+
+
+        <section class="content-card">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Equipment
+                    </h2>
+
+                    <p class="section-description">
+                        Network and infrastructure equipment.
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="equipment-count"
+                    class="item-count"
+                >
+                    0 items
+                </div>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Name</th>
+
+                            <th>Type</th>
+
+                            <th>Vendor</th>
+
+                            <th>Model</th>
+
+                            <th>Version</th>
+
+                            <th>IP Address</th>
+
+                            <th>Criticality</th>
+
+                            <th>Environment</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="assets-table-body">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <section
+            id="equipment-form-container"
+            class="content-card form-card"
+            style="display: none;"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2 id="equipment-form-title">
+                        Add Equipment
+                    </h2>
+
+                    <p class="section-description">
+                        Enter equipment information.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form id="equipment-form">
+
+                <div class="form-grid">
+
+                    <div class="form-field">
+
+                        <label for="name">
+                            Name *
+                        </label>
+
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            required
+                            placeholder="Example: FW-01"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="device_type">
+                            Device Type
+                        </label>
+
+                        <input
+                            id="device_type"
+                            name="device_type"
+                            type="text"
+                            placeholder="Firewall / Router / Switch"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="vendor">
+                            Vendor
+                        </label>
+
+                        <input
+                            id="vendor"
+                            name="vendor"
+                            type="text"
+                            placeholder="Fortinet / Cisco / F5"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="model">
+                            Model
+                        </label>
+
+                        <input
+                            id="model"
+                            name="model"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="version">
+                            Version / Firmware
+                        </label>
+
+                        <input
+                            id="version"
+                            name="version"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="ip_address">
+                            IP Address
+                        </label>
+
+                        <input
+                            id="ip_address"
+                            name="ip_address"
+                            type="text"
+                            placeholder="192.168.1.1"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="serial_number">
+                            Serial Number
+                        </label>
+
+                        <input
+                            id="serial_number"
+                            name="serial_number"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="cpe">
+                            CPE
+                        </label>
+
+                        <input
+                            id="cpe"
+                            name="cpe"
+                            type="text"
+                            placeholder="cpe:2.3:..."
+                        >
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="criticality">
+                            Criticality
+                        </label>
+
+                        <select
+                            id="criticality"
+                            name="criticality"
+                        >
+
+                            <option value="Critical">
+                                Critical
+                            </option>
+
+                            <option value="High">
+                                High
+                            </option>
+
+                            <option
+                                value="Medium"
+                                selected
+                            >
+                                Medium
+                            </option>
+
+                            <option value="Low">
+                                Low
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field">
+
+                        <label for="environment">
+                            Environment
+                        </label>
+
+                        <select
+                            id="environment"
+                            name="environment"
+                        >
+
+                            <option
+                                value="Production"
+                                selected
+                            >
+                                Production
+                            </option>
+
+                            <option value="DR">
+                                DR
+                            </option>
+
+                            <option value="Test">
+                                Test
+                            </option>
+
+                            <option value="Development">
+                                Development
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-field form-full-width">
+
+                        <label for="description">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Optional description..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Save Equipment
+                    </button>
+
+
+                    <button
+                        type="button"
+                        id="cancel-equipment-button"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <script src="../services/api.js"></script>
+
+    <script src="../services/assets.js"></script>
+
+</body>
+
+</html>

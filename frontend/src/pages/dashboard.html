@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>Dashboard - Vul-Management</title>
+
+<link rel="stylesheet" href="../styles/main.css">
+```
+
+</head>
+
+<body>
+
+```
+<header class="app-header">
+    <div class="app-brand">
+        Vul-Management
+    </div>
+
+    <nav class="app-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="assets.html">Assets</a>
+        <a href="vulnerabilities.html">Vulnerabilities</a>
+    </nav>
+</header>
+
+<main class="page-container">
+
+    <section class="page-header">
+        <h1>Dashboard</h1>
+        <p>Vulnerability Management Platform</p>
+    </section>
+
+    <section class="dashboard-grid">
+
+        <div class="dashboard-card">
+            <span class="card-title">Assets</span>
+            <strong id="asset-count">0</strong>
+        </div>
+
+        <div class="dashboard-card">
+            <span class="card-title">Vulnerabilities</span>
+            <strong id="vulnerability-count">0</strong>
+        </div>
+
+        <div class="dashboard-card">
+            <span class="card-title">Critical</span>
+            <strong id="critical-count">0</strong>
+        </div>
+
+        <div class="dashboard-card">
+            <span class="card-title">High</span>
+            <strong id="high-count">0</strong>
+        </div>
+
+    </section>
+
+</main>
+
+<script src="../services/api.js"></script>
+```
+
+</body>
+</html>
