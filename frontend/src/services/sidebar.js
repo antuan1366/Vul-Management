@@ -101,8 +101,7 @@
                             sidebar-parent
                             ${
                                 [
-                                    "assets.html",
-                                    "asset-fields.html"
+                                    "assets.html"
                                 ].includes(currentPage)
                                     ? "active"
                                     : ""
@@ -430,20 +429,7 @@
                         class="sidebar-submenu"
                     >
 
-                        <a
-                            href="asset-fields.html"
-                            class="
-                                sidebar-subitem
-                                ${
-                                    currentPage ===
-                                    "asset-fields.html"
-                                        ? "active"
-                                        : ""
-                                }
-                            "
-                        >
-                            Asset Fields
-                        </a>
+                        
 
                     </div>
 
@@ -459,7 +445,7 @@
                 </span>
 
                 <span>
-                    v0.1.0
+                    v0.1.1
                 </span>
 
             </div>
