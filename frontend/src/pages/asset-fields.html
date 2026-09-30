@@ -139,141 +139,78 @@
         </section>
 
 
-        <section
-            id="field-form-container"
-            class="content-card form-card"
-            style="display: none;"
+        <div
+            id="field-modal"
+            class="modal-overlay"
+            aria-hidden="true"
         >
-
-            <div class="section-header">
-
-                <div>
-
-                    <h2 id="field-form-title">
-                        Add Custom Field
-                    </h2>
-
-                    <p class="section-description">
-                        Create or configure an asset field.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <form id="field-form">
-
-                <div class="form-grid">
-
-                    <div class="form-field">
-
-                        <label for="field_label">
-                            Label *
-                        </label>
-
-                        <input
-                            id="field_label"
-                            type="text"
-                            required
-                            placeholder="Example: Rack Number"
-                        >
-
+            <div
+                class="modal-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="field-form-title"
+            >
+                <div class="modal-header">
+                    <div>
+                        <h2 id="field-form-title">Add Custom Field</h2>
+                        <p class="section-description">
+                            Define the field name and its behavior.
+                        </p>
                     </div>
-
-
-                    <div class="form-field">
-
-                        <label for="field_key">
-                            Key *
-                        </label>
-
-                        <input
-                            id="field_key"
-                            type="text"
-                            required
-                            placeholder="rack_number"
-                        >
-
-                    </div>
-
-
-                    
-
-
-                    <div class="form-field">
-
-                        <label for="field_options">
-                            Options
-                        </label>
-
-                        <textarea
-                            id="field_options"
-                            rows="5"
-                            placeholder="One option per line"
-                        ></textarea>
-
-                    </div>
-
-
-                    <div class="form-field checkbox-field">
-
-                        <label class="checkbox-label">
-
-                            <input
-                                id="field_required"
-                                type="checkbox"
-                            >
-
-                            Required
-
-                        </label>
-
-                    </div>
-
-
-                    <div class="form-field checkbox-field">
-
-                        <label class="checkbox-label">
-
-                            <input
-                                id="field_visible"
-                                type="checkbox"
-                                checked
-                            >
-
-                            Visible
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-
-                <div class="form-actions">
-
-                    <button
-                        type="submit"
-                        class="primary-button"
-                    >
-                        Save Field
-                    </button>
-
 
                     <button
                         type="button"
-                        id="cancel-field-button"
-                        class="secondary-button"
+                        id="close-field-modal"
+                        class="modal-close-button"
+                        aria-label="Close"
                     >
-                        Cancel
+                        &times;
                     </button>
-
                 </div>
 
-            </form>
+                <form id="field-form">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="field_label">Field Name *</label>
+                            <input
+                                id="field_label"
+                                type="text"
+                                required
+                                placeholder="Example: Rack Number"
+                            >
+                        </div>
 
-        </section>
+                        <div class="form-field checkbox-field">
+                            <label class="checkbox-label">
+                                <input id="field_required" type="checkbox">
+                                Required
+                            </label>
+                        </div>
+
+                        <div class="form-field checkbox-field">
+                            <label class="checkbox-label">
+                                <input id="field_visible" type="checkbox" checked>
+                                Visible
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">
+                            Save Field
+                        </button>
+
+                        <button
+                            type="button"
+                            id="cancel-field-button"
+                            class="secondary-button"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
     </main>
 
