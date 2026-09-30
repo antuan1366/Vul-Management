@@ -4,7 +4,7 @@
 0.1.1
 
 ## State
-DEVELOPMENT BASELINE
+RELEASE CANDIDATE
 
 This document describes the current state of the project at version 0.1.1.
 
@@ -117,6 +117,9 @@ The frontend currently contains:
 - Shared styling
 
 The UI uses a dark sidebar/navigation structure.
+
+Equipment Add/Edit forms and Asset Field Add/Edit forms use floating modal
+windows with Save/Cancel, close, overlay-click, and Escape interactions.
 
 ## Vulnerabilities
 
