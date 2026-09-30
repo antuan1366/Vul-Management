@@ -52,7 +52,7 @@ async function loadAssetFields() {
                 <tr>
 
                     <td
-                        colspan="7"
+                        colspan="6"
                         class="empty-cell"
                     >
                         No fields configured.
@@ -165,7 +165,7 @@ async function loadAssetFields() {
             <tr>
 
                 <td
-                    colspan="7"
+                    colspan="6"
                     class="error-cell"
                 >
 
@@ -302,13 +302,7 @@ function editField(id) {
     ).disabled = true;
 
 
-    document.getElementById(
-        "field_type"
-    ).value =
-        field.field_type;
-
-
-    document.getElementById(
+document.getElementById(
         "field_required"
     ).checked =
         Boolean(
