@@ -52,6 +52,17 @@
                 </a>
 
 
+                <div class="page-header-actions">
+                <label class="form-field inline-field">
+                    <span>Asset Type</span>
+                    <select id="asset-type-selector">
+                        <option value="equipment">Equipment</option>
+                        <option value="operating_system">Operating Systems</option>
+                        <option value="application">Applications</option>
+                        <option value="library">Libraries</option>
+                    </select>
+                </label>
+
                 <button
                     id="add-field-button"
                     class="primary-button"
@@ -59,6 +70,7 @@
                 >
                     Add Custom Field
                 </button>
+            </div>
 
             </div>
 
@@ -71,7 +83,7 @@
 
                 <div>
 
-                    <h2>
+                    <h2 id="asset-fields-section-title">
                         Equipment Fields
                     </h2>
 
