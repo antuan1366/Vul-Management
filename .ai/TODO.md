@@ -1,27 +1,47 @@
-﻿# TODO
+# TODO
 
 ## Current Release
 
 Version: 0.1.1
 
-## Immediate
+## Release Checklist
 
-- [ ] Verify local working tree
-- [ ] Test backend startup
+### Code and Documentation
+- [x] Equipment CRUD implementation
+- [x] Generic Asset Field system
+- [x] Asset Field Administration UI
+- [x] Equipment Add/Edit floating modal
+- [x] Asset Field Add/Edit floating modal
+- [x] Required / Optional field configuration
+- [x] Visible / Hidden field configuration
+- [x] Automatic custom field key generation
+- [x] Options removed from custom-field UI
+- [x] Version updated to 0.1.1
+- [x] .ai documentation updated
+
+### Local Verification
+- [ ] Verify local working tree is clean
+- [ ] Pull latest develop
+- [ ] Start backend successfully
 - [ ] Test Equipment CRUD
-- [ ] Test Asset Field API
-- [ ] Test Asset Field Administration UI
-- [ ] Test Equipment dynamic fields
+- [ ] Test Asset Field CRUD
+- [ ] Test Equipment Add/Edit modal
+- [ ] Test Asset Field Add/Edit modal
+- [ ] Test required/visible behavior
+- [ ] Test custom field validation
+- [ ] Test Delete actions
 - [ ] Review frontend behavior
-- [ ] Review .ai documentation
-- [ ] Commit version 0.1.1
-- [ ] Push version 0.1.1 to GitHub
+
+### Release
+- [ ] Commit any local verification fixes
+- [ ] Push final develop
+- [ ] Create Pull Request: develop -> main
+- [ ] Merge develop -> main
 - [ ] Create Git tag v0.1.1
 
 ## Asset Management
 
 ### Equipment
-
 - [x] Equipment model
 - [x] Equipment CRUD
 - [x] Equipment frontend
@@ -33,7 +53,6 @@ Version: 0.1.1
 - [x] Asset Field Administration
 
 ### Operating Systems
-
 - [ ] Operating System model
 - [ ] Operating System schema
 - [ ] Operating System service
@@ -43,7 +62,6 @@ Version: 0.1.1
 - [ ] Equipment relationship
 
 ### Applications
-
 - [ ] Application model
 - [ ] Application schema
 - [ ] Application service
@@ -53,7 +71,6 @@ Version: 0.1.1
 - [ ] Asset relationships
 
 ### Libraries
-
 - [ ] Library model
 - [ ] Library schema
 - [ ] Library service
@@ -63,7 +80,6 @@ Version: 0.1.1
 - [ ] Application relationships
 
 ## Vulnerability Management
-
 - [ ] Vulnerability model
 - [ ] Vulnerability schema
 - [ ] Vulnerability CRUD
@@ -83,7 +99,6 @@ Version: 0.1.1
 - [ ] Asset/Vulnerability relationship
 
 ## Vulnerability Intelligence
-
 - [ ] NVD integration
 - [ ] CISA KEV integration
 - [ ] CVE synchronization
@@ -92,7 +107,6 @@ Version: 0.1.1
 - [ ] Manual applicability override
 
 ## Scanning
-
 - [ ] Nessus import
 - [ ] Finding normalization
 - [ ] Asset matching
@@ -100,7 +114,6 @@ Version: 0.1.1
 - [ ] Scan result management
 
 ## Risk Management
-
 - [ ] Risk calculation
 - [ ] Severity weighting
 - [ ] Asset criticality weighting
@@ -110,7 +123,6 @@ Version: 0.1.1
 - [ ] Explainable risk calculation
 
 ## Reporting
-
 - [ ] Dashboard
 - [ ] Asset statistics
 - [ ] Vulnerability statistics
@@ -122,7 +134,6 @@ Version: 0.1.1
 - [ ] Export functionality
 
 ## Security
-
 - [ ] Authentication
 - [ ] Authorization
 - [ ] Role-based access control
@@ -132,7 +143,6 @@ Version: 0.1.1
 - [ ] Input security review
 
 ## Future
-
 - [ ] AI assistant
 - [ ] Local/private AI integration
 - [ ] Natural language vulnerability analysis
