@@ -1001,3 +1001,52 @@ textarea {
     height: 16px;
     margin: 0;
 }
+
+
+/* Asset Field modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.modal-overlay.is-open {
+    display: flex;
+}
+
+.modal-dialog {
+    width: min(560px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    background: var(--card-background, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+    padding: 24px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.modal-close-button {
+    border: 0;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 8px;
+}
+
+.modal-dialog .form-actions {
+    justify-content: flex-end;
+    margin-top: 24px;
+}
