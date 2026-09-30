@@ -19,7 +19,7 @@ from app.services.managed_assets import (
 
 def build_router(asset_type: str, title: str) -> APIRouter:
     router = APIRouter(
-        prefix=f"/api/{asset_type.replace('_', '-')}",
+        prefix=f"/api/{asset_type.replace('_', '-')}s",
         tags=[title],
     )
 
