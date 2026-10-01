@@ -1,12 +1,36 @@
 let editingFieldId = null;
 let currentFields = [];
 
+const assetTypeLabels = {
+    equipment: "Equipment",
+    operating_system: "Operating Systems",
+    application: "Applications",
+    library: "Libraries"
+};
+
+function getSelectedAssetType() {
+    return document.getElementById("asset-type-selector")?.value || "equipment";
+}
+
+function updateAssetFieldsHeading() {
+    const assetType = getSelectedAssetType();
+    const label = assetTypeLabels[assetType] || assetType;
+
+    const heading = document.getElementById("asset-fields-section-title");
+
+    if (heading) {
+        heading.textContent = `${label} Fields`;
+    }
+}
+
 async function loadAssetFields() {
     const tableBody = document.getElementById("fields-table-body");
 
     if (!tableBody) {
         return;
     }
+
+    updateAssetFieldsHeading();
 
     tableBody.innerHTML = `
         <tr>
@@ -16,16 +40,8 @@ async function loadAssetFields() {
 
     try {
         currentFields = await apiRequest(
-            "/api/asset-fields?asset_type=equipment"
+            `/api/asset-fields?asset_type=${encodeURIComponent(getSelectedAssetType())}`
         );
-
-        const fieldCount = document.getElementById("field-count");
-
-        if (fieldCount) {
-            fieldCount.textContent =
-                currentFields.length +
-                (currentFields.length === 1 ? " Field" : " Fields");
-        }
 
         if (currentFields.length === 0) {
             tableBody.innerHTML = `
@@ -116,7 +132,7 @@ function openFieldModal(field = null) {
     modal.setAttribute("aria-hidden", "false");
 
     setTimeout(() => {
-        document.getElementById("field_label").focus();
+        document.getElementById("field_label")?.focus();
     }, 50);
 }
 
@@ -128,14 +144,12 @@ function closeFieldModal() {
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
 
-    document.getElementById("field-form").reset();
+    document.getElementById("field-form")?.reset();
     document.getElementById("field_visible").checked = true;
 }
 
 function editField(id) {
-    const field = currentFields.find(
-        (item) => item.id === id
-    );
+    const field = currentFields.find(item => item.id === id);
 
     if (!field) {
         alert("Field not found.");
@@ -148,14 +162,9 @@ function editField(id) {
 async function saveField(event) {
     event.preventDefault();
 
-    const label = document.getElementById("field_label")
-        .value.trim();
-
-    const required = document.getElementById("field_required")
-        .checked;
-
-    const visible = document.getElementById("field_visible")
-        .checked;
+    const label = document.getElementById("field_label").value.trim();
+    const required = document.getElementById("field_required").checked;
+    const visible = document.getElementById("field_visible").checked;
 
     if (!label) {
         alert("Field name is required.");
@@ -164,18 +173,15 @@ async function saveField(event) {
 
     try {
         if (editingFieldId === null) {
-            await apiRequest(
-                "/api/asset-fields",
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        asset_type: "equipment",
-                        label,
-                        required,
-                        visible
-                    })
-                }
-            );
+            await apiRequest("/api/asset-fields", {
+                method: "POST",
+                body: JSON.stringify({
+                    asset_type: getSelectedAssetType(),
+                    label,
+                    required,
+                    visible
+                })
+            });
         } else {
             await apiRequest(
                 `/api/asset-fields/${editingFieldId}`,
@@ -196,25 +202,19 @@ async function saveField(event) {
         console.error(error);
 
         alert(
-            `Failed to save field.\\n\\n${error.message}`
+            `Failed to save field.\n\n${error.message}`
         );
     }
 }
 
 async function deleteField(id) {
-    const field = currentFields.find(
-        (item) => item.id === id
-    );
+    const field = currentFields.find(item => item.id === id);
 
     if (!field) {
         return;
     }
 
-    if (
-        !confirm(
-            `Are you sure you want to delete "${field.label}"?`
-        )
-    ) {
+    if (!confirm(`Are you sure you want to delete "${field.label}"?`)) {
         return;
     }
 
@@ -229,7 +229,7 @@ async function deleteField(id) {
         console.error(error);
 
         alert(
-            `Failed to delete field.\\n\\n${error.message}`
+            `Failed to delete field.\n\n${error.message}`
         );
     }
 }
@@ -242,58 +242,41 @@ function escapeHtml(value) {
     return element.innerHTML;
 }
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-        document.getElementById("add-field-button")
-            ?.addEventListener(
-                "click",
-                () => openFieldModal()
-            );
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("add-field-button")
+        ?.addEventListener("click", () => openFieldModal());
 
-        document.getElementById("cancel-field-button")
-            ?.addEventListener(
-                "click",
-                closeFieldModal
-            );
+    document.getElementById("cancel-field-button")
+        ?.addEventListener("click", closeFieldModal);
 
-        document.getElementById("close-field-modal")
-            ?.addEventListener(
-                "click",
-                closeFieldModal
-            );
+    document.getElementById("close-field-modal")
+        ?.addEventListener("click", closeFieldModal);
 
-        document.getElementById("field-form")
-            ?.addEventListener(
-                "submit",
-                saveField
-            );
+    document.getElementById("field-form")
+        ?.addEventListener("submit", saveField);
 
-        document.getElementById("field-modal")
-            ?.addEventListener(
-                "click",
-                (event) => {
-                    if (
-                        event.target.id === "field-modal"
-                    ) {
-                        closeFieldModal();
-                    }
-                }
-            );
+    document.getElementById("asset-type-selector")
+        ?.addEventListener("change", () => {
+            closeFieldModal();
+            loadAssetFields();
+        });
 
-        document.addEventListener(
-            "keydown",
-            (event) => {
-                if (
-                    event.key === "Escape" &&
-                    document.getElementById("field-modal")
-                        ?.classList.contains("is-open")
-                ) {
-                    closeFieldModal();
-                }
+    document.getElementById("field-modal")
+        ?.addEventListener("click", event => {
+            if (event.target.id === "field-modal") {
+                closeFieldModal();
             }
-        );
+        });
 
-        loadAssetFields();
-    }
-);
+    document.addEventListener("keydown", event => {
+        if (
+            event.key === "Escape" &&
+            document.getElementById("field-modal")
+                ?.classList.contains("is-open")
+        ) {
+            closeFieldModal();
+        }
+    });
+
+    loadAssetFields();
+});

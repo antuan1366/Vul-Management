@@ -1,10 +1,24 @@
-﻿from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect
 
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
 from app.api.health import router as health_router
+from app.api.managed_assets import (
+    application_router,
+    library_router,
+    operating_system_router,
+)
 from app.core.config import settings
+from app.core.database_version import (
+    ensure_database_version,
+    validate_database_compatibility,
+)
 from app.database import (
     Base,
     SessionLocal,
@@ -12,20 +26,27 @@ from app.database import (
     migrate_equipment_name_nullable,
 )
 
-from app.models.asset_field import (
-    AssetFieldDefinition,
-    AssetFieldValue,
-)
+from app.models.application import Application
+from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
+from app.models.library import Library
+from app.models.operating_system import OperatingSystem
 
-from app.services.asset_fields import (
-    seed_default_fields,
-)
+from app.services.asset_fields import seed_default_fields
+from app.services.managed_asset_fields import seed_managed_asset_fields
 
+
+existing_tables = set(inspect(engine).get_table_names())
+fresh_database = not existing_tables
 
 migrate_equipment_name_nullable()
 
 Base.metadata.create_all(bind=engine)
+
+database_schema_version = ensure_database_version(
+    fresh_database=fresh_database,
+)
+validate_database_compatibility(database_schema_version)
 
 
 def initialize_database():
@@ -33,7 +54,7 @@ def initialize_database():
 
     try:
         seed_default_fields(db)
-
+        seed_managed_asset_fields(db)
     finally:
         db.close()
 
@@ -57,23 +78,35 @@ app.add_middleware(
 )
 
 
-app.include_router(
-    health_router
+app.include_router(health_router)
+app.include_router(equipment_router)
+app.include_router(asset_fields_router)
+app.include_router(operating_system_router)
+app.include_router(application_router)
+app.include_router(library_router)
+
+
+frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
+
+app.mount(
+    "/src",
+    StaticFiles(directory=frontend_dir),
+    name="frontend",
 )
 
-app.include_router(
-    equipment_router
-)
 
-app.include_router(
-    asset_fields_router
-)
+@app.get("/api/info")
+def app_info():
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "database_schema_version": database_schema_version,
+        "database_schema_min": settings.db_schema_min,
+        "database_schema_max": settings.db_schema_max,
+        "status": "running",
+    }
 
 
 @app.get("/")
 def root():
-    return {
-        "name": settings.app_name,
-        "version": settings.app_version,
-        "status": "running",
-    }
+    return RedirectResponse(url="/src/pages/dashboard.html")

@@ -1,4 +1,4 @@
-﻿# PROJECT
+# PROJECT
 
 ## Name
 Vul-Management
@@ -8,7 +8,7 @@ GitHub:
 antuan1366/Vul-Management
 
 ## Current Version
-0.1.1
+1.0.0
 
 ## Description
 Vul-Management is a modular web-based vulnerability management platform.
@@ -33,40 +33,46 @@ The platform is designed to provide centralized management for:
 
 ## Current Development Status
 
-The project currently has a functional foundation and an initial
-Asset Management implementation.
+Version 1.0.0 establishes the first complete Asset Management foundation.
 
-The Equipment asset type is implemented with:
+Implemented asset types:
 
-- Equipment CRUD
-- Dynamic Asset Field definitions
-- System fields
-- Custom fields
+- Equipment
+- Operating Systems
+- Applications
+- Libraries
+
+The current release includes:
+
+- CRUD APIs for all four asset categories
+- Generic Asset Field definitions
+- Asset-specific system fields
+- Custom fields and custom values
 - Required / Optional configuration
 - Visible / Hidden configuration
-- Field type validation
 - Asset Field Administration UI
-- Equipment management UI
+- Dynamic Add/Edit forms for managed assets
+- Equipment table with dynamic field labels
+- FastAPI-hosted frontend under /src
+- Root redirect to the dashboard
+- API metadata endpoint at /api/info
+- Alembic database versioning
+- Database schema compatibility validation
 
 The project is currently focused on building the core platform before
 implementing advanced vulnerability intelligence and AI functionality.
 
-Version 0.1.1 is the first stable Asset Management checkpoint and includes
-the Equipment CRUD workflow, generic Asset Field administration, and the
-modal-based Add/Edit user interface.
-
 ## Technology
 
 ### Backend
-
 - Python
 - FastAPI
 - SQLAlchemy
 - Pydantic
+- Alembic
 - SQLite
 
 ### Frontend
-
 - HTML
 - CSS
 - JavaScript
@@ -90,6 +96,8 @@ Frontend responsibilities are separated into:
 - Styles
 - API communication
 
+The frontend is served by FastAPI in the current integrated runtime.
+
 ## Asset Field Architecture
 
 The project uses a generic Asset Field system.
@@ -108,7 +116,7 @@ System-critical fields are protected from deletion where required.
 
 Custom fields are stored through the generic asset field/value system.
 
-The design is intended to be reusable for:
+The design is reusable across:
 
 - Equipment
 - Operating Systems
@@ -118,6 +126,9 @@ The design is intended to be reusable for:
 ## Database
 
 SQLite is currently used for development.
+
+Alembic is the schema-versioning mechanism. The current baseline is
+schema revision 0001, and application version 1.0.0 supports DB schema 1.
 
 The database architecture should remain replaceable so that PostgreSQL
 or another production database can be introduced later without requiring
@@ -160,13 +171,16 @@ GitHub releases should represent stable development checkpoints.
 
 Current version:
 
-0.1.1
+1.0.0
 
-The 0.1.x series represents the early development phase of the platform.
+Version 1.0.0 is the first consolidated Asset Management release and
+includes the Asset Types implementation, database versioning foundation,
+and FastAPI/frontend integration.
 
-Minor version increases should be used for meaningful new functionality.
+Future versioning should use semantic-versioning principles:
 
-Patch version increases should be used for fixes and smaller improvements.
+- Patch versions for fixes and small corrections
+- Minor versions for backward-compatible feature additions
+- Major versions for breaking changes
 
-Major version 1.0.0 should only be considered when the core platform is
-stable and sufficiently production-ready.
+The next major development area after this release is Vulnerability Management.

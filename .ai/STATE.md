@@ -1,12 +1,12 @@
-﻿# STATE
+# STATE
 
 ## Version
-0.1.1
+1.0.0
 
 ## State
-RELEASE CANDIDATE
+RELEASE CANDIDATE FOR MAIN
 
-This document describes the current state of the project at version 0.1.1.
+This document describes the current project state for version 1.0.0.
 
 ## Backend
 
@@ -17,49 +17,49 @@ Implemented:
 - SQLite database
 - SQLAlchemy
 - Pydantic schemas
+- Alembic database versioning
+- Database compatibility validation
 - Health API
 - Equipment CRUD API
+- Operating Systems CRUD API
+- Applications CRUD API
+- Libraries CRUD API
 - Generic Asset Field API
 - Generic Asset Field validation
 - Custom Asset Field value storage
 
+## Asset Management
+
+The following asset categories are implemented:
+
+1. Equipment
+2. Operating Systems
+3. Applications
+4. Libraries
+
+Each managed asset category supports its own system fields and generic
+custom-field configuration.
+
 ## Equipment
 
-Equipment is the first implemented asset type.
-
-### System Fields
-
-Current Equipment system fields:
-
-- name
-- device_type
-- vendor
-- model
-- version
-- ip_address
-- serial_number
-- cpe
-- criticality
-- environment
-- description
-
-System fields are stored directly in the Equipment table.
-
-### Equipment Operations
-
-Implemented:
+Equipment supports:
 
 - Create
 - Read
 - List
 - Update
 - Delete
+- System fields
+- Custom fields
+- Required / Optional configuration
+- Visible / Hidden configuration
+
+The Equipment table header is driven by the configured Equipment field labels,
+so an Asset Field label change is reflected in the Equipment table.
 
 ## Generic Asset Fields
 
-The generic Asset Field system is implemented.
-
-It supports:
+The generic Asset Field system supports:
 
 - Field definitions
 - Custom fields
@@ -73,9 +73,7 @@ It supports:
 - Value validation
 - Asset-specific field configuration
 
-### Supported Field Types
-
-Current supported field types include:
+Supported field types include:
 
 - text
 - textarea
@@ -88,38 +86,49 @@ Current supported field types include:
 - url
 - email
 
-## Asset Field Administration
-
-An Administration page exists for configuring Equipment fields.
-
-The current implementation supports:
-
-- Viewing field definitions
-- Creating custom fields
-- Editing configurable field properties
-- Required / Optional
-- Visible / Hidden
-- Field options
-- Deleting custom fields where permitted
-
-System fields are protected according to their configuration.
-
 ## Frontend
 
-The frontend currently contains:
+Implemented:
 
 - Dashboard page
 - Equipment page
+- Operating Systems page
+- Applications page
+- Libraries page
 - Asset Fields Administration page
 - Vulnerabilities initial/skeleton page
 - Shared API service
 - Shared sidebar
 - Shared styling
+- FastAPI-hosted frontend
 
-The UI uses a dark sidebar/navigation structure.
+The frontend is mounted under /src.
 
-Equipment Add/Edit forms and Asset Field Add/Edit forms use floating modal
-windows with Save/Cancel, close, overlay-click, and Escape interactions.
+The root URL redirects to:
+
+/src/pages/dashboard.html
+
+API metadata is available at:
+
+/api/info
+
+The UI uses modular frontend service files rather than a single large script.
+
+## Database Versioning
+
+Implemented:
+
+- Alembic environment
+- Baseline revision 0001
+- Application/database compatibility window
+- Startup compatibility validation
+- Existing development database bootstrap to the Alembic baseline
+
+Current compatibility:
+
+- Application: 1.0.0
+- Minimum DB schema: 1
+- Maximum DB schema: 1
 
 ## Vulnerabilities
 
@@ -184,23 +193,30 @@ The project uses:
 
 - Git
 - main branch
+- develop branch
+- feature branches
 - GitHub remote
 
 Target repository:
 
 antuan1366/Vul-Management
 
-Version 0.1.1 represents the current development checkpoint.
+## Release 1.0.0 Contents
+
+Version 1.0.0 consolidates:
+
+- Asset Types
+- Generic Asset Fields
+- Database Versioning
+- FastAPI/frontend integration
+- Dynamic Equipment table field labels
+
+The frontend integration was locally tested and the Equipment field-label
+refresh behavior was verified.
 
 ## Next Major Work
 
-The next major Asset Management work is:
-
-1. Operating Systems
-2. Applications
-3. Libraries
-
-After the core asset categories are established, development should move to:
+The next major development area is:
 
 1. Vulnerability Management
 2. Vulnerability Intelligence
