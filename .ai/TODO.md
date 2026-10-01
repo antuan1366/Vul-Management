@@ -86,7 +86,6 @@ Version: 1.0.0
 - [x] Library frontend
 - [x] Library custom fields
 - [x] Application relationships
-- [x] Application relationships
 
 ## Vulnerability Management
 - [ ] Vulnerability model
