@@ -62,6 +62,25 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
     )
 
+    # Development reset requested for the current test database.
+    # Existing test data is intentionally discarded. Default fields and feeds
+    # are re-seeded by application startup.
+    for table in (
+        "asset_vulnerabilities",
+        "vulnerabilities",
+        "security_identifiers",
+        "vulnerability_candidates",
+        "sync_jobs",
+        "operating_systems",
+        "applications",
+        "libraries",
+        "equipment",
+        "asset_field_values",
+        "asset_field_definitions",
+        "feeds",
+    ):
+        bind.execute(sa.text(f"DELETE FROM {table}"))
+
 
 def downgrade() -> None:
     op.drop_table("sync_jobs")
