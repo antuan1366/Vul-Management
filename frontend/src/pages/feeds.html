@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feeds - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+
+<body>
+
+    <main class="page-container">
+
+        <section class="page-header">
+
+            <div>
+                <h1>Vulnerability Feeds</h1>
+                <p>
+                    Configure, test, enable, disable, and manage external vulnerability intelligence sources.
+                </p>
+            </div>
+
+            <div class="table-actions">
+                <button id="add-feed-button" class="primary-button" type="button">
+                    Add Feed
+                </button>
+            </div>
+
+        </section>
+
+        <section class="content-card">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Configured Feeds</h2>
+                    <p class="section-description">
+                        Built-in feeds are created automatically and can be modified or removed.
+                    </p>
+                </div>
+
+                <div id="feed-count" class="item-count">0 Feeds</div>
+
+            </div>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Method</th>
+                            <th>Enabled</th>
+                            <th>Authentication</th>
+                            <th>Last Test</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="feeds-table-body"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <div id="feed-modal" class="modal-overlay" aria-hidden="true">
+
+            <div
+                class="modal-dialog equipment-modal-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="feed-form-title"
+            >
+
+                <div class="modal-header">
+
+                    <div>
+                        <h2 id="feed-form-title">Add Feed</h2>
+
+                        <p class="section-description">
+                            Configure an external vulnerability intelligence source.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="close-feed-modal"
+                        class="modal-close-button"
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+
+                </div>
+
+                <form id="feed-form">
+
+                    <div class="form-grid">
+
+                        <div class="form-field">
+                            <label for="feed_name">Name *</label>
+                            <input id="feed_name" type="text" required placeholder="Example: NVD CVE API">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="feed_type">Feed Type *</label>
+                            <select id="feed_type" required>
+                                <option value="nvd_cpe">NVD CPE</option>
+                                <option value="nvd_cve">NVD CVE</option>
+                                <option value="cisa_kev">CISA KEV</option>
+                                <option value="osv">OSV</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field form-full-width">
+                            <label for="feed_url">URL *</label>
+                            <input id="feed_url" type="url" required placeholder="https://...">
+                        </div>
+
+                        <div class="form-field">
+                            <label for="feed_method">Method</label>
+                            <select id="feed_method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="feed_auth_type">Authentication</label>
+                            <select id="feed_auth_type">
+                                <option value="none">None</option>
+                                <option value="api_key">API Key</option>
+                                <option value="bearer">Bearer Token</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field form-full-width" id="api-key-field">
+                            <label for="feed_api_key">API Key / Token</label>
+                            <input
+                                id="feed_api_key"
+                                type="password"
+                                autocomplete="new-password"
+                                placeholder="Leave empty to keep the existing secret when editing"
+                            >
+                            <small class="section-description">
+                                Stored server-side. Production deployments should protect this value with a secret store.
+                            </small>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="feed_timeout">Timeout (seconds)</label>
+                            <input id="feed_timeout" type="number" min="3" max="120" value="15">
+                        </div>
+
+                        <div class="form-field checkbox-field">
+                            <label class="checkbox-label">
+                                <input id="feed_enabled" type="checkbox" checked>
+                                <span>Enabled</span>
+                            </label>
+                        </div>
+
+                        <div class="form-field form-full-width">
+                            <label for="feed_description">Description</label>
+                            <textarea id="feed_description" rows="3" placeholder="What this feed is used for."></textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions">
+
+                        <button type="submit" class="primary-button">
+                            Save Feed
+                        </button>
+
+                        <button type="button" id="cancel-feed-button" class="secondary-button">
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="../services/api.js"></script>
+    <script src="../services/feeds.js"></script>
+    <script src="../services/sidebar.js"></script>
+
+</body>
+
+</html>
