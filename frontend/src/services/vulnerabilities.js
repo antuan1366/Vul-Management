@@ -57,8 +57,8 @@ function renderCandidates() {
             "<td>" + escapeVulnerabilityHtml(item.match_status || "-") + "</td>" +
             "<td>" + escapeVulnerabilityHtml(item.confidence ?? "-") + "%</td>" +
             "<td><div class=\"table-actions\">" +
-                "<button class=\"primary-button small-button\" onclick="approveCandidate(" + item.id + ")\">Approve</button>" +
-                "<button class=\"danger-button small-button\" onclick="rejectCandidate(" + item.id + ")">Reject</button>" +
+                "<button class=\"primary-button small-button\" onclick=\'approveCandidate(" + item.id + ")\'>Approve</button>" +
+                "<button class=\"danger-button small-button\" onclick=\'rejectCandidate(" + item.id + ")\'>Reject</button>" +
             "</div></td>" +
             "</tr>";
     }).join("");
