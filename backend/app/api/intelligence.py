@@ -73,6 +73,7 @@ def resolve_cpe_api(
 def sync_asset_vulnerabilities_api(
     asset_type: str,
     asset_id: int,
+    days_back: int = Query(default=5, ge=1, le=120),
     db: Session = Depends(get_db),
 ):
     identifier = db.scalar(
@@ -108,6 +109,7 @@ def sync_asset_vulnerabilities_api(
             cpe=identifier.cpe,
             asset_type=asset_type,
             asset_id=asset_id,
+            days_back=days_back,
         )
     except Exception as error:
         raise HTTPException(
