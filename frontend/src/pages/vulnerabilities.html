@@ -3,25 +3,13 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Vulnerabilities - Vul-Management</title>
 
-    <title>
-        Vulnerabilities - Vul-Management
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="../styles/main.css"
-    >
-
+    <link rel="stylesheet" href="../styles/main.css">
 </head>
-
 
 <body>
 
@@ -30,58 +18,57 @@
         <section class="page-header">
 
             <div>
-
-                <h1>
-                    Vulnerabilities
-                </h1>
+                <h1>Vulnerabilities</h1>
 
                 <p>
-                    Manage discovered vulnerabilities.
+                    Review vulnerabilities synchronized from configured intelligence feeds.
                 </p>
+            </div>
 
+            <div class="table-actions">
+                <button
+                    id="sync-kev-button"
+                    class="primary-button"
+                    type="button"
+                >
+                    Sync CISA KEV
+                </button>
             </div>
 
         </section>
 
-
         <section class="content-card">
+
+            <div class="section-header">
+                <div>
+                    <h2>Vulnerability Inventory</h2>
+                </div>
+
+                <div
+                    id="vulnerability-count"
+                    class="item-count"
+                >
+                    0 Vulnerabilities
+                </div>
+            </div>
 
             <div class="table-container">
 
                 <table>
 
                     <thead>
-
                         <tr>
-
-                            <th>
-                                CVE
-                            </th>
-
-                            <th>
-                                Severity
-                            </th>
-
-                            <th>
-                                Product
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Assets
-                            </th>
-
+                            <th>#</th>
+                            <th>CVE</th>
+                            <th>Severity</th>
+                            <th>CVSS</th>
+                            <th>Product</th>
+                            <th>CISA KEV</th>
+                            <th>Description</th>
                         </tr>
-
                     </thead>
 
-
-                    <tbody id="vulnerabilities-table-body">
-
-                    </tbody>
+                    <tbody id="vulnerabilities-table-body"></tbody>
 
                 </table>
 
@@ -91,9 +78,8 @@
 
     </main>
 
-
     <script src="../services/api.js"></script>
-
+    <script src="../services/vulnerabilities.js"></script>
     <script src="../services/sidebar.js"></script>
 
 </body>
