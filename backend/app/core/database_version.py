@@ -40,16 +40,16 @@ def get_current_database_schema_version() -> int:
     return int(revision)
 
 
-def ensure_database_version() -> int:
+def ensure_database_version(fresh_database: bool = False) -> int:
     """
-    Bootstrap an existing SQLAlchemy-created database into Alembic.
+    Bootstrap an existing or new database into Alembic versioning.
 
-    The current project is transitioning from create_all() plus a small
-    startup migration to formal Alembic versioning. Existing databases are
-    stamped at the current Alembic head after their schema has been created
-    or upgraded by the legacy startup migration.
+    A new empty database is created from the current SQLAlchemy metadata and
+    stamped at the current Alembic head.
 
-    Future schema changes must be introduced through Alembic migrations.
+    An existing unversioned database is assumed to match the 0001 baseline.
+    It is stamped at 0001 so future migrations can be applied explicitly
+    instead of incorrectly marking an older database as already upgraded.
     """
     inspector = inspect(engine)
     table_names = set(inspector.get_table_names())
@@ -62,7 +62,10 @@ def ensure_database_version() -> int:
         raise RuntimeError("No Alembic migration head is configured.")
 
     if "alembic_version" not in table_names:
-        command.stamp(config, "head")
+        if fresh_database:
+            command.stamp(config, "head")
+        else:
+            command.stamp(config, "0001")
 
     return get_current_database_schema_version()
 
