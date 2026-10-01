@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect
 
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
@@ -31,11 +32,16 @@ from app.services.asset_fields import seed_default_fields
 from app.services.managed_asset_fields import seed_managed_asset_fields
 
 
+existing_tables = set(inspect(engine).get_table_names())
+fresh_database = not existing_tables
+
 migrate_equipment_name_nullable()
 
 Base.metadata.create_all(bind=engine)
 
-database_schema_version = ensure_database_version()
+database_schema_version = ensure_database_version(
+    fresh_database=fresh_database,
+)
 validate_database_compatibility(database_schema_version)
 
 
