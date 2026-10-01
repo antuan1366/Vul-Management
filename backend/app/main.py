@@ -11,6 +11,7 @@ from app.api.equipments import router as equipment_router
 from app.api.feeds import router as feeds_router
 from app.api.health import router as health_router
 from app.api.intelligence import router as intelligence_router
+from app.api.remediation import router as remediation_router
 from app.api.managed_assets import (
     application_router,
     library_router,
@@ -96,6 +97,7 @@ app.include_router(library_router)
 app.include_router(feeds_router)
 app.include_router(security_identifiers_router)
 app.include_router(intelligence_router)
+app.include_router(remediation_router)
 
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"

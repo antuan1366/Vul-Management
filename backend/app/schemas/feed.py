@@ -47,5 +47,8 @@ class FeedResponse(BaseModel):
     last_test_status: str | None
     last_test_message: str | None
     last_test_at: datetime | None
+    last_sync_at: datetime | None
+    last_sync_status: str | None
+    last_sync_message: str | None
 
     model_config = ConfigDict(from_attributes=True)

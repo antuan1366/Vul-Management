@@ -7,10 +7,13 @@ from app.models.feed import Feed
 from app.models.security_identifier import SecurityIdentifier
 from app.models.vulnerability import Vulnerability
 from app.services.cpe_resolver import resolve_cpe
+from app.services.asset_intelligence import save_identifier_from_asset
+from app.services.osv_intelligence import sync_osv_for_purl
 from app.services.vulnerability_intelligence import (
     get_asset_vulnerabilities,
     sync_cisa_kev,
     sync_nvd_for_cpe,
+    sync_nvd_incremental,
 )
 
 
@@ -107,6 +110,50 @@ def sync_asset_vulnerabilities_api(
         )
 
 
+
+
+@router.post("/assets/{asset_type}/{asset_id}/refresh-identifiers")
+def refresh_asset_identifiers(
+    asset_type: str,
+    asset_id: int,
+    db: Session = Depends(get_db),
+):
+    try:
+        return save_identifier_from_asset(db, asset_type, asset_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error))
+
+
+@router.post("/assets/{asset_type}/{asset_id}/sync-osv")
+def sync_asset_osv_api(
+    asset_type: str,
+    asset_id: int,
+    db: Session = Depends(get_db),
+):
+    identifier = db.scalar(
+        select(SecurityIdentifier).where(
+            SecurityIdentifier.asset_type == asset_type,
+            SecurityIdentifier.asset_id == asset_id,
+        )
+    )
+    if identifier is None or not identifier.purl:
+        raise HTTPException(status_code=400, detail="A PURL is required before OSV synchronization.")
+
+    feed = db.scalar(
+        select(Feed).where(
+            Feed.feed_type == "osv",
+            Feed.enabled.is_(True),
+        ).order_by(Feed.id)
+    )
+    if feed is None:
+        raise HTTPException(status_code=503, detail="No enabled OSV feed is configured.")
+
+    try:
+        return sync_osv_for_purl(db, feed, purl=identifier.purl, asset_type=asset_type, asset_id=asset_id)
+    except Exception as error:
+        raise HTTPException(status_code=502, detail=f"OSV synchronization failed: {error.__class__.__name__}.")
+
+
 @router.get("/assets/{asset_type}/{asset_id}/vulnerabilities")
 def get_asset_vulnerabilities_api(
     asset_type: str,
@@ -146,6 +193,30 @@ def list_vulnerabilities_api(
         "items": items,
         "total": len(items),
     }
+
+
+
+
+@router.post("/nvd/sync")
+def sync_nvd_api(
+    days_back: int = Query(default=7, ge=1, le=120),
+    db: Session = Depends(get_db),
+):
+    feed = db.scalar(
+        select(Feed).where(
+            Feed.feed_type == "nvd_cve",
+            Feed.enabled.is_(True),
+        ).order_by(Feed.id)
+    )
+    if feed is None:
+        raise HTTPException(status_code=503, detail="No enabled NVD CVE feed is configured.")
+    try:
+        return sync_nvd_incremental(db, feed, days_back=days_back)
+    except Exception as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"NVD synchronization failed: {error.__class__.__name__}.",
+        )
 
 
 @router.post("/cisa-kev/sync")
