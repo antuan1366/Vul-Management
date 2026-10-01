@@ -3,7 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, get_db
+from app.models.application import Application
+from app.models.equipment import Equipment
 from app.models.feed import Feed
+from app.models.library import Library
+from app.models.operating_system import OperatingSystem
 from app.models.security_identifier import SecurityIdentifier
 from app.models.vulnerability import Vulnerability
 from app.services.cpe_resolver import resolve_cpe
@@ -281,3 +285,53 @@ def sync_cisa_kev_api(
     job = create_sync_job(db, "cisa_kev", total=1)
     background_tasks.add_task(_run_cisa_sync_job, job.id)
     return {"job_id": job.id, "status": "started"}
+
+
+def _run_cpe_extraction_job(job_id: int) -> None:
+    db = SessionLocal()
+    job = db.get(SyncJob, job_id)
+    models = [
+        ("equipment", Equipment),
+        ("operating_system", OperatingSystem),
+        ("application", Application),
+        ("library", Library),
+    ]
+    processed = 0
+    resolved = 0
+    try:
+        total = sum(len(db.scalars(select(model)).all()) for _, model in models)
+        update_sync_job(db, job, status="running", total=total, processed=0, current_step="Extracting asset identifiers")
+        for asset_type, model in models:
+            assets = db.scalars(select(model)).all()
+            for asset in assets:
+                try:
+                    result = save_identifier_from_asset(db, asset_type, asset.id)
+                    if result.get("resolved_cpe") or result.get("purl"):
+                        resolved += 1
+                except Exception:
+                    pass
+                processed += 1
+                update_sync_job(
+                    db, job, processed=processed, total=total,
+                    current_step=f"Processed {asset_type} #{asset.id}",
+                )
+        result = {"processed_assets": processed, "resolved_identifiers": resolved}
+        update_sync_job(db, job, status="completed", processed=processed, total=total, current_step="Identifier extraction completed", result=result)
+    except Exception as error:
+        update_sync_job(db, job, status="failed", error_message=f"{error.__class__.__name__}: identifier extraction failed.")
+    finally:
+        db.close()
+
+
+@router.post("/assets/refresh-identifiers")
+def refresh_all_asset_identifiers(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    total = sum(
+        len(db.scalars(select(model)).all())
+        for model in (Equipment, OperatingSystem, Application, Library)
+    )
+    job = create_sync_job(db, "cpe_extraction", total=total)
+    background_tasks.add_task(_run_cpe_extraction_job, job.id)
+    return {"job_id": job.id, "status": "started", "total_assets": total}
