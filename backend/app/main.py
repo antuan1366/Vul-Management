@@ -48,7 +48,8 @@ fresh_database = not existing_tables
 
 migrate_equipment_name_nullable()
 
-Base.metadata.create_all(bind=engine)
+if fresh_database:
+    Base.metadata.create_all(bind=engine)
 
 database_schema_version = ensure_database_version(
     fresh_database=fresh_database,
