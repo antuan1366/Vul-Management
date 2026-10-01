@@ -19,25 +19,8 @@ depends_on = None
 def upgrade() -> None:
     bind = op.get_bind()
 
-    # Development reset requested for the current test database.
-    # Assets and configuration are intentionally cleared as well so the next
-    # run starts from a clean state; default fields/feeds are re-seeded by app startup.
-    for table in (
-        "asset_vulnerabilities",
-        "vulnerabilities",
-        "security_identifiers",
-        "vulnerability_candidates",
-        "sync_jobs",
-        "operating_systems",
-        "applications",
-        "libraries",
-        "equipment",
-        "asset_field_values",
-        "asset_field_definitions",
-        "feeds",
-    ):
-        bind.execute(sa.text(f"DELETE FROM {table}"))
-
+    # Create the new workflow tables first; the reset below must also work
+    # when upgrading an existing 0003 database.
     op.create_table(
         "vulnerability_candidates",
         sa.Column("id", sa.Integer(), primary_key=True),
