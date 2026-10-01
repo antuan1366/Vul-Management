@@ -45,17 +45,35 @@ def resolve_cpe(
 
     for item in data.get("products", []):
         cpe = item.get("cpe", {})
-        name = cpe.get("titles", [{}])[0].get("title")
-        cpe_name = cpe.get("deprecatedBy") or cpe.get("cpeName")
+        titles = cpe.get("titles") or []
+        title = next(
+            (
+                entry.get("title")
+                for entry in titles
+                if entry.get("lang") == "en"
+            ),
+            titles[0].get("title") if titles else None,
+        )
 
-        if isinstance(cpe_name, list):
-            cpe_name = cpe_name[0].get("cpeName") if cpe_name else None
+        cpe_names = cpe.get("cpeName") or []
+        if isinstance(cpe_names, dict):
+            cpe_names = [cpe_names]
+
+        selected = next(
+            (
+                entry.get("cpeName")
+                for entry in cpe_names
+                if entry.get("cpeName")
+            ),
+            None,
+        )
 
         candidates.append(
             {
-                "cpe": cpe_name,
-                "title": name,
+                "cpe": selected,
+                "title": title,
                 "deprecated": cpe.get("deprecated", False),
+                "deprecated_by": cpe.get("deprecatedBy"),
                 "cpe_name_id": cpe.get("cpeNameId"),
             }
         )
