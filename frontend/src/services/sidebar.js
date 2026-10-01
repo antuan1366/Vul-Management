@@ -429,7 +429,7 @@
                     <div
                         id="administration-menu"
                         class="sidebar-submenu"
-                        ${currentPage === "asset-fields.html" ? "open" : ""}
+                        ${["asset-fields.html", "feeds.html"].includes(currentPage) ? "open" : ""}
                     >
 
                         <a
@@ -437,6 +437,13 @@
                             class="sidebar-subitem ${currentPage === "asset-fields.html" ? "active" : ""}"
                         >
                             Asset Fields
+                        </a>
+
+                        <a
+                            href="feeds.html"
+                            class="sidebar-subitem ${currentPage === "feeds.html" ? "active" : ""}"
+                        >
+                            Feeds
                         </a>
 
                     </div>
@@ -453,7 +460,7 @@
                 </span>
 
                 <span>
-                    v0.1.1
+                    v1.1.0
                 </span>
 
             </div>

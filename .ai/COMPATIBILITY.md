@@ -137,3 +137,15 @@ and the database's actual Alembic revision.
 
 Any compatibility-window change must be reviewed as part of the corresponding
 application release.
+
+
+## Revision 0002
+
+Revision 0002 adds:
+
+- Feed configuration
+- Security identifiers
+- Vulnerability inventory
+- Asset/Vulnerability mappings
+
+Existing schema revision 0001 databases are upgraded automatically to 0002 at application startup.

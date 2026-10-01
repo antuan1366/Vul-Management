@@ -1,10 +1,10 @@
 # STATE
 
 ## Version
-1.0.0
+1.1.0
 
 ## State
-RELEASE CANDIDATE FOR MAIN
+VULNERABILITY INTELLIGENCE FOUNDATION
 
 This document describes the current project state for version 1.0.0.
 
@@ -216,9 +216,14 @@ refresh behavior was verified.
 
 ## Next Major Work
 
-The next major development area is:
+The next development priorities are:
 
-1. Vulnerability Management
+1. Improve CPE/PURL resolution and confidence scoring
+2. Complete NVD/OSV incremental synchronization
+3. Complete applicability and version-range evaluation
+4. Asset/Vulnerability UI and remediation workflow
+5. Risk Management
+6. Nessus Integration
 2. Vulnerability Intelligence
 3. Asset/Vulnerability Mapping
 4. Risk Management

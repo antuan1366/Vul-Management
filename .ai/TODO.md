@@ -2,7 +2,7 @@
 
 ## Current Release
 
-Version: 1.0.0
+Version: 1.1.0
 
 ## Release Checklist
 
@@ -88,7 +88,7 @@ Version: 1.0.0
 - [x] Application relationships
 
 ## Vulnerability Management
-- [ ] Vulnerability model
+- [x] Vulnerability model
 - [ ] Vulnerability schema
 - [ ] Vulnerability CRUD
 - [ ] CVE
@@ -107,11 +107,15 @@ Version: 1.0.0
 - [ ] Asset/Vulnerability relationship
 
 ## Vulnerability Intelligence
-- [ ] NVD integration
-- [ ] CISA KEV integration
-- [ ] CVE synchronization
-- [ ] Data normalization
-- [ ] Applicability handling
+- [x] NVD CPE feed configuration
+- [x] NVD CVE correlation foundation
+- [x] CISA KEV synchronization
+- [x] Feed Administration UI
+- [x] Security identifier storage (CPE/PURL)
+- [x] Asset/Vulnerability mapping model
+- [ ] Full NVD incremental synchronization
+- [ ] OSV synchronization by PURL
+- [ ] Complete applicability/version-range engine
 - [ ] Manual applicability override
 
 ## Scanning

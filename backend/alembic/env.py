@@ -11,6 +11,9 @@ from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
 from app.models.library import Library
 from app.models.operating_system import OperatingSystem
+from app.models.feed import Feed
+from app.models.security_identifier import SecurityIdentifier
+from app.models.vulnerability import AssetVulnerability, Vulnerability
 
 
 config = context.config
