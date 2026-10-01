@@ -1,55 +1,78 @@
-﻿# SESSION
+# SESSION
 
 ## Current Session
 
-The project is being prepared for its first GitHub version.
+Version 1.0.0 has been completed as the first consolidated Asset Management
+release candidate for the main branch.
 
 ## Completed During Current Development
 
-- Git for Windows installed
-- Local Git repository initialized
-- Equipment backend CRUD completed
-- Equipment frontend completed
-- Equipment UI manually reviewed
-- Project memory structure created
+- Equipment backend CRUD
+- Equipment frontend
+- Generic Asset Field system
+- Asset Field Administration UI
+- Operating Systems asset type
+- Applications asset type
+- Libraries asset type
+- Dynamic managed-asset frontend
+- Alembic database versioning
+- Database compatibility validation
+- FastAPI-hosted frontend
+- Root redirect to the dashboard
+- API metadata endpoint
+- Dynamic Equipment table field labels
+- Local UI verification of the Equipment field-label behavior
 
-## Current Objective
+## Current Version
 
-Prepare the first clean repository version.
+1.0.0
 
-Target version:
+## Current Branch
 
-v0.1.0
+feature/frontend-fastapi-integration
 
-## Before Commit
-
-Verify:
-
-- .gitignore exists
-- .ai files exist
-- No virtual environment is tracked
-- No local database is tracked
-- No secrets are tracked
-- Backend files are present
-- Frontend files are present
-- requirements.txt is present
+This branch contains the release candidate intended to be promoted to main.
 
 ## Git Workflow
 
-Do not commit intermediate changes automatically.
-
 Preferred workflow:
 
-1. Develop locally
-2. Run/test
+1. Develop on feature branches
+2. Test locally
 3. Review UI
 4. User approval
-5. git add
-6. Review git status
-7. Commit
-8. Push
-9. Tag release
+5. Create Pull Request
+6. User reviews Pull Request
+7. User performs the merge
+8. Update local branches after merge
+9. Tag the release when appropriate
 
-## Current Important Note
+Do not merge Pull Requests automatically.
 
-The first GitHub push has not yet been completed.
+## Release Candidate Scope
+
+The 1.0.0 release contains:
+
+- Four asset categories
+- Generic Asset Field management
+- Database schema versioning
+- FastAPI/frontend integration
+- Dynamic Equipment table field labels
+
+The core vulnerability-management functionality is intentionally not part of
+this release.
+
+## Next Step
+
+Create a Pull Request from:
+
+feature/frontend-fastapi-integration
+
+to:
+
+main
+
+The user will review and merge the Pull Request manually.
+
+After the merge, synchronize the local repository and create the release tag
+v1.0.0 if desired.
