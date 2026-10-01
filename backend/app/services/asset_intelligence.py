@@ -44,6 +44,7 @@ def save_identifier_from_asset(db: Session, asset_type: str, asset_id: int) -> d
     cpe = identity["cpe"]
     purl = identity["purl"]
     resolution = []
+    resolved_from_nvd = False
 
     if not cpe and asset_type != "library":
         feed = db.scalar(
@@ -64,7 +65,17 @@ def save_identifier_from_asset(db: Session, asset_type: str, asset_id: int) -> d
             )
             usable = [item for item in resolution if item.get("cpe") and not item.get("deprecated")]
             if usable:
-                cpe = usable[0]["cpe"]
+                version = (identity.get("version") or "").strip().lower()
+                name = (identity.get("name") or "").strip().lower().replace(" ", "_")
+                ranked = sorted(
+                    usable,
+                    key=lambda item: (
+                        0 if version and (":" + version + ":") in item["cpe"].lower() else 1,
+                        0 if name and name in item["cpe"].lower() else 1,
+                    ),
+                )
+                cpe = ranked[0]["cpe"]
+                resolved_from_nvd = True
 
     if asset_type == "library" and not purl:
         package = identity.get("package_identifier")
@@ -94,9 +105,9 @@ def save_identifier_from_asset(db: Session, asset_type: str, asset_id: int) -> d
             asset_id=asset_id,
             cpe=cpe,
             purl=purl,
-            verification_status="imported" if (cpe or purl) else "unverified",
-            confidence=100 if (cpe or purl) else 0,
-            source="asset_record",
+            verification_status="resolved" if resolved_from_nvd else ("imported" if (cpe or purl) else "unverified"),
+            confidence=90 if resolved_from_nvd else (100 if (cpe or purl) else 0),
+            source="nvd_cpe_resolver" if resolved_from_nvd else "asset_record",
         ),
     )
     return {**result, "resolved_cpe": cpe, "cpe_candidates": resolution}
