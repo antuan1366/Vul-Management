@@ -43,14 +43,14 @@
 
 
             <div class="table-actions">
-
-                <a
-                    href="assets.html"
-                    class="secondary-button"
-                >
-                    Back to Assets
-                </a>
-
+                <label class="form-field inline-field">
+                    <select id="asset-type-selector">
+                        <option value="equipment">Equipment</option>
+                        <option value="operating_system">Operating Systems</option>
+                        <option value="application">Applications</option>
+                        <option value="library">Libraries</option>
+                    </select>
+                </label>
 
                 <button
                     id="add-field-button"
@@ -59,7 +59,6 @@
                 >
                     Add Custom Field
                 </button>
-
             </div>
 
         </section>
@@ -71,7 +70,7 @@
 
                 <div>
 
-                    <h2>
+                    <h2 id="asset-fields-section-title">
                         Equipment Fields
                     </h2>
 

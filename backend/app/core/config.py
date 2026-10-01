@@ -8,6 +8,9 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./data/vul_management.db"
 
+    db_schema_min: int = 1
+    db_schema_max: int = 1
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

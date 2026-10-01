@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libraries - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+    <main class="page-container">
+        <section class="page-header">
+            <div>
+                <h1>Libraries</h1>
+                <p class="page-description">Manage library and package assets.</p>
+            </div>
+            <div class="table-actions">
+                <button id="add-asset-button" class="primary-button" type="button">
+                    Add Library
+                </button>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Libraries</h2>
+                    <p class="section-description">Manage libraries and their configured fields.</p>
+                </div>
+                <div id="asset-count" class="item-count">0 Assets</div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead id="assets-table-head"></thead>
+                    <tbody id="assets-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="asset-form-container" class="modal-overlay" aria-hidden="true">
+            <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="asset-form-title">
+                <div class="modal-header">
+                    <div>
+                        <h2 id="asset-form-title">Add Library</h2>
+                        <p class="section-description">Configure the asset using its system and custom fields.</p>
+                    </div>
+                    <button type="button" id="close-asset-modal" class="modal-close-button" aria-label="Close">&times;</button>
+                </div>
+
+                <form id="asset-form">
+                    <div id="asset-dynamic-fields" class="form-grid"></div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">Save Library</button>
+                        <button type="button" id="cancel-asset-button" class="secondary-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.ASSET_CONFIG = {
+            assetType: "library",
+            endpoint: "/api/libraries",
+            singularLabel: "Library",
+            pluralLabel: "Libraries"
+        };
+    </script>
+    <script src="../services/api.js"></script>
+    <script src="../services/managed-assets.js"></script>
+    <script src="../services/sidebar.js"></script>
+</body>
+</html>

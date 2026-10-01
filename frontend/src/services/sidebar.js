@@ -101,7 +101,10 @@
                             sidebar-parent
                             ${
                                 [
-                                    "assets.html"
+                                    "assets.html",
+                                    "operating-systems.html",
+                                    "applications.html",
+                                    "libraries.html"
                                 ].includes(currentPage)
                                     ? "active"
                                     : ""
@@ -139,7 +142,11 @@
                             sidebar-submenu
                             ${
                                 [
-                                    "assets.html"].includes(currentPage)
+                                    "assets.html",
+                                    "operating-systems.html",
+                                    "applications.html",
+                                    "libraries.html"
+                                ].includes(currentPage)
                                     ? "open"
                                     : ""
                             }
@@ -163,27 +170,24 @@
 
 
                         <a
-                            href="#"
-                            class="sidebar-subitem disabled"
-                            title="Coming soon"
+                            href="operating-systems.html"
+                            class="sidebar-subitem ${currentPage === "operating-systems.html" ? "active" : ""}"
                         >
                             Operating Systems
                         </a>
 
 
                         <a
-                            href="#"
-                            class="sidebar-subitem disabled"
-                            title="Coming soon"
+                            href="applications.html"
+                            class="sidebar-subitem ${currentPage === "applications.html" ? "active" : ""}"
                         >
                             Applications
                         </a>
 
 
                         <a
-                            href="#"
-                            class="sidebar-subitem disabled"
-                            title="Coming soon"
+                            href="libraries.html"
+                            class="sidebar-subitem ${currentPage === "libraries.html" ? "active" : ""}"
                         >
                             Libraries
                         </a>
