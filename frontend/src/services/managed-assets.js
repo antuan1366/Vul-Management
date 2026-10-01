@@ -411,3 +411,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })();
 });
+
+
+window.addEventListener("pageshow", async event => {
+    if (!event.persisted) {
+        return;
+    }
+
+    try {
+        await loadAssetFields();
+        await loadAssets();
+    } catch (error) {
+        console.error(`Failed to refresh ${assetConfig.assetType} page after navigation:`, error);
+    }
+});
