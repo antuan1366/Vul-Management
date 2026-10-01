@@ -8,7 +8,7 @@ GitHub:
 antuan1366/Vul-Management
 
 ## Current Version
-1.0.0
+1.1.0
 
 ## Description
 Vul-Management is a modular web-based vulnerability management platform.
@@ -183,4 +183,4 @@ Future versioning should use semantic-versioning principles:
 - Minor versions for backward-compatible feature additions
 - Major versions for breaking changes
 
-The next major development area after this release is Vulnerability Management.
+The current development area is Vulnerability Intelligence and the first Vulnerability Management foundation. Feed administration, CPE/PURL identity handling, NVD correlation, CISA KEV synchronization, and vulnerability-to-asset mapping are now being introduced.
