@@ -219,6 +219,7 @@ async function loadAssets() {
                     <td>
                         <div class="table-actions">
                             <button type="button" class="secondary-button small-button" onclick="editAsset(${asset.id})">Edit</button>
+                            <button type="button" class="secondary-button small-button" onclick="syncAssetIntelligence(${asset.id})">Sync Vulns</button>
                             <button type="button" class="danger-button small-button" onclick="deleteAsset(${asset.id})">Delete</button>
                         </div>
                     </td>
@@ -351,6 +352,35 @@ async function saveAsset(event) {
     } catch (error) {
         console.error(error);
         alert(`Failed to save ${assetConfig.singularLabel.toLowerCase()}.\n\n${error.message}`);
+    }
+}
+
+async function syncAssetIntelligence(id) {
+    try {
+        await apiRequest(
+            "/api/intelligence/assets/" +
+            encodeURIComponent(assetConfig.assetType) +
+            "/" + id +
+            "/refresh-identifiers",
+            { method: "POST" }
+        );
+
+        const endpoint = assetConfig.assetType === "library"
+            ? "/api/intelligence/assets/" + encodeURIComponent(assetConfig.assetType) + "/" + id + "/sync-osv"
+            : "/api/intelligence/assets/" + encodeURIComponent(assetConfig.assetType) + "/" + id + "/sync";
+
+        const result = await apiRequest(endpoint, { method: "POST" });
+
+        alert(
+            "Vulnerability synchronization completed. Linked " +
+            (result.linked_vulnerabilities ?? 0) +
+            " vulnerabilities."
+        );
+    } catch (error) {
+        alert(
+            "Vulnerability synchronization failed.\n\n" +
+            error.message
+        );
     }
 }
 
