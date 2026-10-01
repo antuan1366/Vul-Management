@@ -376,31 +376,30 @@ async function loadAssets() {
             "assets-table-body"
         );
 
+    const tableHead =
+        document.getElementById(
+            "assets-table-head"
+        );
 
     const equipmentCount =
         document.getElementById(
             "equipment-count"
         );
 
-
     if (!tableBody) {
         return;
     }
 
-
     tableBody.innerHTML = `
         <tr>
-
             <td
                 colspan="10"
                 class="loading-cell"
             >
                 Loading equipment...
             </td>
-
         </tr>
     `;
-
 
     try {
 
@@ -409,34 +408,28 @@ async function loadAssets() {
                 "/api/equipments"
             );
 
-
         if (equipmentCount) {
-
-            equipmentCount.textContent = `${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}`;
-
+            equipmentCount.textContent =
+                \`${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}\`;
         }
 
+        renderEquipmentTableHeader(tableHead);
 
-        if (
-            equipments.length === 0
-        ) {
+        if (equipments.length === 0) {
 
             tableBody.innerHTML = `
                 <tr>
-
                     <td
                         colspan="10"
                         class="empty-cell"
                     >
                         No equipment available.
                     </td>
-
                 </tr>
             `;
 
             return;
         }
-
 
         tableBody.innerHTML =
             equipments
@@ -444,9 +437,7 @@ async function loadAssets() {
                     (equipment, equipmentRowIndex) => {
 
                         const criticality =
-                            equipment.criticality ||
-                            "-";
-
+                            equipment.criticality || "-";
 
                         return `
                             <tr>
@@ -457,72 +448,61 @@ async function loadAssets() {
 
                                 <td>
                                     ${escapeHtml(
-                                        equipment.name ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        equipment.device_type ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        equipment.vendor ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        equipment.model ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        equipment.version ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${escapeHtml(
-                                        equipment.ip_address ||
-                                        "-"
-                                    )}
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        class="
-                                            criticality-badge
-                                            criticality-${String(
-                                                criticality
-                                            ).toLowerCase()}
-                                        "
-                                    >
-                                        ${escapeHtml(
-                                            criticality
+                                        getEquipmentFieldLabel("name", "Name")
+                                    ) === "-"
+                                        ? "-"
+                                        : escapeHtml(
+                                            equipment.name || "-"
                                         )}
-                                    </span>
-
                                 </td>
 
                                 <td>
                                     ${escapeHtml(
-                                        equipment.environment ||
-                                        "-"
+                                        equipment.device_type || "-"
                                     )}
                                 </td>
 
                                 <td>
+                                    ${escapeHtml(
+                                        equipment.vendor || "-"
+                                    )}
+                                </td>
 
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.model || "-"
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.version || "-"
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.ip_address || "-"
+                                    )}
+                                </td>
+
+                                <td>
+                                    <span
+                                        class="criticality-badge criticality-${String(
+                                            criticality
+                                        ).toLowerCase()}"
+                                    >
+                                        ${escapeHtml(criticality)}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    ${escapeHtml(
+                                        equipment.environment || "-"
+                                    )}
+                                </td>
+
+                                <td>
                                     <div class="table-actions">
 
                                         <button
@@ -533,7 +513,6 @@ async function loadAssets() {
                                             Edit
                                         </button>
 
-
                                         <button
                                             type="button"
                                             class="danger-button small-button"
@@ -543,7 +522,6 @@ async function loadAssets() {
                                         </button>
 
                                     </div>
-
                                 </td>
 
                             </tr>
@@ -553,36 +531,115 @@ async function loadAssets() {
                 )
                 .join("");
 
-
     } catch (error) {
 
         console.error(error);
 
-
         tableBody.innerHTML = `
             <tr>
-
                 <td
                     colspan="10"
                     class="error-cell"
                 >
-
                     Failed to load equipment.
-
                     <br>
-
-                    ${escapeHtml(
-                        error.message
-                    )}
-
+                    ${escapeHtml(error.message)}
                 </td>
-
             </tr>
         `;
 
     }
 
 }
+
+
+function getEquipmentFieldLabel(
+    fieldKey,
+    fallbackLabel
+) {
+
+    const field =
+        equipmentFields.find(
+            (item) =>
+                item.field_key === fieldKey
+        );
+
+    return field?.label || fallbackLabel;
+
+}
+
+
+function renderEquipmentTableHeader(
+    tableHead
+) {
+
+    if (!tableHead) {
+        return;
+    }
+
+    const columns = [
+        {
+            fieldKey: null,
+            label: "#",
+        },
+        {
+            fieldKey: "name",
+            label: "Name",
+        },
+        {
+            fieldKey: "device_type",
+            label: "Device Type",
+        },
+        {
+            fieldKey: "vendor",
+            label: "Vendor",
+        },
+        {
+            fieldKey: "model",
+            label: "Model",
+        },
+        {
+            fieldKey: "version",
+            label: "Version / Firmware",
+        },
+        {
+            fieldKey: "ip_address",
+            label: "IP Address",
+        },
+        {
+            fieldKey: "criticality",
+            label: "Criticality",
+        },
+        {
+            fieldKey: "environment",
+            label: "Environment",
+        },
+        {
+            fieldKey: null,
+            label: "Actions",
+        },
+    ];
+
+    tableHead.innerHTML =
+        columns
+            .map(
+                (column) => `
+                    <th>
+                        ${escapeHtml(
+                            column.fieldKey
+                                ? getEquipmentFieldLabel(
+                                    column.fieldKey,
+                                    column.label
+                                )
+                                : column.label
+                        )}
+                    </th>
+                `
+            )
+            .join("");
+
+}
+
 
 
 function openEquipmentForm() {
@@ -987,5 +1044,31 @@ document.addEventListener(
                 );
             }
         })();
+    }
+);
+
+
+window.addEventListener(
+    "pageshow",
+    async (event) => {
+
+        if (!event.persisted) {
+            return;
+        }
+
+        try {
+
+            await loadEquipmentFields();
+            await loadAssets();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to refresh equipment page after navigation:",
+                error
+            );
+
+        }
+
     }
 );
