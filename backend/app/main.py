@@ -10,6 +10,10 @@ from app.api.managed_assets import (
     operating_system_router,
 )
 from app.core.config import settings
+from app.core.database_version import (
+    ensure_database_version,
+    validate_database_compatibility,
+)
 from app.database import (
     Base,
     SessionLocal,
@@ -30,6 +34,9 @@ from app.services.managed_asset_fields import seed_managed_asset_fields
 migrate_equipment_name_nullable()
 
 Base.metadata.create_all(bind=engine)
+
+database_schema_version = ensure_database_version()
+validate_database_compatibility(database_schema_version)
 
 
 def initialize_database():
@@ -74,5 +81,8 @@ def root():
     return {
         "name": settings.app_name,
         "version": settings.app_version,
+        "database_schema_version": database_schema_version,
+        "database_schema_min": settings.db_schema_min,
+        "database_schema_max": settings.db_schema_max,
         "status": "running",
     }
