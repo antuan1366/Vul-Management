@@ -410,7 +410,7 @@ async function loadAssets() {
 
         if (equipmentCount) {
             equipmentCount.textContent =
-                \`${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}\`;
+                `${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}`;
         }
 
         renderEquipmentTableHeader(tableHead);
