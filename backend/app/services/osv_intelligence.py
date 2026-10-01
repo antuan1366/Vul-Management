@@ -1,11 +1,10 @@
 import json
 
 import httpx
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.feed import Feed
-from app.models.vulnerability import AssetVulnerability, Vulnerability
+from app.services.vulnerability_candidates import upsert_candidate
 from app.services.vulnerability_intelligence import _parse_datetime
 
 
@@ -38,7 +37,6 @@ def sync_osv_for_purl(
     data = response.json()
 
     linked = 0
-    created = 0
 
     for item in data.get("vulns", []):
         aliases = item.get("aliases") or []
@@ -50,11 +48,7 @@ def sync_osv_for_purl(
             continue
 
         affected = item.get("affected") or []
-        vulnerability = db.scalar(
-            select(Vulnerability).where(Vulnerability.cve_id == cve_id)
-        )
-
-        values = {
+        parsed = {
             "cve_id": cve_id,
             "source": "osv",
             "description": item.get("details") or item.get("summary"),
@@ -65,39 +59,17 @@ def sync_osv_for_purl(
             "affected_versions": json.dumps(affected, ensure_ascii=False),
         }
 
-        if vulnerability is None:
-            vulnerability = Vulnerability(**values)
-            db.add(vulnerability)
-            db.flush()
-            created += 1
-        else:
-            for key, value in values.items():
-                if value is not None:
-                    setattr(vulnerability, key, value)
-
-        mapping = db.scalar(
-            select(AssetVulnerability).where(
-                AssetVulnerability.asset_type == asset_type,
-                AssetVulnerability.asset_id == asset_id,
-                AssetVulnerability.vulnerability_id == vulnerability.id,
-            )
+        candidate = upsert_candidate(
+            db,
+            parsed=parsed,
+            asset_type=asset_type,
+            asset_id=asset_id,
+            match_status="confirmed_affected",
+            match_method="osv_purl",
+            confidence=96,
         )
-        if mapping is None:
-            db.add(
-                AssetVulnerability(
-                    asset_type=asset_type,
-                    asset_id=asset_id,
-                    vulnerability_id=vulnerability.id,
-                    match_status="confirmed_affected",
-                    match_method="osv_purl",
-                    confidence=96,
-                )
-            )
-        else:
-            mapping.match_status = "confirmed_affected"
-            mapping.match_method = "osv_purl"
-            mapping.confidence = 96
-        linked += 1
+        if candidate.review_status == "pending":
+            linked += 1
 
     db.commit()
     return {
@@ -106,5 +78,5 @@ def sync_osv_for_purl(
         "purl": purl,
         "returned_vulnerabilities": len(data.get("vulns", [])),
         "linked_vulnerabilities": linked,
-        "created_vulnerabilities": created,
+        "pending_review_candidates": linked,
     }

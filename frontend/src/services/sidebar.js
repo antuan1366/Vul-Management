@@ -328,11 +328,10 @@
 
 
                         <a
-                            href="#"
-                            class="sidebar-subitem disabled"
-                            title="Coming soon"
+                            href="sync-status.html"
+                            class="sidebar-subitem ${currentPage === "sync-status.html" ? "active" : ""}"
                         >
-                            CISA KEV
+                            Sync Status
                         </a>
 
                     </div>
@@ -460,7 +459,7 @@
                 </span>
 
                 <span>
-                    v1.1.0
+                    v1.3.0
                 </span>
 
             </div>

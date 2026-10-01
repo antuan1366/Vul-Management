@@ -12,6 +12,8 @@ from app.api.feeds import router as feeds_router
 from app.api.health import router as health_router
 from app.api.intelligence import router as intelligence_router
 from app.api.remediation import router as remediation_router
+from app.api.sync_jobs import router as sync_jobs_router
+from app.api.vulnerability_candidates import router as vulnerability_candidates_router
 from app.api.managed_assets import (
     application_router,
     library_router,
@@ -38,6 +40,8 @@ from app.models.library import Library
 from app.models.operating_system import OperatingSystem
 from app.models.security_identifier import SecurityIdentifier
 from app.models.vulnerability import AssetVulnerability, Vulnerability
+from app.models.vulnerability_candidate import VulnerabilityCandidate
+from app.models.sync_job import SyncJob
 
 from app.services.asset_fields import seed_default_fields
 from app.services.feeds import seed_default_feeds
@@ -98,6 +102,8 @@ app.include_router(feeds_router)
 app.include_router(security_identifiers_router)
 app.include_router(intelligence_router)
 app.include_router(remediation_router)
+app.include_router(sync_jobs_router)
+app.include_router(vulnerability_candidates_router)
 
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
