@@ -1,7 +1,6 @@
 import json
 
 import httpx
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.feed import Feed
@@ -38,7 +37,6 @@ def sync_osv_for_purl(
     data = response.json()
 
     linked = 0
-    created = 0
 
     for item in data.get("vulns", []):
         aliases = item.get("aliases") or []
@@ -72,7 +70,6 @@ def sync_osv_for_purl(
         )
         if candidate.review_status == "pending":
             linked += 1
-        linked += 1
 
     db.commit()
     return {
@@ -81,5 +78,5 @@ def sync_osv_for_purl(
         "purl": purl,
         "returned_vulnerabilities": len(data.get("vulns", [])),
         "linked_vulnerabilities": linked,
-        "created_vulnerabilities": created,
+        "pending_review_candidates": linked,
     }
