@@ -8,12 +8,15 @@ from sqlalchemy import inspect
 
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
+from app.api.feeds import router as feeds_router
 from app.api.health import router as health_router
+from app.api.intelligence import router as intelligence_router
 from app.api.managed_assets import (
     application_router,
     library_router,
     operating_system_router,
 )
+from app.api.security_identifiers import router as security_identifiers_router
 from app.core.config import settings
 from app.core.database_version import (
     ensure_database_version,
@@ -29,10 +32,14 @@ from app.database import (
 from app.models.application import Application
 from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
+from app.models.feed import Feed
 from app.models.library import Library
 from app.models.operating_system import OperatingSystem
+from app.models.security_identifier import SecurityIdentifier
+from app.models.vulnerability import AssetVulnerability, Vulnerability
 
 from app.services.asset_fields import seed_default_fields
+from app.services.feeds import seed_default_feeds
 from app.services.managed_asset_fields import seed_managed_asset_fields
 
 
@@ -55,6 +62,7 @@ def initialize_database():
     try:
         seed_default_fields(db)
         seed_managed_asset_fields(db)
+        seed_default_feeds(db)
     finally:
         db.close()
 
@@ -84,6 +92,9 @@ app.include_router(asset_fields_router)
 app.include_router(operating_system_router)
 app.include_router(application_router)
 app.include_router(library_router)
+app.include_router(feeds_router)
+app.include_router(security_identifiers_router)
+app.include_router(intelligence_router)
 
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
