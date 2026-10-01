@@ -70,6 +70,26 @@ async function loadVulnerabilities() {
     }
 }
 
+async function syncNvd() {
+    const button = document.getElementById("sync-nvd-button");
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Syncing...";
+    }
+    try {
+        const result = await apiRequest("/api/intelligence/nvd/sync?days_back=7", { method: "POST" });
+        alert("NVD synchronization completed. Created " + result.created + " and updated " + result.updated + " vulnerabilities.");
+        await loadVulnerabilities();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Sync NVD";
+        }
+    }
+}
+
 async function syncCisaKev() {
     const button = document.getElementById("sync-kev-button");
     if (button) {
@@ -101,10 +121,8 @@ async function syncCisaKev() {
 }
 
 function initializeVulnerabilitiesPage() {
-    document.getElementById("sync-kev-button")?.addEventListener(
-        "click",
-        syncCisaKev
-    );
+    document.getElementById("sync-nvd-button")?.addEventListener("click", syncNvd);
+    document.getElementById("sync-kev-button")?.addEventListener("click", syncCisaKev);
 
     loadVulnerabilities();
 }
