@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect
 
 from app.api.asset_fields import router as asset_fields_router
@@ -82,8 +86,17 @@ app.include_router(application_router)
 app.include_router(library_router)
 
 
-@app.get("/")
-def root():
+frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
+
+app.mount(
+    "/src",
+    StaticFiles(directory=frontend_dir),
+    name="frontend",
+)
+
+
+@app.get("/api/info")
+def app_info():
     return {
         "name": settings.app_name,
         "version": settings.app_version,
@@ -92,3 +105,8 @@ def root():
         "database_schema_max": settings.db_schema_max,
         "status": "running",
     }
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/src/pages/dashboard.html")
