@@ -9,6 +9,7 @@ from app.models.vulnerability import Vulnerability
 from app.services.cpe_resolver import resolve_cpe
 from app.services.vulnerability_intelligence import (
     get_asset_vulnerabilities,
+    sync_cisa_kev,
     sync_nvd_for_cpe,
 )
 
@@ -145,3 +146,27 @@ def list_vulnerabilities_api(
         "items": items,
         "total": len(items),
     }
+
+
+@router.post("/cisa-kev/sync")
+def sync_cisa_kev_api(db: Session = Depends(get_db)):
+    feed = db.scalar(
+        select(Feed).where(
+            Feed.feed_type == "cisa_kev",
+            Feed.enabled.is_(True),
+        ).order_by(Feed.id)
+    )
+
+    if feed is None:
+        raise HTTPException(
+            status_code=503,
+            detail="No enabled CISA KEV feed is configured.",
+        )
+
+    try:
+        return sync_cisa_kev(db, feed)
+    except Exception as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"CISA KEV synchronization failed: {error.__class__.__name__}.",
+        )
