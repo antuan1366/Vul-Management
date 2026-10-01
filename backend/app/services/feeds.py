@@ -64,6 +64,9 @@ def serialize_feed(feed: Feed) -> dict:
         "last_test_status": feed.last_test_status,
         "last_test_message": feed.last_test_message,
         "last_test_at": feed.last_test_at,
+        "last_sync_at": feed.last_sync_at,
+        "last_sync_status": feed.last_sync_status,
+        "last_sync_message": feed.last_sync_message,
     }
 
 
