@@ -13,6 +13,7 @@ from app.services.vulnerability_intelligence import (
     get_asset_vulnerabilities,
     sync_cisa_kev,
     sync_nvd_for_cpe,
+    sync_nvd_incremental,
 )
 
 
@@ -192,6 +193,30 @@ def list_vulnerabilities_api(
         "items": items,
         "total": len(items),
     }
+
+
+
+
+@router.post("/nvd/sync")
+def sync_nvd_api(
+    days_back: int = Query(default=7, ge=1, le=120),
+    db: Session = Depends(get_db),
+):
+    feed = db.scalar(
+        select(Feed).where(
+            Feed.feed_type == "nvd_cve",
+            Feed.enabled.is_(True),
+        ).order_by(Feed.id)
+    )
+    if feed is None:
+        raise HTTPException(status_code=503, detail="No enabled NVD CVE feed is configured.")
+    try:
+        return sync_nvd_incremental(db, feed, days_back=days_back)
+    except Exception as error:
+        raise HTTPException(
+            status_code=502,
+            detail=f"NVD synchronization failed: {error.__class__.__name__}.",
+        )
 
 
 @router.post("/cisa-kev/sync")
