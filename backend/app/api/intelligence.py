@@ -69,10 +69,42 @@ def resolve_cpe_api(
         )
 
 
+def _run_asset_nvd_sync_job(job_id: int, asset_type: str, asset_id: int, days_back: int) -> None:
+    db = SessionLocal()
+    job = db.get(SyncJob, job_id)
+    try:
+        identifier = db.scalar(
+            select(SecurityIdentifier).where(
+                SecurityIdentifier.asset_type == asset_type,
+                SecurityIdentifier.asset_id == asset_id,
+            )
+        )
+        feed = db.scalar(
+            select(Feed).where(
+                Feed.feed_type == "nvd_cve",
+                Feed.enabled.is_(True),
+            ).order_by(Feed.id)
+        )
+        if identifier is None or not identifier.cpe:
+            update_sync_job(db, job, status="failed", error_message="A CPE is required before vulnerability discovery.")
+            return
+        if feed is None:
+            update_sync_job(db, job, status="failed", error_message="No enabled NVD CVE feed is configured.")
+            return
+        update_sync_job(db, job, status="running", processed=0, total=1, current_step=f"Discovering NVD findings for {asset_type} #{asset_id}")
+        result = sync_nvd_for_cpe(db, feed, identifier.cpe, asset_type, asset_id, days_back=days_back)
+        update_sync_job(db, job, status="completed", processed=1, total=1, current_step="Asset vulnerability discovery completed", result=result)
+    except Exception as error:
+        update_sync_job(db, job, status="failed", error_message=f"{error.__class__.__name__}: synchronization failed.")
+    finally:
+        db.close()
+
+
 @router.post("/assets/{asset_type}/{asset_id}/sync")
 def sync_asset_vulnerabilities_api(
     asset_type: str,
     asset_id: int,
+    background_tasks: BackgroundTasks,
     days_back: int = Query(default=5, ge=1, le=120),
     db: Session = Depends(get_db),
 ):
@@ -82,12 +114,8 @@ def sync_asset_vulnerabilities_api(
             SecurityIdentifier.asset_id == asset_id,
         )
     )
-
     if identifier is None or not identifier.cpe:
-        raise HTTPException(
-            status_code=400,
-            detail="A CPE is required before vulnerability synchronization.",
-        )
+        raise HTTPException(status_code=400, detail="A CPE is required before vulnerability synchronization.")
 
     feed = db.scalar(
         select(Feed).where(
@@ -95,28 +123,12 @@ def sync_asset_vulnerabilities_api(
             Feed.enabled.is_(True),
         ).order_by(Feed.id)
     )
-
     if feed is None:
-        raise HTTPException(
-            status_code=503,
-            detail="No enabled NVD CVE feed is configured.",
-        )
+        raise HTTPException(status_code=503, detail="No enabled NVD CVE feed is configured.")
 
-    try:
-        return sync_nvd_for_cpe(
-            db=db,
-            feed=feed,
-            cpe=identifier.cpe,
-            asset_type=asset_type,
-            asset_id=asset_id,
-            days_back=days_back,
-        )
-    except Exception as error:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Vulnerability synchronization failed: {error.__class__.__name__}.",
-        )
-
+    job = create_sync_job(db, "nvd_asset", total=1)
+    background_tasks.add_task(_run_asset_nvd_sync_job, job.id, asset_type, asset_id, days_back)
+    return {"job_id": job.id, "status": "started", "asset_type": asset_type, "asset_id": asset_id, "days_back": days_back}
 
 
 
