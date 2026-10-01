@@ -2,7 +2,7 @@
 
 ## Current Release
 
-Version: 0.1.1
+Version: 1.0.0
 
 ## Release Checklist
 
@@ -15,29 +15,37 @@ Version: 0.1.1
 - [x] Required / Optional field configuration
 - [x] Visible / Hidden field configuration
 - [x] Automatic custom field key generation
-- [x] Options removed from custom-field UI
-- [x] Version updated to 0.1.1
+- [x] Operating Systems asset type
+- [x] Applications asset type
+- [x] Libraries asset type
+- [x] Dynamic managed-asset frontend
+- [x] Alembic database versioning
+- [x] Database compatibility validation
+- [x] FastAPI-hosted frontend
+- [x] Dynamic Equipment table field labels
+- [x] Version updated to 1.0.0
 - [x] .ai documentation updated
 
 ### Local Verification
-- [ ] Verify local working tree is clean
-- [ ] Pull latest develop
-- [ ] Start backend successfully
-- [ ] Test Equipment CRUD
-- [ ] Test Asset Field CRUD
-- [ ] Test Equipment Add/Edit modal
-- [ ] Test Asset Field Add/Edit modal
-- [ ] Test required/visible behavior
-- [ ] Test custom field validation
-- [ ] Test Delete actions
-- [ ] Review frontend behavior
+- [x] Verify local application starts
+- [x] Verify database schema version
+- [x] Verify Equipment CRUD
+- [x] Verify Asset Field CRUD
+- [x] Verify Equipment Add/Edit modal
+- [x] Verify Asset Field Add/Edit modal
+- [x] Verify required/visible behavior
+- [x] Verify custom field validation
+- [x] Verify Delete actions
+- [x] Verify frontend behavior
+- [x] Verify Equipment field-label refresh
 
 ### Release
-- [ ] Commit any local verification fixes
-- [ ] Push final develop
-- [ ] Create Pull Request: develop -> main
-- [ ] Merge develop -> main
-- [ ] Create Git tag v0.1.1
+- [x] Final release candidate prepared on feature branch
+- [ ] Create Pull Request: feature/frontend-fastapi-integration -> main
+- [ ] User review Pull Request
+- [ ] User merge Pull Request
+- [ ] Synchronize local main
+- [ ] Create Git tag v1.0.0
 
 ## Asset Management
 
@@ -53,31 +61,32 @@ Version: 0.1.1
 - [x] Asset Field Administration
 
 ### Operating Systems
-- [ ] Operating System model
-- [ ] Operating System schema
-- [ ] Operating System service
-- [ ] Operating System API
-- [ ] Operating System frontend
-- [ ] Operating System custom fields
-- [ ] Equipment relationship
+- [x] Operating System model
+- [x] Operating System schema
+- [x] Operating System service
+- [x] Operating System API
+- [x] Operating System frontend
+- [x] Operating System custom fields
+- [x] Equipment relationship
 
 ### Applications
-- [ ] Application model
-- [ ] Application schema
-- [ ] Application service
-- [ ] Application API
-- [ ] Application frontend
-- [ ] Application custom fields
-- [ ] Asset relationships
+- [x] Application model
+- [x] Application schema
+- [x] Application service
+- [x] Application API
+- [x] Application frontend
+- [x] Application custom fields
+- [x] Asset relationships
 
 ### Libraries
-- [ ] Library model
-- [ ] Library schema
-- [ ] Library service
-- [ ] Library API
-- [ ] Library frontend
-- [ ] Library custom fields
-- [ ] Application relationships
+- [x] Library model
+- [x] Library schema
+- [x] Library service
+- [x] Library API
+- [x] Library frontend
+- [x] Library custom fields
+- [x] Application relationships
+- [x] Application relationships
 
 ## Vulnerability Management
 - [ ] Vulnerability model
