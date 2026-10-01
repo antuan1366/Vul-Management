@@ -1,95 +1,75 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Vulnerabilities - Vul-Management</title>
-
     <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .sync-control { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+        .sync-control label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
+        .sync-control input { min-width:90px; }
+        .review-badge { padding:4px 8px; border-radius:6px; font-size:12px; }
+        .review-pending { background:#fff3cd; color:#664d03; }
+    </style>
 </head>
-
 <body>
+<main class="page-container">
+    <section class="page-header">
+        <div>
+            <h1>Vulnerabilities</h1>
+            <p>Only administrator-approved findings are stored in the approved vulnerability inventory.</p>
+        </div>
+        <div class="table-actions">
+            <a class="secondary-button" href="sync-status.html">Sync Status</a>
+        </div>
+    </section>
 
-    <main class="page-container">
-
-        <section class="page-header">
-
+    <section class="content-card">
+        <div class="section-header">
             <div>
-                <h1>Vulnerabilities</h1>
-
-                <p>
-                    Review vulnerabilities synchronized from configured intelligence feeds.
-                </p>
+                <h2>Discovery Controls</h2>
+                <p class="section-description">NVD discovery is asset-scoped. It checks only CVEs modified within the selected window.</p>
             </div>
+        </div>
+        <div class="sync-control">
+            <label>
+                NVD Days Back
+                <input id="nvd-days-back" type="number" min="1" max="120" value="5">
+            </label>
+            <button id="sync-nvd-button" class="primary-button" type="button">Discover NVD Findings</button>
+            <button id="sync-kev-button" class="secondary-button" type="button">Sync CISA KEV</button>
+        </div>
+    </section>
 
-            <div class="table-actions">
-                <button
-                    id="sync-nvd-button"
-                    class="secondary-button"
-                    type="button"
-                >
-                    Sync NVD
-                </button>
+    <section class="content-card">
+        <div class="section-header">
+            <h2>Pending Review</h2>
+            <div id="candidate-count" class="item-count">0 Candidates</div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>#</th><th>CVE</th><th>Asset</th><th>Severity</th><th>CVSS</th><th>Match</th><th>Confidence</th><th>Actions</th></tr></thead>
+                <tbody id="candidate-table-body"></tbody>
+            </table>
+        </div>
+    </section>
 
-                <button
-                    id="sync-kev-button"
-                    class="primary-button"
-                    type="button"
-                >
-                    Sync CISA KEV
-                </button>
-            </div>
-
-        </section>
-
-        <section class="content-card">
-
-            <div class="section-header">
-                <div>
-                    <h2>Vulnerability Inventory</h2>
-                </div>
-
-                <div
-                    id="vulnerability-count"
-                    class="item-count"
-                >
-                    0 Vulnerabilities
-                </div>
-            </div>
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>CVE</th>
-                            <th>Severity</th>
-                            <th>CVSS</th>
-                            <th>Product</th>
-                            <th>CISA KEV</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="vulnerabilities-table-body"></tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-    </main>
-
-    <script src="../services/api.js"></script>
-    <script src="../services/vulnerabilities.js"></script>
-    <script src="../services/sidebar.js"></script>
-
+    <section class="content-card">
+        <div class="section-header">
+            <h2>Approved Vulnerabilities</h2>
+            <div id="vulnerability-count" class="item-count">0 Vulnerabilities</div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>#</th><th>CVE</th><th>Severity</th><th>CVSS</th><th>Product</th><th>CISA KEV</th><th>Description</th></tr></thead>
+                <tbody id="vulnerabilities-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="../services/api.js"></script>
+<script src="../services/vulnerabilities.js"></script>
+<script src="../services/sidebar.js"></script>
 </body>
-
 </html>
