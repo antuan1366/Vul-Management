@@ -52,11 +52,6 @@ async function loadScanJobs() {
     const data = await apiRequest("/api/sync-jobs?job_type=nvd");
     renderScanResults(data.items || []);
     const latest = (data.items || [])[0];
-    if (latest) {
-        document.getElementById("current-status").textContent = latest.status || "Idle";
-        document.getElementById("current-progress").textContent = (latest.progress ?? 0) + "%";
-        document.getElementById("scan-result").textContent = resultText(latest);
-    }
 }
 
 async function loadSchedule() {
@@ -65,7 +60,7 @@ async function loadSchedule() {
 }
 
 async function scanNow() {
-    const button = document.getElementById("scan-now-button");
+    const button = document.getElementById("start-scan-button");
     button.disabled = true;
     button.textContent = "Starting...";
     try {
@@ -76,7 +71,7 @@ async function scanNow() {
         alert("Could not start vulnerability scan.\n\n" + error.message);
     } finally {
         button.disabled = false;
-        button.textContent = "Scan Now";
+        button.textContent = "Start";
     }
 }
 
@@ -99,14 +94,13 @@ async function refreshScanPage() {
     try {
         await Promise.all([loadScanJobs(), loadSchedule()]);
     } catch (error) {
-        document.getElementById("scan-result").textContent = error.message;
+        document.getElementById("schedule-message").textContent = error.message;
     }
 }
 
 function initializeScanPage() {
     document.getElementById("start-scan-button")?.addEventListener("click", scanNow);
     document.getElementById("sync-kev-button")?.addEventListener("click", updateCisaKev);
-    document.getElementById("save-schedule-button")?.addEventListener("click", saveSchedule);
     refreshScanPage();
     scanPollTimer = setInterval(refreshScanPage, 3000);
 }
