@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,10 +12,16 @@ router = APIRouter(prefix="/api/sync-jobs", tags=["Synchronization"])
 
 
 @router.get("")
-def list_sync_jobs(db: Session = Depends(get_db)):
-    jobs = db.scalars(
-        select(SyncJob).order_by(SyncJob.created_at.desc()).limit(50)
-    ).all()
+def list_sync_jobs(
+    job_type: str | None = None,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+):
+    limit = max(1, min(limit, 200))
+    query = select(SyncJob).order_by(SyncJob.created_at.desc()).limit(limit)
+    if job_type:
+        query = select(SyncJob).where(SyncJob.job_type == job_type).order_by(SyncJob.created_at.desc()).limit(limit)
+    jobs = db.scalars(query).all()
     return {"items": [serialize_sync_job(job) for job in jobs]}
 
 
