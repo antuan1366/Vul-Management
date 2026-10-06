@@ -75,21 +75,6 @@ async function scanNow() {
     }
 }
 
-async function updateCisaKev() {
-    const button = document.getElementById("sync-kev-button");
-    button.disabled = true;
-    button.textContent = "Updating...";
-    try {
-        const result = await apiRequest("/api/intelligence/cisa-kev/sync", { method: "POST" });
-        document.getElementById("schedule-message").textContent = "CISA KEV update started as job #" + result.job_id + ".";
-    } catch (error) {
-        alert("CISA KEV update failed.\n\n" + error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "Update CISA KEV";
-    }
-}
-
 async function refreshScanPage() {
     try {
         await Promise.all([loadScanJobs(), loadSchedule()]);
@@ -100,7 +85,6 @@ async function refreshScanPage() {
 
 function initializeScanPage() {
     document.getElementById("start-scan-button")?.addEventListener("click", scanNow);
-    document.getElementById("sync-kev-button")?.addEventListener("click", updateCisaKev);
     refreshScanPage();
     scanPollTimer = setInterval(refreshScanPage, 3000);
 }
