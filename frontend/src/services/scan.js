@@ -1,7 +1,12 @@
 let scanPollTimer = null;
 
 function scanEscape(value) {
-    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function scanDate(value) {
@@ -27,6 +32,7 @@ function resultText(job) {
 function renderScanResults(jobs) {
     const body = document.getElementById("scan-results-body");
     if (!body) return;
+
     document.getElementById("scan-count").textContent = jobs.length + " Scans";
 
     if (!jobs.length) {
@@ -51,23 +57,71 @@ function renderScanResults(jobs) {
 async function loadScanJobs() {
     const data = await apiRequest("/api/sync-jobs?job_type=nvd");
     renderScanResults(data.items || []);
-    const latest = (data.items || [])[0];
 }
 
 async function loadSchedule() {
     const frequency = document.getElementById("scan-frequency");
-    if (frequency) frequency.value = "now";
+    if (!frequency) return;
+
+    const schedule = await apiRequest("/api/vulnerability-scan/status");
+
+    if (schedule.enabled && schedule.frequency) {
+        frequency.value = schedule.frequency;
+    } else {
+        frequency.value = "now";
+    }
 }
 
-async function scanNow() {
+function currentTimeHHMM() {
+    const now = new Date();
+    return String(now.getHours()).padStart(2, "0") + ":" +
+        String(now.getMinutes()).padStart(2, "0");
+}
+
+async function startSelectedScan() {
+    const frequency = document.getElementById("scan-frequency");
     const button = document.getElementById("start-scan-button");
+    const message = document.getElementById("schedule-message");
+    const selectedFrequency = frequency ? frequency.value : "now";
+
     button.disabled = true;
     button.textContent = "Starting...";
+    message.textContent = "";
+
     try {
-        const result = await apiRequest("/api/vulnerability-scan/run", { method: "POST" });
-        document.getElementById("schedule-message").textContent = "Scan #" + result.job_id + " started.";
-        await loadScanJobs();
+        if (selectedFrequency === "now") {
+            await apiRequest("/api/vulnerability-scan/schedule", {
+                method: "PUT",
+                body: JSON.stringify({
+                    enabled: false,
+                    frequency: "daily",
+                    scan_time: "02:00"
+                })
+            });
+
+            const result = await apiRequest("/api/vulnerability-scan/run", {
+                method: "POST"
+            });
+
+            message.textContent = "Scan #" + result.job_id + " started.";
+        } else {
+            const schedule = await apiRequest("/api/vulnerability-scan/schedule", {
+                method: "PUT",
+                body: JSON.stringify({
+                    enabled: true,
+                    frequency: selectedFrequency,
+                    scan_time: currentTimeHHMM()
+                })
+            });
+
+            message.textContent = "Scan schedule set to " +
+                frequency.options[frequency.selectedIndex].text +
+                ". Next scan: " + scanDate(schedule.next_scan_at) + ".";
+        }
+
+        await Promise.all([loadScanJobs(), loadSchedule()]);
     } catch (error) {
+        message.textContent = error.message;
         alert("Could not start vulnerability scan.\n\n" + error.message);
     } finally {
         button.disabled = false;
@@ -84,7 +138,7 @@ async function refreshScanPage() {
 }
 
 function initializeScanPage() {
-    document.getElementById("start-scan-button")?.addEventListener("click", scanNow);
+    document.getElementById("start-scan-button")?.addEventListener("click", startSelectedScan);
     refreshScanPage();
     scanPollTimer = setInterval(refreshScanPage, 3000);
 }
