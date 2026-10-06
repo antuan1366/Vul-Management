@@ -60,36 +60,8 @@ async function loadScanJobs() {
 }
 
 async function loadSchedule() {
-    const data = await apiRequest("/api/vulnerability-scan/status");
-    document.getElementById("scan-enabled").checked = Boolean(data.enabled);
-    document.getElementById("scan-frequency").value = data.frequency || "daily";
-    document.getElementById("scan-time").value = data.scan_time || "02:00";
-    document.getElementById("next-scan").textContent = data.enabled && data.next_scan_at ? scanDate(data.next_scan_at) : "Not scheduled";
-    document.getElementById("schedule-message").textContent =
-        data.enabled
-            ? "Schedule enabled. Next scan: " + (data.next_scan_at ? scanDate(data.next_scan_at) : "-")
-            : "Schedule disabled.";
-}
-
-async function saveSchedule() {
-    const button = document.getElementById("save-schedule-button");
-    button.disabled = true;
-    button.textContent = "Saving...";
-    try {
-        const enabled = document.getElementById("scan-enabled").checked;
-        const frequency = document.getElementById("scan-frequency").value;
-        const scanTime = document.getElementById("scan-time").value || "02:00";
-        await apiRequest("/api/vulnerability-scan/schedule", {
-            method: "PUT",
-            body: JSON.stringify({ enabled, frequency, scan_time: scanTime })
-        });
-        await loadSchedule();
-    } catch (error) {
-        alert("Could not save the scan schedule.\n\n" + error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "Save Schedule";
-    }
+    const frequency = document.getElementById("scan-frequency");
+    if (frequency) frequency.value = "now";
 }
 
 async function scanNow() {
@@ -132,7 +104,7 @@ async function refreshScanPage() {
 }
 
 function initializeScanPage() {
-    document.getElementById("scan-now-button")?.addEventListener("click", scanNow);
+    document.getElementById("start-scan-button")?.addEventListener("click", scanNow);
     document.getElementById("sync-kev-button")?.addEventListener("click", updateCisaKev);
     document.getElementById("save-schedule-button")?.addEventListener("click", saveSchedule);
     refreshScanPage();
