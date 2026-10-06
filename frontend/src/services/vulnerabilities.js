@@ -67,7 +67,6 @@ function renderFindings() {
             "<td><span class=\"status-badge " + statusClass(item.status) + "\">" +
                 escapeVulnerabilityHtml(humanStatus(item.status)) +
             "</span></td>" +
-            "<td>" + (item.cisa_kev ? "Yes" : "No") + "</td>" +
             "<td>" + actions + "</td>" +
             "</tr>";
     }).join("");
@@ -88,7 +87,6 @@ async function loadFindings() {
             cvss_score: item.cvss_score,
             match_status: item.match_status,
             status: item.review_status || "pending",
-            cisa_kev: false,
             source: item.source,
             created_at: item.created_at
         }));
