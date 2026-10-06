@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Scans - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .page-header-actions { display:flex; gap:10px; align-items:center; }
+        .scan-card { margin-bottom:20px; }
+        .scan-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+        .scan-stat { padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; }
+        .scan-stat-label { font-size:12px; color:#6b7280; margin-bottom:6px; }
+        .scan-stat-value { font-size:18px; font-weight:700; }
+        .schedule-form { display:grid; grid-template-columns:1fr 1fr auto auto; gap:12px; align-items:end; }
+        .schedule-form label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
+        .schedule-form select,.schedule-form input { min-height:38px; }
+        .schedule-enabled { display:flex !important; flex-direction:row !important; align-items:center; gap:8px !important; padding-bottom:9px; }
+        .scan-message { margin-top:14px; }
+        .result-box { padding:14px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; white-space:pre-wrap; }
+        .status-badge { display:inline-flex; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600; }
+        .status-running,.status-pending { background:#fff3cd; color:#664d03; }
+        .status-completed { background:#d1e7dd; color:#0f5132; }
+        .status-failed { background:#f8d7da; color:#842029; }
+        @media(max-width:900px){ .scan-grid,.schedule-form{grid-template-columns:1fr;} }
+    </style>
+</head>
+<body>
+<main class="page-container">
+    <section class="page-header">
+        <div>
+            <h1>Vulnerability Scans</h1>
+            <p>Run vulnerability discovery against the current asset inventory and review every scan execution here.</p>
+        </div>
+        <div class="page-header-actions">
+            <button id="scan-now-button" class="primary-button" type="button">Scan Now</button>
+            <button id="sync-kev-button" class="secondary-button" type="button">Update CISA KEV</button>
+        </div>
+    </section>
+
+    <section class="content-card scan-card">
+        <div class="section-header">
+            <div>
+                <h2>Scan Schedule</h2>
+                <p class="section-description">Choose how often the asset inventory should be scanned automatically.</p>
+            </div>
+        </div>
+        <div class="schedule-form">
+            <label>
+                Frequency
+                <select id="scan-frequency">
+                    <option value="hourly">Every hour</option>
+                    <option value="every_2_hours">Every 2 hours</option>
+                    <option value="every_6_hours">Every 6 hours</option>
+                    <option value="daily">Every day</option>
+                    <option value="every_2_days">Every 2 days</option>
+                    <option value="weekly">Every week</option>
+                </select>
+            </label>
+            <label>
+                Start time
+                <input id="scan-time" type="time" value="02:00">
+            </label>
+            <label class="schedule-enabled">
+                <input id="scan-enabled" type="checkbox">
+                Enable schedule
+            </label>
+            <button id="save-schedule-button" class="secondary-button" type="button">Save Schedule</button>
+        </div>
+        <div id="schedule-message" class="section-description scan-message"></div>
+    </section>
+
+    <section class="content-card scan-card">
+        <div class="section-header">
+            <div>
+                <h2>Current Scan</h2>
+                <p class="section-description">The current or latest execution is shown here while the scan runs.</p>
+            </div>
+        </div>
+        <div class="scan-grid">
+            <div class="scan-stat"><div class="scan-stat-label">Status</div><div id="current-status" class="scan-stat-value">Idle</div></div>
+            <div class="scan-stat"><div class="scan-stat-label">Progress</div><div id="current-progress" class="scan-stat-value">0%</div></div>
+            <div class="scan-stat"><div class="scan-stat-label">Next Scheduled Scan</div><div id="next-scan" class="scan-stat-value">Not scheduled</div></div>
+        </div>
+        <div id="scan-result" class="result-box scan-message">No scan has been executed yet.</div>
+    </section>
+
+    <section class="content-card">
+        <div class="section-header">
+            <div>
+                <h2>Scan Results</h2>
+                <p class="section-description">Complete scan execution history and result summaries.</p>
+            </div>
+            <div id="scan-count" class="item-count">0 Scans</div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Scan ID</th>
+                        <th>Started</th>
+                        <th>Finished</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Current Step</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="scan-results-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="../services/api.js"></script>
+<script src="../services/scan.js"></script>
+<script src="../services/sidebar.js"></script>
+</body>
+</html>
