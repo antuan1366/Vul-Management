@@ -101,7 +101,7 @@ def configure_schedule(db, *, enabled: bool, frequency: str, scan_time: str) -> 
     return schedule
 
 
-def _set_scan_started(job_id: int) -> None:
+def _set_scan_started(job_id: int, *, scheduled: bool = False) -> None:
     db = SessionLocal()
     try:
         schedule = get_or_create_schedule(db)
@@ -118,7 +118,7 @@ def _set_scan_started(job_id: int) -> None:
         db.close()
 
 
-def _run_scan_job(job_id: int) -> None:
+def _run_scan_job(job_id: int, *, scheduled: bool = False) -> None:
     db = SessionLocal()
     job = db.get(SyncJob, job_id)
     try:
@@ -205,7 +205,7 @@ def _run_scan_job(job_id: int) -> None:
         db.close()
 
 
-def start_scan(db) -> SyncJob:
+def start_scan(db, *, scheduled: bool = False) -> SyncJob:
     existing_running = db.scalar(select(SyncJob).where(
         SyncJob.job_type == "nvd",
         SyncJob.status.in_(["pending", "running"])
@@ -217,10 +217,10 @@ def start_scan(db) -> SyncJob:
         select(SecurityIdentifier).where(SecurityIdentifier.cpe.is_not(None))
     ).all())
     job = create_sync_job(db, "nvd", total=total)
-    _set_scan_started(job.id)
+    _set_scan_started(job.id, scheduled=scheduled)
 
     loop = asyncio.get_running_loop()
-    loop.create_task(asyncio.to_thread(_run_scan_job, job.id))
+    loop.create_task(asyncio.to_thread(_run_scan_job, job.id, scheduled=scheduled))
     return job
 
 
