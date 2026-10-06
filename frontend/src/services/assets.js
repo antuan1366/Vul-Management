@@ -1,14 +1,17 @@
 let editingEquipmentId = null;
 
 let equipmentFields = [];
+let equipmentIdentifiers = {};
 
 
 async function loadEquipmentFields() {
-
     equipmentFields = await apiRequest(
         "/api/asset-fields?asset_type=equipment"
     );
+}
 
+async function loadEquipmentIdentifiers() {
+    equipmentIdentifiers = await loadIdentifierMap("equipment");
 }
 
 
@@ -408,6 +411,8 @@ async function loadAssets() {
                 "/api/equipments"
             );
 
+        await loadEquipmentIdentifiers();
+
         if (equipmentCount) {
             equipmentCount.textContent =
                 `${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}`;
@@ -502,6 +507,8 @@ async function loadAssets() {
                                     )}
                                 </td>
 
+                                <td>${renderIdentifierStatus(equipmentIdentifiers[String(equipment.id)], "equipment", equipment.id)}</td>
+
                                 <td>
                                     <div class="table-actions">
 
@@ -513,13 +520,6 @@ async function loadAssets() {
                                             Edit
                                         </button>
 
-                                        <button
-                                            type="button"
-                                            class="secondary-button small-button"
-                                            onclick="extractEquipmentCpe(${equipment.id})"
-                                        >
-                                            Extract CPE
-                                        </button>
 
                                         <button
                                             type="button"
@@ -621,6 +621,10 @@ function renderEquipmentTableHeader(
         {
             fieldKey: "environment",
             label: "Environment",
+        },
+        {
+            fieldKey: null,
+            label: "Identification",
         },
         {
             fieldKey: null,
