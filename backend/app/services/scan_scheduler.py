@@ -239,7 +239,7 @@ async def scheduler_loop() -> None:
                         SyncJob.status.in_(["pending", "running"])
                     ).order_by(SyncJob.id.desc()).limit(1))
                     if running is None:
-                        start_scan(db)
+                        start_scan(db, scheduled=True)
                     else:
                         schedule.next_scan_at = calculate_next_scan(
                             schedule.scan_time, schedule.frequency, now
