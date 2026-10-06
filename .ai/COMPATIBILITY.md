@@ -1,8 +1,20 @@
 # Application / Database Compatibility
 
-Application Version: 1.2.0
+## Current Release Candidate
+
+Application Version: 2.0.0
 Minimum DB Schema: 1
-Maximum DB Schema: 3
+Maximum DB Schema: 4
+
+## Database Engine
+
+Current engine: SQLite
+
+Default file:
+
+backend/data/vul_management.db
+
+The physical database file is local state and is not committed to Git.
 
 ## Revisions
 
@@ -17,13 +29,34 @@ Adds:
 - asset_vulnerabilities
 
 ### 0003
-Adds feed synchronization metadata:
+Adds:
 - last_sync_at
 - last_sync_status
 - last_sync_message
 
-The application uses Alembic revisions as the database schema version.
-Future schema changes require a new migration revision.
+### 0004
+Adds:
+- vulnerability_candidates
+- sync_jobs
+- candidate review workflow
+- synchronization job tracking
+
+Migration 0004 intentionally resets the current development/test data while
+upgrading the development database. Default fields and feeds are re-seeded
+by application startup.
+
+This destructive reset is a development-only decision and must not be
+reused for production migrations.
+
+## Compatibility Policy
+
+The application validates the supported database schema range at startup.
+
+Future schema changes require a new Alembic revision.
+
+Released migrations must not be edited after release.
+
+Major-version upgrades may intentionally change the supported schema window.
 
 ## Operational Commands
 
@@ -33,4 +66,8 @@ alembic current
 alembic history
 alembic upgrade head
 
-Do not edit released migration files.
+For a clean development database, remove the local SQLite file and allow
+the application bootstrap/migrations to recreate it.
+
+For production, use an explicit backup and migration procedure. Never delete
+the production database to solve a schema problem.
