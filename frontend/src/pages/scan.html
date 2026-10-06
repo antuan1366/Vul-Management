@@ -30,7 +30,7 @@
     <section class="page-header">
         <div>
             <h1>Vulnerability Scans</h1>
-            <p>Run vulnerability discovery against the current asset inventory and review every scan execution here.</p>
+            <p>Start vulnerability discovery against the current asset inventory and review scan execution results here.</p>
         </div>
         <div class="page-header-actions">
             <button id="scan-now-button" class="primary-button" type="button">Scan Now</button>
@@ -38,54 +38,8 @@
         </div>
     </section>
 
-    <section class="content-card scan-card">
-        <div class="section-header">
-            <div>
-                <h2>Scan Schedule</h2>
-                <p class="section-description">Choose how often the asset inventory should be scanned automatically.</p>
-            </div>
-        </div>
-        <div class="schedule-form">
-            <label>
-                Frequency
-                <select id="scan-frequency">
-                    <option value="hourly">Every hour</option>
-                    <option value="every_2_hours">Every 2 hours</option>
-                    <option value="every_6_hours">Every 6 hours</option>
-                    <option value="daily">Every day</option>
-                    <option value="every_2_days">Every 2 days</option>
-                    <option value="weekly">Every week</option>
-                </select>
-            </label>
-            <label>
-                Start time
-                <input id="scan-time" type="time" value="02:00">
-            </label>
-            <label class="schedule-enabled">
-                <input id="scan-enabled" type="checkbox">
-                Enable schedule
-            </label>
-            <button id="save-schedule-button" class="secondary-button" type="button">Save Schedule</button>
-        </div>
-        <div id="schedule-message" class="section-description scan-message"></div>
-    </section>
-
-    <section class="content-card scan-card">
-        <div class="section-header">
-            <div>
-                <h2>Current Scan</h2>
-                <p class="section-description">The current or latest execution is shown here while the scan runs.</p>
-            </div>
-        </div>
-        <div class="scan-grid">
-            <div class="scan-stat"><div class="scan-stat-label">Status</div><div id="current-status" class="scan-stat-value">Idle</div></div>
-            <div class="scan-stat"><div class="scan-stat-label">Progress</div><div id="current-progress" class="scan-stat-value">0%</div></div>
-            <div class="scan-stat"><div class="scan-stat-label">Next Scheduled Scan</div><div id="next-scan" class="scan-stat-value">Not scheduled</div></div>
-        </div>
-        <div id="scan-result" class="result-box scan-message">No scan has been executed yet.</div>
-    </section>
-
     <section class="content-card">
+
         <div class="section-header">
             <div>
                 <h2>Scan Results</h2>
