@@ -1,5 +1,6 @@
 let editingAssetId = null;
 let assetFields = [];
+let assetIdentifiers = {};
 
 const assetConfig = window.ASSET_CONFIG || {};
 
@@ -7,6 +8,10 @@ async function loadAssetFields() {
     assetFields = await apiRequest(
         `/api/asset-fields?asset_type=${encodeURIComponent(assetConfig.assetType)}`
     );
+}
+
+async function loadAssetIdentifiers() {
+    assetIdentifiers = await loadIdentifierMap(assetConfig.assetType);
 }
 
 function getFieldValue(field, asset) {
@@ -160,7 +165,7 @@ function renderTableHeader() {
         <tr>
             <th>#</th>
             ${primaryFields.map(field => `<th>${escapeHtml(field.label)}</th>`).join("")}
-            <th>Actions</th>
+            <th>Identification</th><th>Actions</th>
         </tr>
     `;
 
@@ -183,6 +188,7 @@ async function loadAssets() {
 
     try {
         const assets = await apiRequest(assetConfig.endpoint);
+        await loadAssetIdentifiers();
 
         if (count) {
             count.textContent = `${assets.length} ${assets.length === 1 ? "Asset" : "Assets"}`;
@@ -216,11 +222,10 @@ async function loadAssets() {
                 <tr>
                     <td>${index + 1}</td>
                     ${cells}
+                    <td>${renderIdentifierStatus(assetIdentifiers[String(asset.id)], assetConfig.assetType, asset.id)}</td>
                     <td>
                         <div class="table-actions">
                             <button type="button" class="secondary-button small-button" onclick="editAsset(${asset.id})">Edit</button>
-                            <button type="button" class="secondary-button small-button" onclick="extractAssetCpe(${asset.id})">Extract CPE</button>
-                            <button type="button" class="secondary-button small-button" onclick="syncAssetIntelligence(${asset.id})">Discover Vulns</button>
                             <button type="button" class="danger-button small-button" onclick="deleteAsset(${asset.id})">Delete</button>
                         </div>
                     </td>
