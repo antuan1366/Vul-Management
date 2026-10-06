@@ -240,7 +240,7 @@ def _run_nvd_sync_job(job_id: int, days_back: int) -> None:
 @router.post("/nvd/sync")
 def sync_nvd_api(
     background_tasks: BackgroundTasks,
-    days_back: int = Query(default=7, ge=1, le=120),
+    days_back: int = Query(default=5, ge=1, le=120),
     db: Session = Depends(get_db),
 ):
     feed = db.scalar(
