@@ -6,17 +6,22 @@ Version: 2.0.0
 ### Release Gate
 - [ ] Start backend successfully
 - [ ] Confirm SQLite DB file is created
-- [ ] Confirm schema version 4
+- [ ] Confirm schema version 5
 - [ ] Confirm clean development data after migration
 - [ ] Verify all asset CRUD pages
 - [ ] Verify CPE/PURL extraction
-- [ ] Verify NVD discovery with five-day default
+- [ ] Verify NVD discovery
 - [ ] Verify OSV discovery for libraries
 - [ ] Verify Candidate -> Pending Review workflow
+- [ ] Verify finding status badges
 - [ ] Verify Approve workflow
 - [ ] Verify Reject workflow
+- [ ] Verify daily scan scheduling
+- [ ] Verify Last Scan / Next Scan / Scan Status
+- [ ] Verify Scan Now
 - [ ] Verify CISA KEV enrichment
-- [ ] Verify Sync Status progress
+- [ ] Verify standalone Sync Status page is removed
+- [ ] Verify NVD Days Back is removed from the UI
 - [ ] Verify remediation status API
 - [ ] Update documentation after final fixes
 - [ ] User approval
@@ -43,12 +48,16 @@ Version: 2.0.0
 - [x] Asset/Vulnerability mapping
 - [x] Remediation status API
 - [x] Vulnerability inventory UI
+- [x] Candidate review states
 - [ ] Full vulnerability detail page
 - [ ] Remediation UI
 - [ ] Remediation SLA/dates
 - [ ] Analyst workflow
 
 ### Scanning
+- [x] Daily NVD discovery schedule
+- [x] Manual NVD discovery
+- [x] Scan status on Vulnerabilities page
 - [ ] Nessus import
 - [ ] Finding normalization
 - [ ] Asset matching
