@@ -6,11 +6,24 @@
     <title>Vulnerabilities - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .sync-control { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
-        .sync-control label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
-        .sync-control input { min-width:90px; }
-        .review-badge { padding:4px 8px; border-radius:6px; font-size:12px; }
-        .review-pending { background:#fff3cd; color:#664d03; }
+        .scan-status-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; }
+        .scan-status-item { padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; }
+        .scan-status-label { font-size:12px; color:#6b7280; margin-bottom:6px; }
+        .scan-status-value { font-size:18px; font-weight:700; }
+        .scan-controls { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-top:18px; }
+        .scan-controls label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
+        .scan-controls input[type="time"] { min-width:110px; }
+        .scan-schedule-label { display:flex !important; flex-direction:row !important; align-items:center; gap:8px !important; padding-bottom:8px; }
+        .status-badge { display:inline-flex; align-items:center; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; }
+        .status-pending { background:#fff3cd; color:#664d03; }
+        .status-approved { background:#d1e7dd; color:#0f5132; }
+        .status-rejected { background:#f8d7da; color:#842029; }
+        .status-affected { background:#f8d7da; color:#842029; }
+        .status-potential { background:#cff4fc; color:#055160; }
+        .status-not-affected { background:#e2e3e5; color:#41464b; }
+        .scan-state { font-weight:600; }
+        @media(max-width:1000px){ .scan-status-grid{grid-template-columns:repeat(2,1fr);} }
+        @media(max-width:600px){ .scan-status-grid{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
@@ -18,52 +31,79 @@
     <section class="page-header">
         <div>
             <h1>Vulnerabilities</h1>
-            <p>Only administrator-approved findings are stored in the approved vulnerability inventory.</p>
-        </div>
-        <div class="table-actions">
-            <a class="secondary-button" href="sync-status.html">Sync Status</a>
+            <p>Every discovered finding stays in a review state until an administrator takes action.</p>
         </div>
     </section>
 
     <section class="content-card">
         <div class="section-header">
             <div>
-                <h2>Discovery Controls</h2>
-                <p class="section-description">NVD discovery is asset-scoped. It checks only CVEs modified within the selected window.</p>
+                <h2>Discovery Status</h2>
+                <p class="section-description">Run vulnerability discovery now or schedule it once every day at a specific time.</p>
             </div>
         </div>
-        <div class="sync-control">
+
+        <div class="scan-status-grid">
+            <div class="scan-status-item">
+                <div class="scan-status-label">Last Scan</div>
+                <div id="last-scan" class="scan-status-value">Never</div>
+            </div>
+            <div class="scan-status-item">
+                <div class="scan-status-label">Next Scan</div>
+                <div id="next-scan" class="scan-status-value">Not scheduled</div>
+            </div>
+            <div class="scan-status-item">
+                <div class="scan-status-label">Scan Status</div>
+                <div id="scan-status" class="scan-status-value">Idle</div>
+            </div>
+            <div class="scan-status-item">
+                <div class="scan-status-label">Pending Review</div>
+                <div id="pending-scan-count" class="scan-status-value">0</div>
+            </div>
+        </div>
+
+        <div class="scan-controls">
             <label>
-                NVD Days Back
-                <input id="nvd-days-back" type="number" min="1" max="120" value="5">
+                Daily scan time
+                <input id="scan-time" type="time" value="02:00">
             </label>
-            <button id="sync-nvd-button" class="primary-button" type="button">Discover NVD Findings</button>
-            <button id="sync-kev-button" class="secondary-button" type="button">Sync CISA KEV</button>
+            <label class="scan-schedule-label">
+                <input id="scan-enabled" type="checkbox">
+                Enable daily scan
+            </label>
+            <button id="save-schedule-button" class="secondary-button" type="button">Save Schedule</button>
+            <button id="run-scan-button" class="primary-button" type="button">Scan Now</button>
+            <button id="sync-kev-button" class="secondary-button" type="button">Update CISA KEV</button>
         </div>
+
+        <p id="scan-message" class="section-description"></p>
     </section>
 
     <section class="content-card">
         <div class="section-header">
-            <h2>Pending Review</h2>
-            <div id="candidate-count" class="item-count">0 Candidates</div>
+            <div>
+                <h2>Vulnerability Findings</h2>
+                <p class="section-description">Status is part of each finding. Pending findings require administrator review.</p>
+            </div>
+            <div id="finding-count" class="item-count">0 Findings</div>
         </div>
-        <div class="table-container">
-            <table>
-                <thead><tr><th>#</th><th>CVE</th><th>Asset</th><th>Severity</th><th>CVSS</th><th>Match</th><th>Confidence</th><th>Actions</th></tr></thead>
-                <tbody id="candidate-table-body"></tbody>
-            </table>
-        </div>
-    </section>
 
-    <section class="content-card">
-        <div class="section-header">
-            <h2>Approved Vulnerabilities</h2>
-            <div id="vulnerability-count" class="item-count">0 Vulnerabilities</div>
-        </div>
         <div class="table-container">
             <table>
-                <thead><tr><th>#</th><th>CVE</th><th>Severity</th><th>CVSS</th><th>Product</th><th>CISA KEV</th><th>Description</th></tr></thead>
-                <tbody id="vulnerabilities-table-body"></tbody>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>CVE</th>
+                        <th>Asset</th>
+                        <th>Severity</th>
+                        <th>CVSS</th>
+                        <th>Applicability</th>
+                        <th>Status</th>
+                        <th>CISA KEV</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="findings-table-body"></tbody>
             </table>
         </div>
     </section>
