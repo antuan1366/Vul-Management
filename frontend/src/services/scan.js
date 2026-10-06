@@ -59,19 +59,6 @@ async function loadScanJobs() {
     renderScanResults(data.items || []);
 }
 
-async function loadSchedule() {
-    const frequency = document.getElementById("scan-frequency");
-    if (!frequency) return;
-
-    const schedule = await apiRequest("/api/vulnerability-scan/status");
-
-    if (schedule.enabled && schedule.frequency) {
-        frequency.value = schedule.frequency;
-    } else {
-        frequency.value = "now";
-    }
-}
-
 function currentTimeHHMM() {
     const now = new Date();
     return String(now.getHours()).padStart(2, "0") + ":" +
@@ -90,15 +77,6 @@ async function startSelectedScan() {
 
     try {
         if (selectedFrequency === "now") {
-            await apiRequest("/api/vulnerability-scan/schedule", {
-                method: "PUT",
-                body: JSON.stringify({
-                    enabled: false,
-                    frequency: "daily",
-                    scan_time: "02:00"
-                })
-            });
-
             const result = await apiRequest("/api/vulnerability-scan/run", {
                 method: "POST"
             });
@@ -119,7 +97,7 @@ async function startSelectedScan() {
                 ". Next scan: " + scanDate(schedule.next_scan_at) + ".";
         }
 
-        await Promise.all([loadScanJobs(), loadSchedule()]);
+        await loadScanJobs();
     } catch (error) {
         message.textContent = error.message;
         alert("Could not start vulnerability scan.\n\n" + error.message);
@@ -131,14 +109,25 @@ async function startSelectedScan() {
 
 async function refreshScanPage() {
     try {
-        await Promise.all([loadScanJobs(), loadSchedule()]);
+        // Only refresh scan results while the page is open.
+        // The frequency selector is intentionally controlled by the user.
+        await loadScanJobs();
     } catch (error) {
         document.getElementById("schedule-message").textContent = error.message;
     }
 }
 
 function initializeScanPage() {
+    const frequency = document.getElementById("scan-frequency");
+
+    // Every new page load starts from "Scan Now".
+    // Do not read the persisted backend schedule here.
+    if (frequency) {
+        frequency.value = "now";
+    }
+
     document.getElementById("start-scan-button")?.addEventListener("click", startSelectedScan);
+
     refreshScanPage();
     scanPollTimer = setInterval(refreshScanPage, 3000);
 }
