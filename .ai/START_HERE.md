@@ -8,11 +8,11 @@ Vul-Management is a vulnerability management platform for assets,
 vulnerabilities, vulnerability intelligence, remediation tracking and
 reporting.
 
-## Current Release Candidate
-2.0.0
+## Current Development Version
+2.0.1
 
 ## Current Branch
-feature/v2-sqlite-foundation
+develop
 
 ## Current Development State
 
@@ -66,6 +66,8 @@ keeping the database in one portable file.
 
 ## Immediate Goal
 
-Verify the 2.0.0 release candidate locally before any merge to main.
+Verify the 2.0.1 online asset identification feature locally before any merge to main.
+
+The user performs the final merge.
 
 The user performs the final merge.
