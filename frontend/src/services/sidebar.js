@@ -52,8 +52,8 @@
                         <span class="sidebar-chevron">›</span>
                     </button>
                     <div id="vulnerabilities-menu" class="sidebar-submenu ${["vulnerabilities.html","scan.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                         <a href="scan.html" class="sidebar-subitem ${currentPage === "scan.html" ? "active" : ""}">Scan</a>
+                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                         <a href="#" class="sidebar-subitem disabled" title="Coming soon">Remediation</a>
                     </div>
                 </div>
