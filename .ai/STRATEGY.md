@@ -1,12 +1,10 @@
-﻿# STRATEGY
+# STRATEGY
 
 ## Development Strategy
 
 Build Vul-Management incrementally.
 
-Do not implement the entire platform at once.
-
-Every major component should follow:
+Every major component follows:
 
 1. Design
 2. Implementation
@@ -15,169 +13,80 @@ Every major component should follow:
 5. UI review
 6. Documentation update
 7. Git commit
+8. User approval before merge
 
-Do not push unfinished functionality as a stable development checkpoint.
+## Current Release Candidate
 
-## Current Version
-
-0.1.1
-
-The current version represents the first structured development
-checkpoint after establishing the initial Asset Management foundation.
+2.0.0
 
 ## Phase 1 - Foundation
 
 Status: COMPLETED
 
 Implemented:
-
-- Project structure
 - FastAPI
-- Configuration
-- Database layer
 - SQLAlchemy
+- Alembic
 - SQLite
+- Modular backend/frontend structure
 - Health endpoint
-- Modular backend structure
-- Modular frontend structure
+- Database compatibility validation
 
 ## Phase 2 - Asset Management
 
-Status: RELEASE CANDIDATE
-
-### Equipment
-
-Status: IMPLEMENTED
+Status: COMPLETED
 
 Implemented:
-
-- Equipment model
-- Equipment CRUD
-- Equipment frontend
-- Generic Asset Field engine
-- System fields
-- Custom fields
-- Required / Optional
-- Visible / Hidden
-- Field validation
-- Asset Field Administration
-- Floating modal UX for Equipment Add/Edit
-- Floating modal UX for Asset Field Add/Edit
-
-### Operating Systems
-
-Status: PLANNED
-
-Order:
-
-1. Model
-2. Schema
-3. Service
-4. API
-5. Frontend
-6. Custom fields
-7. Equipment relationship
-
-### Applications
-
-Status: PLANNED
-
-Order:
-
-1. Model
-2. Schema
-3. Service
-4. API
-5. Frontend
-6. Custom fields
-7. Asset relationships
-
-### Libraries
-
-Status: PLANNED
-
-Order:
-
-1. Model
-2. Schema
-3. Service
-4. API
-5. Frontend
-6. Custom fields
-7. Application relationships
-
-## Phase 3 - Vulnerability Management
-
-Implement:
-
-- Vulnerability database
-- CVE
-- Severity
-- Product
-- Description
-- Affected versions
-- Remediation
-- Mitigation
-- Workaround
-- Status
-- Dates
-- References
-
-The vulnerability model should be independent from external intelligence
-providers.
-
-Manual vulnerability records must remain possible.
-
-## Phase 4 - Vulnerability Intelligence
-
-Integrate:
-
-- NVD
-- CISA KEV
-
-External intelligence should be handled by dedicated integration
-services.
-
-Imported information must not blindly overwrite manually maintained
-information.
-
-The system should preserve source information and synchronization
-metadata.
-
-## Phase 5 - Asset/Vulnerability Mapping
-
-Create relationships between:
-
 - Equipment
 - Operating Systems
 - Applications
 - Libraries
-- Vulnerabilities
+- Generic Asset Fields
+- Dynamic managed-asset forms
 
-The mapping must support:
+## Phase 3 - Vulnerability Intelligence
 
-- Applicability
-- Manual override
-- Evidence
-- Mapping status
+Status: IMPLEMENTED FOUNDATION
 
-## Phase 6 - Risk Management
+Implemented:
+- Feed administration
+- NVD CPE
+- NVD CVE discovery
+- CPE applicability foundation
+- OSV PURL discovery
+- Security identifiers
+- Five-day default NVD discovery window
 
-Implement explainable risk prioritization using factors such as:
+## Phase 4 - Candidate and Review Workflow
 
-- Severity
-- Exploitability
-- CISA KEV status
-- Asset criticality
-- Environment
-- Exposure
+Status: IMPLEMENTED FOUNDATION
 
-Risk calculations should be explicit and auditable.
+Implemented:
+- Vulnerability Candidate model
+- Pending Review UI
+- Approve
+- Reject
+- Approved Vulnerability inventory
+- Asset/Vulnerability mapping
+- CISA KEV enrichment for approved records
+- Sync Status
 
-## Phase 7 - Nessus Integration
+## Phase 5 - Risk Management
 
-Support:
+Status: NEXT MAJOR FUNCTIONAL AREA
 
+Implement:
+- Risk calculation
+- Asset criticality weighting
+- CVSS weighting
+- KEV weighting
+- Exposure weighting
+- Environment weighting
+- Explainable risk score
+
+## Phase 6 - Nessus Integration
+
+Implement:
 - Nessus file import
 - Finding normalization
 - Asset matching
@@ -185,13 +94,19 @@ Support:
 - Finding status
 - Remediation tracking
 
-Nessus should be treated as an external source rather than the core
-vulnerability data model.
+## Phase 7 - Remediation
+
+Implement:
+- Full remediation UI
+- SLA/dates
+- Ownership
+- Exceptions
+- Evidence
+- Closure workflow
 
 ## Phase 8 - Dashboard and Reporting
 
 Implement:
-
 - Asset statistics
 - Vulnerability statistics
 - Critical/High findings
@@ -203,30 +118,23 @@ Implement:
 ## Phase 9 - Security
 
 Implement:
-
 - Authentication
 - Authorization
-- Role-based access control
+- RBAC
 - Audit logging
 - Secure configuration
 - API protection
 - Security review
 
-Security work becomes increasingly important as the application moves
-toward production use.
-
 ## Phase 10 - AI
 
-AI should only be implemented after the core platform is stable.
+AI remains optional and postponed until the core platform is stable.
 
-Possible capabilities:
-
+Possible future capabilities:
 - Vulnerability analysis
-- Natural language queries
+- Natural-language queries
 - Remediation assistance
 - Asset intelligence
 - Reporting assistance
-
-AI must remain optional.
 
 The platform must remain fully functional without AI.
