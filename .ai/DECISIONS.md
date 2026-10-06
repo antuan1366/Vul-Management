@@ -88,3 +88,14 @@ Git history remains responsible for code history.
 
 Version 2.0.0 is a release candidate until local API/UI verification is
 complete and the user explicitly approves promotion to main.
+
+
+## Decision 010 - Online Asset Identification
+
+Asset administrators should enter only the information they already know. Vul-Management performs online identification for each asset category.
+
+Equipment, Operating Systems and Applications use NVD CPE resolution. Libraries use PURL because package ecosystems are better represented by package identifiers than by forcing CPE matching.
+
+Automatic matches remain pending administrator verification. Reasons and candidate matches are stored so an administrator can understand and correct failed or ambiguous identification.
+
+NVD CPE and OSV endpoints are configured as Feeds and can be connectivity-tested from Administration > Feeds.
