@@ -31,8 +31,7 @@ Vul-Management is a modular web-based vulnerability management platform for:
 
 ## Current Development State
 
-The 2.0.0 release candidate consolidates the vulnerability-intelligence
-foundation and introduces the Candidate -> Review -> Approved workflow.
+The 2.0.0 release candidate consolidates the vulnerability-intelligence foundation and introduces the Candidate -> Review -> Approved workflow plus scheduled vulnerability discovery.
 
 Implemented:
 
@@ -50,7 +49,9 @@ Implemented:
 - CISA KEV enrichment for approved vulnerabilities
 - Remediation status API
 - Synchronization jobs and progress tracking
-- Five-day default NVD discovery window
+- Daily NVD discovery scheduling
+- In-page last/next scan status
+- Unified finding status on the Vulnerabilities page
 - FastAPI-hosted frontend
 - Alembic database versioning
 - SQLite single-file database
@@ -78,19 +79,15 @@ Default database:
 
 backend/data/vul_management.db
 
-The database is one physical file and is intentionally excluded from Git
-through .gitignore.
+The database is one physical file and is intentionally excluded from Git through .gitignore.
 
-SQLAlchemy remains the application data-access layer and Alembic remains the
-schema migration mechanism.
+SQLAlchemy remains the application data-access layer and Alembic remains the schema migration mechanism.
 
-The architecture keeps the database layer replaceable so PostgreSQL can be
-introduced later if deployment scale requires it.
+The architecture keeps the database layer replaceable so PostgreSQL can be introduced later if deployment scale requires it.
 
 ### Backup Principle
 
-Because the database is a file, the SQLite database can be backed up by
-copying the database file while the application is stopped.
+Because the database is a file, the SQLite database can be backed up by copying the database file while the application is stopped.
 
 Production backup/restore procedures must be defined before production use.
 
@@ -100,14 +97,30 @@ Asset
 -> CPE / PURL
 -> NVD / OSV discovery
 -> Vulnerability Candidate
--> Administrator Review
--> Approved Vulnerability
+-> Pending Review
+-> Administrator action
+-> Approved / Rejected
 -> Asset/Vulnerability mapping
 -> CISA KEV enrichment
 -> Risk
 -> Remediation
 
 A discovered finding must not automatically become an approved vulnerability.
+
+## Scan Workflow
+
+The Vulnerabilities page is the primary discovery and review surface.
+
+The administrator can:
+- run a scan immediately
+- enable/disable daily scanning
+- choose the daily scan time
+- see last scan and next scan
+- see pending review count
+- review candidate states
+- update CISA KEV
+
+The old standalone Sync Status page is intentionally removed from the UI. Internal Sync Jobs remain available to support long-running operations.
 
 ## AI
 
@@ -123,6 +136,4 @@ Semantic versioning is used:
 - Minor: backward-compatible features
 - Major: breaking architecture or workflow changes
 
-Version 2.0.0 is the next major release candidate. It must not be treated
-as the main-branch release until the user completes local verification and
-explicitly approves the merge.
+Version 2.0.0 is the next major release candidate. It must not be treated as the main-branch release until the user completes local verification and explicitly approves the merge.
