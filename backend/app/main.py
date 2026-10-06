@@ -42,6 +42,7 @@ from app.models.library import Library
 from app.models.operating_system import OperatingSystem
 from app.models.scan_schedule import ScanSchedule
 from app.models.security_identifier import SecurityIdentifier
+from app.models.security_identifier_check import SecurityIdentifierCheck
 from app.models.sync_job import SyncJob
 from app.models.vulnerability import AssetVulnerability, Vulnerability
 from app.models.vulnerability_candidate import VulnerabilityCandidate

@@ -11,7 +11,7 @@ from app.models.operating_system import OperatingSystem
 from app.models.security_identifier import SecurityIdentifier
 from app.models.vulnerability import Vulnerability
 from app.services.cpe_resolver import resolve_cpe
-from app.services.asset_intelligence import save_identifier_from_asset
+from app.services.asset_intelligence import check_all_assets, save_identifier_from_asset
 from app.services.osv_intelligence import sync_osv_for_purl
 from app.models.sync_job import SyncJob
 from app.services.sync_jobs import create_sync_job, update_sync_job
@@ -215,6 +215,113 @@ def list_vulnerabilities_api(
     }
 
 
+
+
+
+def _run_identifier_check_job(job_id: int, asset_type: str) -> None:
+    db = SessionLocal()
+    job = db.get(SyncJob, job_id)
+    try:
+        model_map = {
+            "equipment": Equipment,
+            "operating_system": OperatingSystem,
+            "application": Application,
+            "library": Library,
+        }
+        model = model_map.get(asset_type)
+        if model is None:
+            update_sync_job(db, job, status="failed", error_message="Unsupported asset type.")
+            return
+
+        total = len(db.scalars(select(model)).all())
+        update_sync_job(
+            db,
+            job,
+            status="running",
+            processed=0,
+            total=total,
+            current_step=f"Checking {asset_type.replace('_', ' ')} identifiers",
+        )
+        result = check_all_assets(db, asset_type)
+        for index, item in enumerate(result["results"], start=1):
+            update_sync_job(
+                db,
+                job,
+                processed=index,
+                total=total,
+                current_step=f"Checked {item['asset_name']}",
+            )
+
+        update_sync_job(
+            db,
+            job,
+            status="completed",
+            processed=total,
+            total=total,
+            current_step="Online identification completed",
+            result=result,
+        )
+    except Exception as error:
+        update_sync_job(
+            db,
+            job,
+            status="failed",
+            error_message=f"{error.__class__.__name__}: identifier check failed.",
+        )
+    finally:
+        db.close()
+
+
+@router.post("/assets/{asset_type}/check")
+def check_asset_identifiers_api(
+    asset_type: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    model_map = {
+        "equipment": Equipment,
+        "operating_system": OperatingSystem,
+        "application": Application,
+        "library": Library,
+    }
+    model = model_map.get(asset_type)
+    if model is None:
+        raise HTTPException(status_code=400, detail="Unsupported asset type.")
+
+    if asset_type == "library":
+        feed = db.scalar(
+            select(Feed).where(
+                Feed.feed_type == "osv",
+                Feed.enabled.is_(True),
+            ).order_by(Feed.id)
+        )
+        if feed is None:
+            raise HTTPException(
+                status_code=503,
+                detail="No enabled OSV feed is configured. Check Administration > Feeds.",
+            )
+    else:
+        feed = db.scalar(
+            select(Feed).where(
+                Feed.feed_type == "nvd_cpe",
+                Feed.enabled.is_(True),
+            ).order_by(Feed.id)
+        )
+        if feed is None:
+            raise HTTPException(
+                status_code=503,
+                detail="No enabled NVD CPE feed is configured. Check Administration > Feeds.",
+            )
+
+    total = len(db.scalars(select(model)).all())
+    job = create_sync_job(db, "identifier_check", total=total)
+    background_tasks.add_task(_run_identifier_check_job, job.id, asset_type)
+    return {
+        "job_id": job.id,
+        "status": "started",
+        "asset_type": asset_type,
+        "total_assets": total,
+    }
 
 
 def _run_nvd_sync_job(job_id: int, days_back: int) -> None:
