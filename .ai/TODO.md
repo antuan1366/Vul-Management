@@ -1,15 +1,15 @@
 # TODO
 
 ## Current Release Candidate
-Version: 2.0.0
+Version: 2.0.1
 
 ### Release Gate
 - [ ] Start backend successfully
 - [ ] Confirm SQLite DB file is created
-- [ ] Confirm schema version 5
+- [ ] Confirm schema version 6
 - [ ] Confirm clean development data after migration
 - [ ] Verify all asset CRUD pages
-- [ ] Verify CPE/PURL extraction
+- [ ] Verify online CPE/PURL identification
 - [ ] Verify NVD discovery
 - [ ] Verify OSV discovery for libraries
 - [ ] Verify Candidate -> Pending Review workflow
@@ -40,7 +40,11 @@ Version: 2.0.0
 - [x] Incremental NVD synchronization
 - [x] OSV PURL synchronization
 - [x] Asset-level vulnerability synchronization
-- [ ] Automatic CPE resolver confidence workflow
+- [x] Automatic CPE resolver confidence workflow
+- [x] Identification reason/status workflow
+- [x] Administrator identifier verification
+- [x] Identification check history
+- [x] NVD CPE and OSV connectivity checks
 - [ ] Manual applicability override UI
 
 ### Vulnerability Management
