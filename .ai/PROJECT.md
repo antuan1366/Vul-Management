@@ -7,13 +7,11 @@ Vul-Management
 GitHub:
 antuan1366/Vul-Management
 
-## Current Version
-1.1.0
+## Current Release Candidate
+2.0.0
 
 ## Description
-Vul-Management is a modular web-based vulnerability management platform.
-
-The platform is designed to provide centralized management for:
+Vul-Management is a modular web-based vulnerability management platform for:
 
 - Asset Management
 - Vulnerability Management
@@ -31,36 +29,31 @@ The platform is designed to provide centralized management for:
 3. Applications
 4. Libraries
 
-## Current Development Status
+## Current Development State
 
-Version 1.0.0 establishes the first complete Asset Management foundation.
+The 2.0.0 release candidate consolidates the vulnerability-intelligence
+foundation and introduces the Candidate -> Review -> Approved workflow.
 
-Implemented asset types:
+Implemented:
 
-- Equipment
-- Operating Systems
-- Applications
-- Libraries
-
-The current release includes:
-
-- CRUD APIs for all four asset categories
-- Generic Asset Field definitions
-- Asset-specific system fields
-- Custom fields and custom values
-- Required / Optional configuration
-- Visible / Hidden configuration
-- Asset Field Administration UI
-- Dynamic Add/Edit forms for managed assets
-- Equipment table with dynamic field labels
-- FastAPI-hosted frontend under /src
-- Root redirect to the dashboard
-- API metadata endpoint at /api/info
+- CRUD for all four asset categories
+- Generic Asset Field system
+- Feed administration
+- Security identifiers
+- NVD CPE resolution
+- NVD CVE discovery
+- CPE applicability/version-range foundation
+- OSV PURL discovery
+- Candidate vulnerability workflow
+- Admin approve/reject workflow
+- Asset/Vulnerability mapping
+- CISA KEV enrichment for approved vulnerabilities
+- Remediation status API
+- Synchronization jobs and progress tracking
+- Five-day default NVD discovery window
+- FastAPI-hosted frontend
 - Alembic database versioning
-- Database schema compatibility validation
-
-The project is currently focused on building the core platform before
-implementing advanced vulnerability intelligence and AI functionality.
+- SQLite single-file database
 
 ## Technology
 
@@ -77,110 +70,59 @@ implementing advanced vulnerability intelligence and AI functionality.
 - CSS
 - JavaScript
 
-## Architecture Principles
+## Database Architecture
 
-The application should remain modular and easy to troubleshoot.
+SQLite is the current application database.
 
-Backend responsibilities are separated into:
+Default database:
 
-- API routes
-- Models
-- Schemas
-- Services
-- Core / configuration
+backend/data/vul_management.db
 
-Frontend responsibilities are separated into:
+The database is one physical file and is intentionally excluded from Git
+through .gitignore.
 
-- Pages
-- Services
-- Styles
-- API communication
+SQLAlchemy remains the application data-access layer and Alembic remains the
+schema migration mechanism.
 
-The frontend is served by FastAPI in the current integrated runtime.
+The architecture keeps the database layer replaceable so PostgreSQL can be
+introduced later if deployment scale requires it.
 
-## Asset Field Architecture
+### Backup Principle
 
-The project uses a generic Asset Field system.
+Because the database is a file, the SQLite database can be backed up by
+copying the database file while the application is stopped.
 
-Each asset type can have:
+Production backup/restore procedures must be defined before production use.
 
-- Predefined system fields
-- Custom fields
-- Required / Optional configuration
-- Visible / Hidden configuration
-- Editable / Non-editable configuration
-- Field type validation
-- Select / Multiselect options
+## Vulnerability Workflow
 
-System-critical fields are protected from deletion where required.
+Asset
+-> CPE / PURL
+-> NVD / OSV discovery
+-> Vulnerability Candidate
+-> Administrator Review
+-> Approved Vulnerability
+-> Asset/Vulnerability mapping
+-> CISA KEV enrichment
+-> Risk
+-> Remediation
 
-Custom fields are stored through the generic asset field/value system.
-
-The design is reusable across:
-
-- Equipment
-- Operating Systems
-- Applications
-- Libraries
-
-## Database
-
-SQLite is currently used for development.
-
-Alembic is the schema-versioning mechanism. The current baseline is
-schema revision 0001, and application version 1.0.0 supports DB schema 1.
-
-The database architecture should remain replaceable so that PostgreSQL
-or another production database can be introduced later without requiring
-a complete application redesign.
-
-## Vulnerability Intelligence
-
-Planned sources include:
-
-- NVD / CVE
-- CISA KEV
-- Manual vulnerability entry
-- Nessus findings
+A discovered finding must not automatically become an approved vulnerability.
 
 ## AI
 
-AI functionality is currently OUT OF SCOPE.
+AI functionality is OUT OF SCOPE for the 2.0.0 core release.
 
-Mem0, local LLMs and AI-assisted vulnerability analysis may be added later.
-
-Core application functionality must never depend on AI.
-
-## Development Philosophy
-
-Development is incremental.
-
-Each major component should be:
-
-1. Designed
-2. Implemented
-3. Tested locally
-4. Reviewed through API/UI
-5. Approved
-6. Documented
-7. Committed to Git
-
-GitHub releases should represent stable development checkpoints.
+Mem0, local LLMs and AI-assisted analysis remain optional future work.
 
 ## Versioning
 
-Current version:
+Semantic versioning is used:
 
-1.0.0
+- Patch: fixes
+- Minor: backward-compatible features
+- Major: breaking architecture or workflow changes
 
-Version 1.0.0 is the first consolidated Asset Management release and
-includes the Asset Types implementation, database versioning foundation,
-and FastAPI/frontend integration.
-
-Future versioning should use semantic-versioning principles:
-
-- Patch versions for fixes and small corrections
-- Minor versions for backward-compatible feature additions
-- Major versions for breaking changes
-
-The current development area is Vulnerability Intelligence and the first Vulnerability Management foundation. Feed administration, CPE/PURL identity handling, NVD correlation, CISA KEV synchronization, and vulnerability-to-asset mapping are now being introduced.
+Version 2.0.0 is the next major release candidate. It must not be treated
+as the main-branch release until the user completes local verification and
+explicitly approves the merge.
