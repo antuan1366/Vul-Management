@@ -106,3 +106,18 @@ The next action after this documentation update is local testing.
 AI/Mem0/Gemini remains postponed.
 
 The core application must operate without AI.
+
+
+## Latest Vulnerability Scan UX Update
+
+- The Vulnerabilities page now has a single **Scan** button in the upper-right.
+- The Scan menu contains:
+  - One-time Scan
+  - Scheduled Scan
+- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
+- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
+- The standalone Scan Results navigation item was removed.
+- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
+- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
+- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
+- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.
