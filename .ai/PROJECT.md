@@ -7,8 +7,8 @@ Vul-Management
 GitHub:
 antuan1366/Vul-Management
 
-## Current Release Candidate
-2.0.0
+## Current Development Version
+2.0.1
 
 ## Description
 Vul-Management is a modular web-based vulnerability management platform for:
@@ -31,7 +31,7 @@ Vul-Management is a modular web-based vulnerability management platform for:
 
 ## Current Development State
 
-The 2.0.0 release candidate consolidates the vulnerability-intelligence foundation and introduces the Candidate -> Review -> Approved workflow plus scheduled vulnerability discovery.
+The 2.0.1 development version extends the vulnerability-intelligence foundation and introduces the Candidate -> Review -> Approved workflow plus scheduled vulnerability discovery.
 
 Implemented:
 
@@ -40,6 +40,10 @@ Implemented:
 - Feed administration
 - Security identifiers
 - NVD CPE resolution
+- Online asset identification checks with administrator verification
+- Identification failure reasons and CPE candidate lists
+- PURL generation for libraries
+- Identification check history
 - NVD CVE discovery
 - CPE applicability/version-range foundation
 - OSV PURL discovery
@@ -50,6 +54,7 @@ Implemented:
 - Remediation status API
 - Synchronization jobs and progress tracking
 - Daily NVD discovery scheduling
+- Identification feed connectivity testing
 - In-page last/next scan status
 - Unified finding status on the Vulnerabilities page
 - FastAPI-hosted frontend
@@ -118,7 +123,7 @@ The administrator can:
 - see last scan and next scan
 - see pending review count
 - review candidate states
-- update CISA KEV
+- manage vulnerability feeds and test identification endpoints
 
 The old standalone Sync Status page is intentionally removed from the UI. Internal Sync Jobs remain available to support long-running operations.
 
@@ -136,4 +141,4 @@ Semantic versioning is used:
 - Minor: backward-compatible features
 - Major: breaking architecture or workflow changes
 
-Version 2.0.0 is the next major release candidate. It must not be treated as the main-branch release until the user completes local verification and explicitly approves the merge.
+Version 2.0.1 is the current development version on develop. It must not be merged to main until the user completes local verification and explicitly approves the merge.
