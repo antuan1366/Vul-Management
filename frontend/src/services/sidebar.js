@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v2.0.0</span></div>
+            <div class="sidebar-footer"><span>Vul-Management</span><span>v2.0.1</span></div>
         `;
 
         document.body.prepend(sidebar);
