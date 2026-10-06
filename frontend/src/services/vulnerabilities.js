@@ -107,7 +107,6 @@ async function loadFindings() {
                 cvss_score: item.cvss_score,
                 match_status: "confirmed_affected",
                 status: "approved",
-                cisa_kev: Boolean(item.cisa_kev),
                 source: item.source,
                 created_at: item.created_at
             }));
