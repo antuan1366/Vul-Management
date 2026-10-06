@@ -8,6 +8,11 @@
     <style>
         .page-header-actions { display:flex; gap:10px; align-items:center; }
         .scan-card { margin-bottom:20px; }
+        .schedule-status-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:16px; margin-bottom:20px; }
+        .schedule-status-item { padding:14px 16px; border:1px solid #e5e7eb; border-radius:8px; }
+        .schedule-status-label { display:block; font-size:12px; color:#6b7280; margin-bottom:6px; }
+        .schedule-status-value { font-size:14px; font-weight:600; }
+        .schedule-actions { display:flex; gap:10px; align-items:center; }
         .schedule-form { display:flex; gap:12px; align-items:end; }
         .schedule-form label { display:flex; flex-direction:column; gap:6px; font-size:13px; min-width:260px; }
         .schedule-form select { min-height:38px; }
@@ -30,8 +35,39 @@
     <section class="content-card scan-card">
         <div class="section-header">
             <div>
+                <h2>Scan Schedule</h2>
+                <p class="section-description">Monitor the recurring vulnerability scan schedule. Scan Now runs a one-time scan without disabling or changing this schedule.</p>
+            </div>
+            <div class="schedule-actions">
+                <button id="disable-schedule-button" class="secondary-button" type="button">Disable Schedule</button>
+            </div>
+        </div>
+        <div class="schedule-status-grid">
+            <div class="schedule-status-item">
+                <span class="schedule-status-label">Status</span>
+                <span id="schedule-status" class="schedule-status-value">Loading...</span>
+            </div>
+            <div class="schedule-status-item">
+                <span class="schedule-status-label">Frequency</span>
+                <span id="schedule-frequency-status" class="schedule-status-value">-</span>
+            </div>
+            <div class="schedule-status-item">
+                <span class="schedule-status-label">Next Scan</span>
+                <span id="schedule-next-scan" class="schedule-status-value">-</span>
+            </div>
+            <div class="schedule-status-item">
+                <span class="schedule-status-label">Last Scan</span>
+                <span id="schedule-last-scan" class="schedule-status-value">-</span>
+            </div>
+        </div>
+        <div class="schedule-status-item" style="margin-bottom:20px;">
+            <span class="schedule-status-label">Last Status</span>
+            <span id="schedule-last-status" class="schedule-status-value">-</span>
+        </div>
+        <div class="section-header">
+            <div>
                 <h2>Start Scan</h2>
-                <p class="section-description">Select the scan mode and start vulnerability discovery immediately.</p>
+                <p class="section-description">Select Scan Now for a one-time scan, or choose a frequency to enable a recurring schedule.</p>
             </div>
         </div>
         <div class="schedule-form">
