@@ -154,7 +154,10 @@ async function loadScanStatus() {
             document.getElementById("scan-schedule-controls")?.classList.add("open");
         }
 
-        if (status.last_error) {
+        const lastJob = status.last_job;
+        if (lastJob?.result?.message) {
+            document.getElementById("scan-message").textContent = lastJob.result.message;
+        } else if (status.last_error) {
             document.getElementById("scan-message").textContent = status.last_error;
         } else if (status.last_job_id) {
             document.getElementById("scan-message").textContent =
