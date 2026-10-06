@@ -1,8 +1,6 @@
-﻿# ARCHITECTURE
+# ARCHITECTURE
 
 ## Current Architecture
-
-Vul-Management currently uses a modular web application architecture.
 
 Browser
     |
@@ -14,20 +12,16 @@ Frontend
 FastAPI
     |
     +-- API Routes
-    |
     +-- Services
-    |
     +-- Pydantic Schemas
-    |
     +-- SQLAlchemy Models
     |
     v
-SQLite
+SQLite database file
 
 ## Backend
 
 Location:
-
 backend/
 
 Structure:
@@ -44,24 +38,23 @@ backend/
 
 ### API Layer
 
-API routes are responsible for:
-
+Responsible for:
 - HTTP endpoints
 - Request handling
 - Request validation
 - Response handling
 - HTTP errors
 
-Business logic should remain inside services.
+Business logic belongs in services.
 
 ### Service Layer
 
-Services contain:
-
+Contains:
 - Business logic
 - Database operations
 - Validation
 - Data transformation
+- External intelligence integration
 
 ### Model Layer
 
@@ -69,239 +62,131 @@ SQLAlchemy models represent persistent database entities.
 
 ### Schema Layer
 
-Pydantic schemas define:
+Pydantic schemas define API request/response contracts.
 
-- API requests
-- API responses
-- Validation contracts
+## Database Architecture
 
-## Database
+Current engine: SQLite.
 
-SQLite is currently used during development.
+Default file:
+backend/data/vul_management.db
 
-The database should remain replaceable.
+The complete database is stored in one file.
 
-PostgreSQL or another production database should be possible later
-without redesigning the complete application architecture.
+The application uses SQLAlchemy, so API/service code should not depend on
+SQLite-specific SQL unless there is a deliberate reason.
+
+Alembic is the schema migration mechanism.
+
+The database file is excluded from Git.
+
+### Why SQLite
+
+SQLite is a real relational database, not a custom data file.
+
+It provides:
+- SQL
+- transactions
+- indexes
+- constraints
+- foreign keys
+- ACID behavior
+- simple backup/restore
+- zero separate DB server for local/small deployments
+
+### Future Database Replacement
+
+PostgreSQL remains a possible future deployment database.
+
+The replacement should be handled through the SQLAlchemy/Alembic data layer
+rather than by rewriting application business logic.
 
 ## Asset Architecture
 
-Equipment is currently the first implemented asset type.
-
-Equipment contains core system fields directly in its database model.
-
-Generic Asset Field definitions and values are stored separately.
-
-Conceptually:
-
-Asset
- |
- +-- System Fields
- |
- +-- Custom Field Definitions
- |
- +-- Custom Field Values
-
-The generic field engine is designed to be reused by:
-
+Supported asset types:
 - Equipment
 - Operating Systems
 - Applications
 - Libraries
 
-## Asset Field System
+Each asset may have:
+- system fields
+- custom field definitions
+- custom field values
+- security identifiers
 
-The Asset Field system contains:
+Security identifiers include CPE and PURL data.
 
-### AssetFieldDefinition
+## Vulnerability Architecture
 
-Defines:
+The vulnerability workflow is intentionally separated:
 
-- asset_type
-- field_key
-- label
-- field_type
-- required
-- visible
-- system_field
-- editable
-- deletable
-- options
-- description
+Asset
+-> CPE/PURL
+-> NVD/OSV
+-> Applicability
+-> Candidate
+-> Review
+-> Approved Vulnerability
+-> Asset/Vulnerability mapping
+-> CISA KEV
+-> Remediation
 
-### AssetFieldValue
+Candidate data is not the same thing as approved vulnerability inventory.
 
-Stores:
+## Synchronization Architecture
 
-- asset_type
-- asset_id
-- field_id
-- value
+Long-running discovery operations use Sync Jobs.
 
-This separation allows asset-specific custom fields without creating
-a new database column for every custom requirement.
+A Sync Job tracks:
+- status
+- progress
+- processed
+- total
+- current step
+- result
+- error
+- timestamps
 
-## Current API
-
-### Core
-
-GET /
-
-GET /api/health
-
-### Equipment
-
-GET /api/equipments
-
-GET /api/equipments/{equipment_id}
-
-POST /api/equipments
-
-PUT /api/equipments/{equipment_id}
-
-DELETE /api/equipments/{equipment_id}
-
-### Asset Fields
-
-GET /api/asset-fields
-
-POST /api/asset-fields
-
-PUT /api/asset-fields/{field_id}
-
-DELETE /api/asset-fields/{field_id}
+The frontend polls Sync Job status.
 
 ## Frontend
 
 Location:
+frontend/src/
 
-frontend/
+Structure:
+- pages/
+- services/
+- styles/
+- layouts/
 
-The frontend is a lightweight HTML/CSS/JavaScript application.
-
-Equipment and Asset Field forms use shared modal-overlay/dialog patterns for
-consistent Add/Edit interaction.
-
-Responsibilities:
-
-- Page rendering
-- API communication
-- Forms
-- Tables
-- Navigation
-- User interaction
-
-Frontend pages are separated from reusable services.
-
-Current conceptual structure:
-
-frontend/
-└── src/
-    ├── pages/
-    ├── services/
-    └── styles/
-
-## Navigation
-
-The frontend uses a shared sidebar/navigation structure.
-
-Current conceptual sections:
-
-- Dashboard
-- Assets
-  - Equipment
-  - Operating Systems
-  - Applications
-  - Libraries
-- Vulnerabilities
-  - Vulnerabilities
-  - Remediation
-  - Scan Results
-- Intelligence
-  - NVD
-  - CISA KEV
-- Reporting
-  - Dashboard
-  - Reports
-- Administration
-  - Asset Fields
-
-Some sections are currently placeholders for future functionality.
-
-## Backend as Source of Truth
-
-The backend remains responsible for:
-
-- Validation
-- Required field enforcement
-- Field type validation
-- Business rules
-- Database consistency
-
-Frontend validation exists for usability but must not replace backend
-validation.
+The frontend is a lightweight HTML/CSS/JavaScript application served by
+FastAPI.
 
 ## External Integrations
 
-Future integrations should use dedicated services.
-
-Planned integrations:
-
+Dedicated services handle:
 - NVD
 - CISA KEV
-- Nessus
+- OSV
+- future Nessus integration
 
-These integrations should not place provider-specific logic directly
-inside API route handlers.
+Provider-specific logic should not be embedded directly in API routes.
 
-## Future Architecture
+## Security Architecture
 
-The long-term architecture is:
-
-Frontend
-    |
-API
-    |
-Application Services
-    |
-Domain / Data Layer
-    |
-Database
-
-External integrations:
-
-NVD
-CISA KEV
-Nessus
-
-should communicate through dedicated integration services.
-
-## Future Security Architecture
-
-The application will eventually require:
-
+Future production requirements:
 - Authentication
 - Authorization
-- Role-based access control
+- RBAC
 - Audit logging
-- Secure API configuration
 - Secret management
-- Input validation
+- API protection
 - Security monitoring
 
 ## AI Architecture
 
-AI is intentionally not part of the current core architecture.
+AI is not part of the core architecture.
 
-If introduced later, AI should communicate with the platform through
-well-defined services/interfaces.
-
-AI must not become tightly coupled to:
-
-- Database models
-- Core business rules
-- Asset CRUD
-- Vulnerability CRUD
-- Authentication
-
-The core application must remain fully functional without AI.
+The platform must remain fully functional without AI.
