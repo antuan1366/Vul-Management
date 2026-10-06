@@ -2,9 +2,9 @@
 
 ## Current Release Candidate
 
-Application Version: 2.0.0
+Application Version: 2.0.1
 Minimum DB Schema: 1
-Maximum DB Schema: 5
+Maximum DB Schema: 6
 
 ## Database Engine
 
@@ -53,6 +53,13 @@ Adds:
 - scan_schedules
 - persistent daily vulnerability scan configuration
 - last/next scan metadata
+
+### 0006
+Adds:
+- asset identification reason/status metadata
+- CPE/PURL candidate storage
+- last identifier check timestamp
+- security_identifier_checks history
 
 The scheduler is disabled by default.
 
