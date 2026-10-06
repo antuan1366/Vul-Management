@@ -236,7 +236,16 @@ def _run_scan_job(job_id: int) -> None:
         try:
             schedule = get_or_create_schedule(status_db)
             finished_job = status_db.get(SyncJob, job_id)
-            schedule.last_status = finished_job.status if finished_job else "failed"
+            if finished_job and finished_job.status == "completed" and finished_job.result_summary:
+                import json
+                try:
+                    job_result = json.loads(finished_job.result_summary)
+                except json.JSONDecodeError:
+                    job_result = {}
+                schedule.last_status = job_result.get("status") or finished_job.status
+            else:
+                schedule.last_status = finished_job.status if finished_job else "failed"
+
             schedule.last_error = (
                 finished_job.error_message if finished_job else "Scan job was not found."
             )
