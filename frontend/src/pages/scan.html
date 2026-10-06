@@ -26,9 +26,33 @@
             <p>Start vulnerability discovery against the current asset inventory and review scan execution results here.</p>
         </div>
         <div class="page-header-actions">
-            <button id="scan-now-button" class="primary-button" type="button">Scan Now</button>
             <button id="sync-kev-button" class="secondary-button" type="button">Update CISA KEV</button>
         </div>
+    </section>
+
+    <section class="content-card scan-card">
+        <div class="section-header">
+            <div>
+                <h2>Start Scan</h2>
+                <p class="section-description">Select the scan mode and start vulnerability discovery immediately.</p>
+            </div>
+        </div>
+        <div class="schedule-form">
+            <label>
+                Frequency
+                <select id="scan-frequency">
+                    <option value="now" selected>Scan Now</option>
+                    <option value="hourly">Every hour</option>
+                    <option value="every_2_hours">Every 2 hours</option>
+                    <option value="every_6_hours">Every 6 hours</option>
+                    <option value="daily">Every day</option>
+                    <option value="every_2_days">Every 2 days</option>
+                    <option value="weekly">Every week</option>
+                </select>
+            </label>
+            <button id="start-scan-button" class="primary-button" type="button">Start</button>
+        </div>
+        <div id="schedule-message" class="section-description scan-message"></div>
     </section>
 
     <section class="content-card">
