@@ -109,10 +109,11 @@ def _set_scan_started(job_id: int, *, scheduled: bool = False) -> None:
         schedule.last_scan_at = datetime.now()
         schedule.last_status = "running"
         schedule.last_error = None
-        schedule.next_scan_at = (
-            calculate_next_scan(schedule.scan_time, schedule.frequency)
-            if schedule.enabled else None
-        )
+        if scheduled:
+            schedule.next_scan_at = (
+                calculate_next_scan(schedule.scan_time, schedule.frequency)
+                if schedule.enabled else None
+            )
         db.commit()
     finally:
         db.close()
@@ -194,10 +195,11 @@ def _run_scan_job(job_id: int, *, scheduled: bool = False) -> None:
             else:
                 schedule.last_status = finished_job.status if finished_job else "failed"
             schedule.last_error = finished_job.error_message if finished_job else "Scan job was not found."
-            schedule.next_scan_at = (
-                calculate_next_scan(schedule.scan_time, schedule.frequency)
-                if schedule.enabled else None
-            )
+            if scheduled:
+                schedule.next_scan_at = (
+                    calculate_next_scan(schedule.scan_time, schedule.frequency)
+                    if schedule.enabled else None
+                )
             schedule.updated_at = datetime.utcnow()
             status_db.commit()
         finally:
