@@ -1,5 +1,4 @@
 let findings = [];
-let scanPollTimer = null;
 
 function escapeVulnerabilityHtml(value) {
     return String(value ?? "")
@@ -8,13 +7,6 @@ function escapeVulnerabilityHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-}
-
-function formatDate(value) {
-    if (!value) return "Never";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return String(value);
-    return date.toLocaleString();
 }
 
 function statusClass(status) {
@@ -46,15 +38,12 @@ function humanApplicability(status) {
 function renderFindings() {
     const body = document.getElementById("findings-table-body");
     const count = document.getElementById("finding-count");
-    const pendingCount = document.getElementById("pending-scan-count");
     if (!body) return;
 
-    const pending = findings.filter(item => item.status === "pending").length;
     if (count) count.textContent = findings.length + " Findings";
-    if (pendingCount) pendingCount.textContent = pending;
 
     if (!findings.length) {
-        body.innerHTML = '<tr><td colspan="9" class="empty-cell">No vulnerability findings have been discovered yet.</td></tr>';
+        body.innerHTML = '<tr><td colspan="9" class="empty-cell">No vulnerabilities have been discovered yet.</td></tr>';
         return;
     }
 
@@ -105,9 +94,7 @@ async function loadFindings() {
         }));
 
         const approvedCves = new Set(
-            candidateFindings
-                .filter(item => item.status === "approved")
-                .map(item => item.cve_id)
+            candidateFindings.filter(item => item.status === "approved").map(item => item.cve_id)
         );
 
         const approvedFindings = (vulnerabilityResult.items || [])
@@ -133,135 +120,7 @@ async function loadFindings() {
         renderFindings();
     } catch (error) {
         document.getElementById("findings-table-body").innerHTML =
-            '<tr><td colspan="9" class="error-cell">' +
-            escapeVulnerabilityHtml(error.message) +
-            "</td></tr>";
-    }
-}
-
-async function loadScanStatus() {
-    try {
-        const status = await apiRequest("/api/vulnerability-scan/status");
-
-        document.getElementById("last-scan").textContent = formatDate(status.last_scan_at);
-        document.getElementById("next-scan").textContent =
-            status.enabled ? formatDate(status.next_scan_at) : "Not scheduled";
-        document.getElementById("scan-status").textContent =
-            status.last_status || "Idle";
-        document.getElementById("scan-time").value = status.scan_time || "02:00";
-        document.getElementById("scan-enabled").checked = Boolean(status.enabled);
-        if (status.enabled) {
-            document.getElementById("scan-schedule-controls")?.classList.add("open");
-        }
-
-        const lastJob = status.last_job;
-        if (lastJob?.result?.message) {
-            document.getElementById("scan-message").textContent = lastJob.result.message;
-        } else if (status.last_error) {
-            document.getElementById("scan-message").textContent = status.last_error;
-        } else if (status.last_job_id) {
-            document.getElementById("scan-message").textContent =
-                "Last scan job #" + status.last_job_id + ".";
-        } else {
-            document.getElementById("scan-message").textContent =
-                "No vulnerability discovery scan has run yet.";
-        }
-    } catch (error) {
-        document.getElementById("scan-message").textContent = error.message;
-    }
-}
-
-function toggleScanMenu() {
-    document.getElementById("scan-menu-panel")?.classList.toggle("open");
-}
-
-function openScheduleControls() {
-    document.getElementById("scan-menu-panel")?.classList.remove("open");
-    document.getElementById("scan-schedule-controls")?.classList.add("open");
-}
-
-function closeScanMenuOnOutsideClick(event) {
-    const menu = document.querySelector(".scan-menu");
-    if (menu && !menu.contains(event.target)) {
-        document.getElementById("scan-menu-panel")?.classList.remove("open");
-    }
-}
-
-async function saveSchedule() {
-    const button = document.getElementById("save-schedule-button");
-    const enabled = document.getElementById("scan-enabled").checked;
-    const scanTime = document.getElementById("scan-time").value || "02:00";
-
-    if (button) {
-        button.disabled = true;
-        button.textContent = "Saving...";
-    }
-
-    try {
-        await apiRequest("/api/vulnerability-scan/schedule", {
-            method: "PUT",
-            body: JSON.stringify({
-                enabled: enabled,
-                scan_time: scanTime
-            })
-        });
-        await loadScanStatus();
-        document.getElementById("scan-message").textContent =
-            enabled
-                ? "Daily vulnerability scan schedule saved."
-                : "Daily vulnerability scan disabled.";
-    } catch (error) {
-        alert("Could not save the scan schedule.\n\n" + error.message);
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Save Schedule";
-        }
-    }
-}
-
-async function runScan() {
-    const button = document.getElementById("run-scan-button");
-    if (button) {
-        button.disabled = true;
-        button.textContent = "Starting...";
-    }
-
-    try {
-        await apiRequest("/api/vulnerability-scan/run", { method: "POST" });
-        document.getElementById("scan-message").textContent =
-            "Vulnerability scan started. The scan is using the current asset inventory. If no assets are defined, the scan will finish with a No Assets status.";
-        await loadScanStatus();
-        await loadFindings();
-    } catch (error) {
-        alert("Could not start vulnerability scan.\n\n" + error.message);
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Scan Now";
-        }
-    }
-}
-
-async function syncCisaKev() {
-    const button = document.getElementById("sync-kev-button");
-    if (button) {
-        button.disabled = true;
-        button.textContent = "Updating...";
-    }
-
-    try {
-        const result = await apiRequest("/api/intelligence/cisa-kev/sync", { method: "POST" });
-        document.getElementById("scan-message").textContent =
-            "CISA KEV update started as job #" + result.job_id + ".";
-        await loadFindings();
-    } catch (error) {
-        alert("CISA KEV update failed.\n\n" + error.message);
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.textContent = "Update CISA KEV";
-        }
+            '<tr><td colspan="9" class="error-cell">' + escapeVulnerabilityHtml(error.message) + "</td></tr>";
     }
 }
 
@@ -281,7 +140,6 @@ async function approveCandidate(id) {
 async function rejectCandidate(id) {
     const notes = prompt("Reason for rejection:", "") ?? "";
     if (!confirm("Reject this finding?")) return;
-
     try {
         await apiRequest("/api/vulnerability-candidates/" + id + "/reject", {
             method: "POST",
@@ -293,23 +151,9 @@ async function rejectCandidate(id) {
     }
 }
 
-async function refreshVulnerabilityPage() {
-    await Promise.all([loadScanStatus(), loadFindings()]);
-}
-
 function initializeVulnerabilitiesPage() {
-    document.getElementById("scan-menu-button")?.addEventListener("click", toggleScanMenu);
-    document.getElementById("one-time-scan-button")?.addEventListener("click", runScan);
-    document.getElementById("scheduled-scan-button")?.addEventListener("click", openScheduleControls);
-    document.getElementById("save-schedule-button")?.addEventListener("click", saveSchedule);
-    document.getElementById("sync-kev-button")?.addEventListener("click", syncCisaKev);
-    document.addEventListener("click", closeScanMenuOnOutsideClick);
-
-    refreshVulnerabilityPage();
-
-    scanPollTimer = setInterval(function() {
-        refreshVulnerabilityPage();
-    }, 5000);
+    loadFindings();
+    setInterval(loadFindings, 10000);
 }
 
 if (document.readyState === "loading") {
