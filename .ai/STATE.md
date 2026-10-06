@@ -4,10 +4,9 @@
 2.0.0 release candidate
 
 ## State
-VULNERABILITY INTELLIGENCE + APPROVAL WORKFLOW + SQLITE FOUNDATION
+VULNERABILITY INTELLIGENCE + APPROVAL WORKFLOW + SCHEDULED SCANNING + SQLITE FOUNDATION
 
-The current candidate is based on the approved-findings/sync-status feature
-line and is being prepared as the next major release.
+The current candidate is based on the approved-findings/sync-status feature line and is being prepared as the next major release.
 
 ## Implemented
 
@@ -27,10 +26,12 @@ line and is being prepared as the next major release.
 - Remediation status API
 - Asset identifier extraction
 - Sync Jobs with progress/status
-- Five-day default NVD discovery window
+- Daily vulnerability scan scheduling
+- Last/next scan status on the Vulnerabilities page
+- Unified vulnerability finding status on the Vulnerabilities page
 - SQLite single-file database
 
-## Intelligence Pipeline
+## Vulnerability Workflow
 
 Asset
 -> Vendor/Product/Version
@@ -38,14 +39,24 @@ Asset
 -> NVD / OSV
 -> Applicability evaluation
 -> Vulnerability Candidate
--> Admin Review
--> Approved Vulnerability
+-> Pending Review
+-> Administrator action
+-> Approved / Rejected
 -> Asset/Vulnerability mapping
 -> CISA KEV
 -> Remediation
 
-A CPE match alone is not automatically treated as a confirmed approved
-vulnerability.
+A CPE match alone is not automatically treated as a confirmed approved vulnerability.
+
+## Scan Workflow
+
+The Vulnerabilities page is the control point for vulnerability discovery.
+
+- Scan Now starts NVD candidate discovery.
+- The administrator can enable a daily scan at a selected HH:MM time.
+- Last scan, next scan and scan status are shown on the same page.
+- The old standalone Sync Status page is removed from the UI.
+- The NVD look-back value is no longer exposed in the Vulnerabilities UI; the current internal discovery window remains five days.
 
 ## Database
 
@@ -60,9 +71,10 @@ Alembic revisions:
 - 0002 vulnerability intelligence
 - 0003 feed synchronization metadata
 - 0004 candidate workflow and sync jobs
+- 0005 vulnerability scan schedule
 
 Supported schema:
-- 1-4
+- 1-5
 
 The local database file is ignored by Git.
 
@@ -74,22 +86,25 @@ feature/v2-sqlite-foundation
 Base:
 feature/approved-findings-sync-status
 
-This branch is a release-candidate preparation branch. It must not be merged
-automatically.
+This branch is a release-candidate preparation branch. It must not be merged automatically.
 
 The user performs local verification and the final merge.
 
 ## Immediate Verification
 
 1. Start backend successfully.
-2. Confirm database bootstrap and schema 4.
-3. Confirm Approved Vulnerabilities is empty after the development reset.
-4. Create test assets.
-5. Extract CPE/PURL identifiers.
-6. Run NVD/OSV discovery.
-7. Confirm discoveries appear as Pending Review.
-8. Approve one candidate and reject another.
-9. Confirm only approved findings enter the approved inventory.
-10. Verify CISA KEV enriches approved findings.
-11. Verify Sync Status progress.
-12. Verify the SQLite file is created under backend/data.
+2. Confirm database bootstrap and schema 5.
+3. Confirm the scan schedule is created with scheduling disabled by default.
+4. Open Vulnerabilities and confirm the discovery status panel is visible.
+5. Run Scan Now and confirm Last Scan/Scan Status update.
+6. Enable a daily schedule and verify Next Scan is populated.
+7. Create test assets.
+8. Extract CPE/PURL identifiers.
+9. Run NVD/OSV discovery.
+10. Confirm discoveries appear as Pending Review.
+11. Approve one candidate and reject another.
+12. Confirm statuses are visible in the single findings table.
+13. Confirm only approved findings enter the approved inventory.
+14. Verify CISA KEV enriches approved findings.
+15. Verify the old Sync Status page/link is gone.
+16. Verify the SQLite file is created under backend/data.
