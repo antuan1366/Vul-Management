@@ -2,7 +2,7 @@
 
 ## Current Session
 
-The project is being prepared for the 2.0.0 major release candidate.
+The project is being prepared for the 2.0.1 development.
 
 The user requested a file-based database and then clarified the Vulnerabilities workflow: scanning must have an in-page status/control window, scans must be schedulable by day/time, the old standalone Sync Status and NVD Days Back controls must be removed, and each finding must carry an actionable administrator review state.
 
@@ -32,10 +32,10 @@ SQLAlchemy remains the data-access layer and Alembic remains the schema versioni
 
 ## Current Application Version
 
-2.0.0 release candidate
+2.0.1 development
 
 Supported database schema:
-1-5
+1-6
 
 ## Current Vulnerability UX
 
@@ -121,3 +121,14 @@ The core application must operate without AI.
 - If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
 - If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
 - The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.
+
+
+## Online Asset Identification — Version 2.0.1
+
+The administrator enters the asset information already available to them. Each asset category has an Online Identification Check control in the upper-right of its list.
+
+Equipment, Operating Systems and Applications use the configured NVD CPE feed. Libraries generate a PURL from package metadata and use the configured OSV feed for later vulnerability discovery.
+
+Identification results are saved with status, CPE/PURL, confidence, source, reason, candidate CPE list, and last checked time. Results remain pending until administrator verification.
+
+Every check is recorded in security_identifier_checks for history. Administration > Feeds contains NVD CPE and OSV endpoints and supports connectivity tests.
