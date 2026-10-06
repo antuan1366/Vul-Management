@@ -1,10 +1,10 @@
 # STATE
 
 ## Version
-2.0.0 release candidate
+2.0.1 development
 
 ## State
-VULNERABILITY INTELLIGENCE + APPROVAL WORKFLOW + SCHEDULED SCANNING + SQLITE FOUNDATION
+ONLINE ASSET IDENTIFICATION + VULNERABILITY INTELLIGENCE + APPROVAL WORKFLOW + SCHEDULED SCANNING
 
 The current candidate is based on the approved-findings/sync-status feature line and is being prepared as the next major release.
 
@@ -25,6 +25,11 @@ The current candidate is based on the approved-findings/sync-status feature line
 - CISA KEV enrichment
 - Remediation status API
 - Asset identifier extraction
+- Online CPE/PURL identification with status/reason/confidence
+- Administrator verification of discovered identifiers
+- Security identifier check history
+- Identification check progress window for each asset category
+- NVD CPE and OSV feed connectivity testing
 - Sync Jobs with progress/status
 - Daily vulnerability scan scheduling
 - Last/next scan status on the Vulnerabilities page
@@ -74,19 +79,19 @@ Alembic revisions:
 - 0005 vulnerability scan schedule
 
 Supported schema:
-- 1-5
+- 1-6
 
 The local database file is ignored by Git.
 
 ## Git
 
 Current branch:
-feature/v2-sqlite-foundation
+develop
 
 Base:
 feature/approved-findings-sync-status
 
-This branch is a release-candidate preparation branch. It must not be merged automatically.
+This branch is the active development branch for version 2.0.1. It must not be merged automatically.
 
 The user performs local verification and the final merge.
 
