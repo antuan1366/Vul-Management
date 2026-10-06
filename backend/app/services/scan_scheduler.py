@@ -4,10 +4,15 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 
 from app.database import SessionLocal
+from app.models.application import Application
+from app.models.equipment import Equipment
 from app.models.feed import Feed
+from app.models.library import Library
+from app.models.operating_system import OperatingSystem
 from app.models.scan_schedule import ScanSchedule
 from app.models.security_identifier import SecurityIdentifier
 from app.models.sync_job import SyncJob
+from app.services.asset_intelligence import save_identifier_from_asset
 from app.services.sync_jobs import create_sync_job, update_sync_job
 from app.services.vulnerability_intelligence import sync_nvd_incremental
 
@@ -99,6 +104,86 @@ def _run_scan_job(job_id: int) -> None:
     db = SessionLocal()
     job = db.get(SyncJob, job_id)
     try:
+        asset_models = [
+            ("equipment", Equipment),
+            ("operating_system", OperatingSystem),
+            ("application", Application),
+            ("library", Library),
+        ]
+        total_assets = sum(len(db.scalars(select(model)).all()) for _, model in asset_models)
+
+        if total_assets == 0:
+            update_sync_job(
+                db,
+                job,
+                status="completed",
+                processed=0,
+                total=0,
+                current_step="No assets are defined in the asset inventory",
+                result={
+                    "status": "no_assets",
+                    "message": "Scan started successfully, but no assets are defined in the asset inventory.",
+                    "total_assets": 0,
+                    "scannable_assets": 0,
+                    "discovered_candidates": 0,
+                },
+            )
+            return
+
+        update_sync_job(
+            db,
+            job,
+            status="running",
+            processed=0,
+            total=total_assets,
+            current_step="Preparing asset inventory for vulnerability discovery",
+        )
+
+        processed_assets = 0
+        for asset_type, model in asset_models:
+            assets = db.scalars(select(model)).all()
+            for asset in assets:
+                try:
+                    save_identifier_from_asset(db, asset_type, asset.id)
+                except Exception:
+                    pass
+                processed_assets += 1
+                update_sync_job(
+                    db,
+                    job,
+                    processed=processed_assets,
+                    total=total_assets,
+                    current_step=f"Preparing {asset_type} #{asset.id}",
+                )
+
+        db.commit()
+
+        scannable_assets = len(
+            db.scalars(
+                select(SecurityIdentifier).where(
+                    SecurityIdentifier.cpe.is_not(None)
+                )
+            ).all()
+        )
+
+        if scannable_assets == 0:
+            update_sync_job(
+                db,
+                job,
+                status="completed",
+                processed=total_assets,
+                total=total_assets,
+                current_step="No scannable assets were found",
+                result={
+                    "status": "no_scannable_assets",
+                    "message": "Assets exist, but no asset has a resolved CPE for NVD vulnerability discovery.",
+                    "total_assets": total_assets,
+                    "scannable_assets": 0,
+                    "discovered_candidates": 0,
+                },
+            )
+            return
+
         feed = db.scalar(
             select(Feed).where(
                 Feed.feed_type == "nvd_cve",
@@ -114,20 +199,13 @@ def _run_scan_job(job_id: int) -> None:
             )
             return
 
-        total = len(
-            db.scalars(
-                select(SecurityIdentifier).where(
-                    SecurityIdentifier.cpe.is_not(None)
-                )
-            ).all()
-        )
         update_sync_job(
             db,
             job,
             status="running",
             processed=0,
-            total=total,
-            current_step="Running scheduled vulnerability discovery",
+            total=scannable_assets,
+            current_step="Running vulnerability discovery against asset inventory",
         )
 
         result = sync_nvd_incremental(
@@ -141,8 +219,8 @@ def _run_scan_job(job_id: int) -> None:
             db,
             job,
             status="completed",
-            processed=total,
-            total=total,
+            processed=scannable_assets,
+            total=scannable_assets,
             current_step="Vulnerability discovery completed",
             result=result,
         )
