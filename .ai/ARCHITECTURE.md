@@ -1,8 +1,6 @@
-﻿# ARCHITECTURE
+# ARCHITECTURE
 
 ## Current Architecture
-
-Vul-Management currently uses a modular web application architecture.
 
 Browser
     |
@@ -14,20 +12,16 @@ Frontend
 FastAPI
     |
     +-- API Routes
-    |
     +-- Services
-    |
     +-- Pydantic Schemas
-    |
     +-- SQLAlchemy Models
     |
     v
-SQLite
+SQLite database file
 
 ## Backend
 
 Location:
-
 backend/
 
 Structure:
@@ -44,264 +38,205 @@ backend/
 
 ### API Layer
 
-API routes are responsible for:
-
+Responsible for:
 - HTTP endpoints
 - Request handling
 - Request validation
 - Response handling
 - HTTP errors
 
-Business logic should remain inside services.
+Business logic belongs in services.
 
 ### Service Layer
 
-Services contain:
-
+Contains:
 - Business logic
 - Database operations
 - Validation
 - Data transformation
+- External intelligence integration
+- Vulnerability scan scheduling
 
 ### Model Layer
 
 SQLAlchemy models represent persistent database entities.
 
-### Schema Layer
+### Database Architecture
 
-Pydantic schemas define:
+Current engine: SQLite.
 
-- API requests
-- API responses
-- Validation contracts
+Default file:
+backend/data/vul_management.db
 
-## Database
+The complete database is stored in one file.
 
-SQLite is currently used during development.
+The application uses SQLAlchemy, so API/service code should not depend on SQLite-specific SQL unless there is a deliberate reason.
 
-The database should remain replaceable.
+Alembic is the schema migration mechanism.
 
-PostgreSQL or another production database should be possible later
-without redesigning the complete application architecture.
+The database file is excluded from Git.
+
+### Scan Scheduling
+
+The vulnerability scan schedule is persisted in scan_schedules.
+
+The scheduler stores:
+- enabled
+- frequency
+- daily scan time
+- last job ID
+- last scan timestamp
+- next scan timestamp
+- last status
+- last error
+
+The FastAPI lifespan starts a lightweight scheduler loop. The loop checks the persisted daily schedule and starts the existing NVD discovery job when due.
+
+The schedule is disabled by default so application startup never unexpectedly launches an external scan.
+
+### Why SQLite
+
+SQLite is a real relational database, not a custom data file.
+
+It provides:
+- SQL
+- transactions
+- indexes
+- constraints
+- foreign keys
+- ACID behavior
+- simple backup/restore
+- zero separate DB server for local/small deployments
+
+### Future Database Replacement
+
+PostgreSQL remains a possible future deployment database.
+
+The replacement should be handled through the SQLAlchemy/Alembic data layer rather than by rewriting application business logic.
 
 ## Asset Architecture
 
-Equipment is currently the first implemented asset type.
-
-Equipment contains core system fields directly in its database model.
-
-Generic Asset Field definitions and values are stored separately.
-
-Conceptually:
-
-Asset
- |
- +-- System Fields
- |
- +-- Custom Field Definitions
- |
- +-- Custom Field Values
-
-The generic field engine is designed to be reused by:
-
+Supported asset types:
 - Equipment
 - Operating Systems
 - Applications
 - Libraries
 
-## Asset Field System
+Each asset may have:
+- system fields
+- custom field definitions
+- custom field values
+- security identifiers
 
-The Asset Field system contains:
+Security identifiers include CPE and PURL data.
 
-### AssetFieldDefinition
+## Vulnerability Architecture
 
-Defines:
+The vulnerability workflow is intentionally separated:
 
-- asset_type
-- field_key
-- label
-- field_type
-- required
-- visible
-- system_field
-- editable
-- deletable
-- options
-- description
+Asset
+-> CPE/PURL
+-> NVD/OSV
+-> Applicability
+-> Candidate
+-> Pending Review
+-> Administrator action
+-> Approved / Rejected
+-> Asset/Vulnerability mapping
+-> CISA KEV
+-> Remediation
 
-### AssetFieldValue
+Candidate data is not the same thing as approved vulnerability inventory.
 
-Stores:
+### Finding State Model
 
-- asset_type
-- asset_id
-- field_id
-- value
+The candidate review state is:
+- pending
+- approved
+- rejected
 
-This separation allows asset-specific custom fields without creating
-a new database column for every custom requirement.
+New discoveries enter pending.
 
-## Current API
+The Vulnerabilities page renders candidate review state directly as the finding status. Approved vulnerability records without a candidate row are also shown as approved.
 
-### Core
+Admin actions currently available from the findings table:
+- Approve
+- Reject
 
-GET /
+## Synchronization Architecture
 
-GET /api/health
+Long-running discovery operations use Sync Jobs internally.
 
-### Equipment
+A Sync Job tracks:
+- status
+- progress
+- processed
+- total
+- current step
+- result
+- error
+- timestamps
 
-GET /api/equipments
-
-GET /api/equipments/{equipment_id}
-
-POST /api/equipments
-
-PUT /api/equipments/{equipment_id}
-
-DELETE /api/equipments/{equipment_id}
-
-### Asset Fields
-
-GET /api/asset-fields
-
-POST /api/asset-fields
-
-PUT /api/asset-fields/{field_id}
-
-DELETE /api/asset-fields/{field_id}
+Sync Jobs are an internal execution mechanism. They are no longer exposed as a standalone frontend page.
 
 ## Frontend
 
 Location:
+frontend/src/
 
-frontend/
+Structure:
+- pages/
+- services/
+- styles/
+- layouts/
 
-The frontend is a lightweight HTML/CSS/JavaScript application.
+The frontend is a lightweight HTML/CSS/JavaScript application served by FastAPI.
 
-Equipment and Asset Field forms use shared modal-overlay/dialog patterns for
-consistent Add/Edit interaction.
-
-Responsibilities:
-
-- Page rendering
-- API communication
-- Forms
-- Tables
-- Navigation
-- User interaction
-
-Frontend pages are separated from reusable services.
-
-Current conceptual structure:
-
-frontend/
-└── src/
-    ├── pages/
-    ├── services/
-    └── styles/
-
-## Navigation
-
-The frontend uses a shared sidebar/navigation structure.
-
-Current conceptual sections:
-
-- Dashboard
-- Assets
-  - Equipment
-  - Operating Systems
-  - Applications
-  - Libraries
-- Vulnerabilities
-  - Vulnerabilities
-  - Remediation
-  - Scan Results
-- Intelligence
-  - NVD
-  - CISA KEV
-- Reporting
-  - Dashboard
-  - Reports
-- Administration
-  - Asset Fields
-
-Some sections are currently placeholders for future functionality.
-
-## Backend as Source of Truth
-
-The backend remains responsible for:
-
-- Validation
-- Required field enforcement
-- Field type validation
-- Business rules
-- Database consistency
-
-Frontend validation exists for usability but must not replace backend
-validation.
+The Vulnerabilities page is the single UI surface for:
+- scan status
+- scan scheduling
+- manual scan
+- CISA KEV update
+- finding review
 
 ## External Integrations
 
-Future integrations should use dedicated services.
-
-Planned integrations:
-
+Dedicated services handle:
 - NVD
 - CISA KEV
-- Nessus
+- OSV
+- future Nessus integration
 
-These integrations should not place provider-specific logic directly
-inside API route handlers.
+Provider-specific logic should not be embedded directly in API routes.
 
-## Future Architecture
+## Security Architecture
 
-The long-term architecture is:
-
-Frontend
-    |
-API
-    |
-Application Services
-    |
-Domain / Data Layer
-    |
-Database
-
-External integrations:
-
-NVD
-CISA KEV
-Nessus
-
-should communicate through dedicated integration services.
-
-## Future Security Architecture
-
-The application will eventually require:
-
+Future production requirements:
 - Authentication
 - Authorization
-- Role-based access control
+- RBAC
 - Audit logging
-- Secure API configuration
 - Secret management
-- Input validation
+- API protection
 - Security monitoring
 
 ## AI Architecture
 
-AI is intentionally not part of the current core architecture.
+AI is not part of the core architecture.
 
-If introduced later, AI should communicate with the platform through
-well-defined services/interfaces.
+The platform must remain fully functional without AI.
 
-AI must not become tightly coupled to:
 
-- Database models
-- Core business rules
-- Asset CRUD
-- Vulnerability CRUD
-- Authentication
+## Latest Vulnerability Scan UX Update
 
-The core application must remain fully functional without AI.
+- The Vulnerabilities page now has a single **Scan** button in the upper-right.
+- The Scan menu contains:
+  - One-time Scan
+  - Scheduled Scan
+- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
+- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
+- The standalone Scan Results navigation item was removed.
+- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
+- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
+- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
+- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.

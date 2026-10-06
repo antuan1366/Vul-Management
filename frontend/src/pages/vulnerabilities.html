@@ -1,101 +1,49 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Vulnerabilities - Vul-Management
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="../styles/main.css"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerabilities - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
 </head>
-
-
 <body>
+<main class="page-container">
+    <section class="page-header">
+        <div>
+            <h1>Vulnerabilities</h1>
+            <p>Approved and reviewable vulnerability findings associated with assets.</p>
+        </div>
+    </section>
 
-    <main class="page-container">
-
-        <section class="page-header">
-
+    <section class="content-card">
+        <div class="section-header">
             <div>
-
-                <h1>
-                    Vulnerabilities
-                </h1>
-
-                <p>
-                    Manage discovered vulnerabilities.
-                </p>
-
+                <h2>Vulnerabilities</h2>
+                <p class="section-description">Review discovered vulnerabilities and take action on pending findings.</p>
             </div>
-
-        </section>
-
-
-        <section class="content-card">
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                CVE
-                            </th>
-
-                            <th>
-                                Severity
-                            </th>
-
-                            <th>
-                                Product
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Assets
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody id="vulnerabilities-table-body">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <script src="../services/api.js"></script>
-
-    <script src="../services/sidebar.js"></script>
-
+            <div id="finding-count" class="item-count">0 Findings</div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>CVE</th>
+                        <th>Asset</th>
+                        <th>Severity</th>
+                        <th>CVSS</th>
+                        <th>Applicability</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="findings-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="../services/api.js"></script>
+<script src="../services/vulnerabilities.js"></script>
+<script src="../services/sidebar.js"></script>
 </body>
-
 </html>

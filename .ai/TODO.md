@@ -1,160 +1,108 @@
 # TODO
 
-## Current Release
+## Current Release Candidate
+Version: 2.0.0
 
-Version: 1.0.0
+### Release Gate
+- [ ] Start backend successfully
+- [ ] Confirm SQLite DB file is created
+- [ ] Confirm schema version 5
+- [ ] Confirm clean development data after migration
+- [ ] Verify all asset CRUD pages
+- [ ] Verify CPE/PURL extraction
+- [ ] Verify NVD discovery
+- [ ] Verify OSV discovery for libraries
+- [ ] Verify Candidate -> Pending Review workflow
+- [ ] Verify finding status badges
+- [ ] Verify Approve workflow
+- [ ] Verify Reject workflow
+- [ ] Verify daily scan scheduling
+- [ ] Verify Last Scan / Next Scan / Scan Status
+- [ ] Verify Scan Now
+- [ ] Verify CISA KEV enrichment
+- [ ] Verify standalone Sync Status page is removed
+- [ ] Verify NVD Days Back is removed from the UI
+- [ ] Verify remediation status API
+- [ ] Update documentation after final fixes
+- [ ] User approval
+- [ ] Prepare PR to main
+- [ ] User performs merge
+- [ ] Tag v2.0.0
 
-## Release Checklist
+### Vulnerability Intelligence
+- [x] NVD CPE feed
+- [x] NVD CVE feed
+- [x] CISA KEV feed
+- [x] Feed administration
+- [x] Security identifiers
+- [x] NVD CPE-to-CVE correlation
+- [x] NVD applicability/version-range foundation
+- [x] Incremental NVD synchronization
+- [x] OSV PURL synchronization
+- [x] Asset-level vulnerability synchronization
+- [ ] Automatic CPE resolver confidence workflow
+- [ ] Manual applicability override UI
 
-### Code and Documentation
-- [x] Equipment CRUD implementation
-- [x] Generic Asset Field system
-- [x] Asset Field Administration UI
-- [x] Equipment Add/Edit floating modal
-- [x] Asset Field Add/Edit floating modal
-- [x] Required / Optional field configuration
-- [x] Visible / Hidden field configuration
-- [x] Automatic custom field key generation
-- [x] Operating Systems asset type
-- [x] Applications asset type
-- [x] Libraries asset type
-- [x] Dynamic managed-asset frontend
-- [x] Alembic database versioning
-- [x] Database compatibility validation
-- [x] FastAPI-hosted frontend
-- [x] Dynamic Equipment table field labels
-- [x] Version updated to 1.0.0
-- [x] .ai documentation updated
+### Vulnerability Management
+- [x] Vulnerability model
+- [x] Asset/Vulnerability mapping
+- [x] Remediation status API
+- [x] Vulnerability inventory UI
+- [x] Candidate review states
+- [ ] Full vulnerability detail page
+- [ ] Remediation UI
+- [ ] Remediation SLA/dates
+- [ ] Analyst workflow
 
-### Local Verification
-- [x] Verify local application starts
-- [x] Verify database schema version
-- [x] Verify Equipment CRUD
-- [x] Verify Asset Field CRUD
-- [x] Verify Equipment Add/Edit modal
-- [x] Verify Asset Field Add/Edit modal
-- [x] Verify required/visible behavior
-- [x] Verify custom field validation
-- [x] Verify Delete actions
-- [x] Verify frontend behavior
-- [x] Verify Equipment field-label refresh
-
-### Release
-- [x] Final release candidate prepared on feature branch
-- [ ] Create Pull Request: feature/frontend-fastapi-integration -> main
-- [ ] User review Pull Request
-- [ ] User merge Pull Request
-- [ ] Synchronize local main
-- [ ] Create Git tag v1.0.0
-
-## Asset Management
-
-### Equipment
-- [x] Equipment model
-- [x] Equipment CRUD
-- [x] Equipment frontend
-- [x] Generic Asset Field system
-- [x] Custom Equipment fields
-- [x] Required / Optional fields
-- [x] Visible / Hidden fields
-- [x] Field type validation
-- [x] Asset Field Administration
-
-### Operating Systems
-- [x] Operating System model
-- [x] Operating System schema
-- [x] Operating System service
-- [x] Operating System API
-- [x] Operating System frontend
-- [x] Operating System custom fields
-- [x] Equipment relationship
-
-### Applications
-- [x] Application model
-- [x] Application schema
-- [x] Application service
-- [x] Application API
-- [x] Application frontend
-- [x] Application custom fields
-- [x] Asset relationships
-
-### Libraries
-- [x] Library model
-- [x] Library schema
-- [x] Library service
-- [x] Library API
-- [x] Library frontend
-- [x] Library custom fields
-- [x] Application relationships
-
-## Vulnerability Management
-- [ ] Vulnerability model
-- [ ] Vulnerability schema
-- [ ] Vulnerability CRUD
-- [ ] CVE
-- [ ] Severity
-- [ ] Product
-- [ ] Description
-- [ ] Affected versions
-- [ ] Remediation
-- [ ] Mitigation
-- [ ] Workaround
-- [ ] Status
-- [ ] Dates
-- [ ] References
-- [ ] Vulnerability frontend
-- [ ] Remediation tracking
-- [ ] Asset/Vulnerability relationship
-
-## Vulnerability Intelligence
-- [ ] NVD integration
-- [ ] CISA KEV integration
-- [ ] CVE synchronization
-- [ ] Data normalization
-- [ ] Applicability handling
-- [ ] Manual applicability override
-
-## Scanning
+### Scanning
+- [x] Daily NVD discovery schedule
+- [x] Manual NVD discovery
+- [x] Scan status on Vulnerabilities page
 - [ ] Nessus import
 - [ ] Finding normalization
 - [ ] Asset matching
 - [ ] Vulnerability matching
-- [ ] Scan result management
+- [ ] Scan history
+- [ ] Scan result UI
 
-## Risk Management
+### Risk
 - [ ] Risk calculation
-- [ ] Severity weighting
 - [ ] Asset criticality weighting
-- [ ] CISA KEV weighting
+- [ ] CVSS weighting
+- [ ] KEV weighting
 - [ ] Exposure weighting
 - [ ] Environment weighting
-- [ ] Explainable risk calculation
+- [ ] Explainable risk score
 
-## Reporting
-- [ ] Dashboard
-- [ ] Asset statistics
-- [ ] Vulnerability statistics
-- [ ] Critical/High findings
-- [ ] Remediation statistics
-- [ ] Trend reporting
+### Reporting
+- [ ] Dashboard metrics
 - [ ] Vulnerability reports
 - [ ] Remediation reports
-- [ ] Export functionality
+- [ ] CSV/JSON export
+- [ ] Trend reporting
 
-## Security
+### Security
 - [ ] Authentication
 - [ ] Authorization
-- [ ] Role-based access control
+- [ ] RBAC
 - [ ] Audit logging
-- [ ] Secure configuration
 - [ ] API protection
-- [ ] Input security review
+- [ ] Production security review
 
-## Future
-- [ ] AI assistant
-- [ ] Local/private AI integration
-- [ ] Natural language vulnerability analysis
-- [ ] AI-assisted reporting
-- [ ] AI-assisted remediation guidance
+### Future
+- [ ] Optional AI/Mem0
 
-AI must remain optional and must not be required by the core platform.
+
+## Latest Vulnerability Scan UX Update
+
+- The Vulnerabilities page now has a single **Scan** button in the upper-right.
+- The Scan menu contains:
+  - One-time Scan
+  - Scheduled Scan
+- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
+- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
+- The standalone Scan Results navigation item was removed.
+- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
+- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
+- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
+- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.

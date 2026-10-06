@@ -219,6 +219,8 @@ async function loadAssets() {
                     <td>
                         <div class="table-actions">
                             <button type="button" class="secondary-button small-button" onclick="editAsset(${asset.id})">Edit</button>
+                            <button type="button" class="secondary-button small-button" onclick="extractAssetCpe(${asset.id})">Extract CPE</button>
+                            <button type="button" class="secondary-button small-button" onclick="syncAssetIntelligence(${asset.id})">Discover Vulns</button>
                             <button type="button" class="danger-button small-button" onclick="deleteAsset(${asset.id})">Delete</button>
                         </div>
                     </td>
@@ -351,6 +353,51 @@ async function saveAsset(event) {
     } catch (error) {
         console.error(error);
         alert(`Failed to save ${assetConfig.singularLabel.toLowerCase()}.\n\n${error.message}`);
+    }
+}
+
+async function extractAssetCpe(id) {
+    try {
+        const result = await apiRequest(
+            "/api/intelligence/assets/" +
+            encodeURIComponent(assetConfig.assetType) +
+            "/" + id +
+            "/refresh-identifiers",
+            { method: "POST" }
+        );
+        if (result.resolved_cpe) {
+            alert("CPE extracted:\n\n" + result.resolved_cpe);
+        } else if (result.purl) {
+            alert("PURL prepared:\n\n" + result.purl);
+        } else {
+            alert("No identifier could be resolved for this asset.");
+        }
+    } catch (error) {
+        alert("Identifier extraction failed.\n\n" + error.message);
+    }
+}
+
+async function syncAssetIntelligence(id) {
+    try {
+        await extractAssetCpe(id);
+
+        const endpoint = assetConfig.assetType === "library"
+            ? "/api/intelligence/assets/" + encodeURIComponent(assetConfig.assetType) + "/" + id + "/sync-osv"
+            : "/api/intelligence/assets/" + encodeURIComponent(assetConfig.assetType) + "/" + id + "/sync";
+
+        const result = await apiRequest(endpoint, { method: "POST" });
+
+        if (result.job_id) {
+            window.location.href = "../pages/sync-status.html?job=" + result.job_id;
+            return;
+        }
+
+        alert(
+            "Discovery completed. Pending review: " +
+            (result.pending_review ?? result.discovered_candidates ?? 0)
+        );
+    } catch (error) {
+        alert("Vulnerability discovery failed.\n\n" + error.message);
     }
 }
 

@@ -1,47 +1,58 @@
-﻿# START HERE
+# START HERE
 
 ## Project
 Vul-Management
 
 ## Purpose
-Vul-Management is a vulnerability management platform for managing assets,
-vulnerabilities, vulnerability intelligence, remediation tracking and reporting.
+Vul-Management is a vulnerability management platform for assets,
+vulnerabilities, vulnerability intelligence, remediation tracking and
+reporting.
 
-## Current Version
-0.1.0
+## Current Release Candidate
+2.0.0
+
+## Current Branch
+feature/v2-sqlite-foundation
 
 ## Current Development State
-The project is in early development.
 
-Completed:
-- FastAPI backend initialized
-- SQLite database configured
-- SQLAlchemy configured
-- Health API implemented
-- Equipment CRUD API implemented
-- Equipment frontend implemented
-- Equipment UI manually reviewed
+The project has progressed beyond the original Asset Management foundation.
 
-Not yet completed:
-- Operating System management
-- Application management
-- Library management
-- Vulnerability management
-- NVD integration
-- CISA KEV integration
-- Asset/Vulnerability mapping
-- Risk prioritization
-- Nessus integration
-- Reporting
-- Authentication/authorization
-- Production deployment
-- AI assistant
+Implemented:
+- Equipment
+- Operating Systems
+- Applications
+- Libraries
+- Generic Asset Fields
+- Feed administration
+- NVD CPE resolution and CVE discovery
+- OSV PURL discovery
+- Applicability foundation
+- Vulnerability Candidate workflow
+- Admin approval/rejection
+- Approved Vulnerability inventory
+- CISA KEV enrichment
+- Remediation status
+- Sync Jobs and progress
+- SQLite single-file database
+- Alembic schema versioning
 
-## Important
-AI functionality using Gemini/Mem0 is postponed.
-The core vulnerability management platform must be developed first.
+## Database
+
+Database engine:
+SQLite
+
+Default file:
+backend/data/vul_management.db
+
+The database file is local runtime state and is ignored by Git.
+
+Do not replace the SQLite file with a JSON/YAML/custom storage format.
+SQLite already provides transactions, indexes, constraints and SQL while
+keeping the database in one portable file.
 
 ## Read Order
+
 1. PROJECT.md
 2. STRATEGY.md
 3. ARCHITECTURE.md
@@ -51,3 +62,10 @@ The core vulnerability management platform must be developed first.
 7. DECISIONS.md
 8. TODO.md
 9. RULES.md
+10. COMPATIBILITY.md
+
+## Immediate Goal
+
+Verify the 2.0.0 release candidate locally before any merge to main.
+
+The user performs the final merge.

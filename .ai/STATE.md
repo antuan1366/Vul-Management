@@ -1,228 +1,125 @@
 # STATE
 
 ## Version
-1.0.0
+2.0.0 release candidate
 
 ## State
-RELEASE CANDIDATE FOR MAIN
+VULNERABILITY INTELLIGENCE + APPROVAL WORKFLOW + SCHEDULED SCANNING + SQLITE FOUNDATION
 
-This document describes the current project state for version 1.0.0.
+The current candidate is based on the approved-findings/sync-status feature line and is being prepared as the next major release.
 
-## Backend
+## Implemented
 
-Implemented:
-
-- FastAPI application
-- Configuration system
-- SQLite database
-- SQLAlchemy
-- Pydantic schemas
-- Alembic database versioning
-- Database compatibility validation
-- Health API
-- Equipment CRUD API
-- Operating Systems CRUD API
-- Applications CRUD API
-- Libraries CRUD API
-- Generic Asset Field API
-- Generic Asset Field validation
-- Custom Asset Field value storage
-
-## Asset Management
-
-The following asset categories are implemented:
-
-1. Equipment
-2. Operating Systems
-3. Applications
-4. Libraries
-
-Each managed asset category supports its own system fields and generic
-custom-field configuration.
-
-## Equipment
-
-Equipment supports:
-
-- Create
-- Read
-- List
-- Update
-- Delete
-- System fields
-- Custom fields
-- Required / Optional configuration
-- Visible / Hidden configuration
-
-The Equipment table header is driven by the configured Equipment field labels,
-so an Asset Field label change is reflected in the Equipment table.
-
-## Generic Asset Fields
-
-The generic Asset Field system supports:
-
-- Field definitions
-- Custom fields
-- Required / Optional
-- Visible / Hidden
-- Editable / Non-editable
-- Deletable / Non-deletable
-- Field types
-- Select options
-- Multiselect options
-- Value validation
-- Asset-specific field configuration
-
-Supported field types include:
-
-- text
-- textarea
-- number
-- ip
-- date
-- boolean
-- select
-- multiselect
-- url
-- email
-
-## Frontend
-
-Implemented:
-
-- Dashboard page
-- Equipment page
-- Operating Systems page
-- Applications page
-- Libraries page
-- Asset Fields Administration page
-- Vulnerabilities initial/skeleton page
-- Shared API service
-- Shared sidebar
-- Shared styling
-- FastAPI-hosted frontend
-
-The frontend is mounted under /src.
-
-The root URL redirects to:
-
-/src/pages/dashboard.html
-
-API metadata is available at:
-
-/api/info
-
-The UI uses modular frontend service files rather than a single large script.
-
-## Database Versioning
-
-Implemented:
-
-- Alembic environment
-- Baseline revision 0001
-- Application/database compatibility window
-- Startup compatibility validation
-- Existing development database bootstrap to the Alembic baseline
-
-Current compatibility:
-
-- Application: 1.0.0
-- Minimum DB schema: 1
-- Maximum DB schema: 1
-
-## Vulnerabilities
-
-Vulnerability Management backend is not implemented yet.
-
-The frontend contains an initial page/skeleton only.
-
-Not yet implemented:
-
-- Vulnerability database model
-- Vulnerability CRUD
-- CVE management
-- Remediation workflow
-- Vulnerability status
+- Asset Management: Equipment, Operating Systems, Applications, Libraries
+- Generic Asset Fields
+- Feed Administration
+- NVD CPE resolution
+- NVD CVE discovery
+- CPE applicability/version evaluation foundation
+- OSV PURL synchronization
+- Security Identifier storage
+- Vulnerability Candidate storage
+- Candidate approve/reject workflow
+- Approved Vulnerability inventory
 - Asset/Vulnerability mapping
+- CISA KEV enrichment
+- Remediation status API
+- Asset identifier extraction
+- Sync Jobs with progress/status
+- Daily vulnerability scan scheduling
+- Last/next scan status on the Vulnerabilities page
+- Unified vulnerability finding status on the Vulnerabilities page
+- SQLite single-file database
 
-## Intelligence
+## Vulnerability Workflow
 
-Not yet implemented:
+Asset
+-> Vendor/Product/Version
+-> CPE or PURL
+-> NVD / OSV
+-> Applicability evaluation
+-> Vulnerability Candidate
+-> Pending Review
+-> Administrator action
+-> Approved / Rejected
+-> Asset/Vulnerability mapping
+-> CISA KEV
+-> Remediation
 
-- NVD integration
-- CISA KEV integration
-- Automated CVE synchronization
-- Applicability engine
+A CPE match alone is not automatically treated as a confirmed approved vulnerability.
 
-## Nessus
+## Scan Workflow
 
-Not yet implemented:
+The Vulnerabilities page is the control point for vulnerability discovery.
 
-- Nessus import
-- Finding normalization
-- Asset matching
-- Vulnerability matching
+- Scan Now starts NVD candidate discovery.
+- The administrator can enable a daily scan at a selected HH:MM time.
+- Last scan, next scan and scan status are shown on the same page.
+- The old standalone Sync Status page is removed from the UI.
+- The NVD look-back value is no longer exposed in the Vulnerabilities UI; the current internal discovery window remains five days.
 
-## Risk
+## Database
 
-Not yet implemented:
+Engine:
+- SQLite
 
-- Risk calculation
-- Asset criticality weighting
-- Exposure weighting
-- KEV weighting
+Database file:
+- backend/data/vul_management.db
 
-## Security
+Alembic revisions:
+- 0001 baseline
+- 0002 vulnerability intelligence
+- 0003 feed synchronization metadata
+- 0004 candidate workflow and sync jobs
+- 0005 vulnerability scan schedule
 
-Not yet implemented:
+Supported schema:
+- 1-5
 
-- Authentication
-- Authorization
-- Audit logging
-- Production security hardening
-
-## AI
-
-AI/Mem0 functionality remains postponed.
-
-No AI dependency is required for the current application.
+The local database file is ignored by Git.
 
 ## Git
 
-The project uses:
+Current branch:
+feature/v2-sqlite-foundation
 
-- Git
-- main branch
-- develop branch
-- feature branches
-- GitHub remote
+Base:
+feature/approved-findings-sync-status
 
-Target repository:
+This branch is a release-candidate preparation branch. It must not be merged automatically.
 
-antuan1366/Vul-Management
+The user performs local verification and the final merge.
 
-## Release 1.0.0 Contents
+## Immediate Verification
 
-Version 1.0.0 consolidates:
+1. Start backend successfully.
+2. Confirm database bootstrap and schema 5.
+3. Confirm the scan schedule is created with scheduling disabled by default.
+4. Open Vulnerabilities and confirm the discovery status panel is visible.
+5. Run Scan Now and confirm Last Scan/Scan Status update.
+6. Enable a daily schedule and verify Next Scan is populated.
+7. Create test assets.
+8. Extract CPE/PURL identifiers.
+9. Run NVD/OSV discovery.
+10. Confirm discoveries appear as Pending Review.
+11. Approve one candidate and reject another.
+12. Confirm statuses are visible in the single findings table.
+13. Confirm only approved findings enter the approved inventory.
+14. Verify CISA KEV enriches approved findings.
+15. Verify the old Sync Status page/link is gone.
+16. Verify the SQLite file is created under backend/data.
 
-- Asset Types
-- Generic Asset Fields
-- Database Versioning
-- FastAPI/frontend integration
-- Dynamic Equipment table field labels
 
-The frontend integration was locally tested and the Equipment field-label
-refresh behavior was verified.
+## Latest Vulnerability Scan UX Update
 
-## Next Major Work
-
-The next major development area is:
-
-1. Vulnerability Management
-2. Vulnerability Intelligence
-3. Asset/Vulnerability Mapping
-4. Risk Management
-5. Nessus Integration
-6. Reporting
-7. Security
-8. AI
+- The Vulnerabilities page now has a single **Scan** button in the upper-right.
+- The Scan menu contains:
+  - One-time Scan
+  - Scheduled Scan
+- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
+- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
+- The standalone Scan Results navigation item was removed.
+- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
+- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
+- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
+- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.

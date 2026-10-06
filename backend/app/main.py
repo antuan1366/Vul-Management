@@ -1,3 +1,5 @@
+import asyncio
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -8,7 +10,14 @@ from sqlalchemy import inspect
 
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
+from app.api.feeds import router as feeds_router
 from app.api.health import router as health_router
+from app.api.intelligence import router as intelligence_router
+from app.api.remediation import router as remediation_router
+from app.api.security_identifiers import router as security_identifiers_router
+from app.api.sync_jobs import router as sync_jobs_router
+from app.api.vulnerability_candidates import router as vulnerability_candidates_router
+from app.api.vulnerability_scan import router as vulnerability_scan_router
 from app.api.managed_assets import (
     application_router,
     library_router,
@@ -25,15 +34,21 @@ from app.database import (
     engine,
     migrate_equipment_name_nullable,
 )
-
 from app.models.application import Application
 from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
+from app.models.feed import Feed
 from app.models.library import Library
 from app.models.operating_system import OperatingSystem
-
+from app.models.scan_schedule import ScanSchedule
+from app.models.security_identifier import SecurityIdentifier
+from app.models.sync_job import SyncJob
+from app.models.vulnerability import AssetVulnerability, Vulnerability
+from app.models.vulnerability_candidate import VulnerabilityCandidate
 from app.services.asset_fields import seed_default_fields
+from app.services.feeds import seed_default_feeds
 from app.services.managed_asset_fields import seed_managed_asset_fields
+from app.services.scan_scheduler import scheduler_loop
 
 
 existing_tables = set(inspect(engine).get_table_names())
@@ -41,7 +56,8 @@ fresh_database = not existing_tables
 
 migrate_equipment_name_nullable()
 
-Base.metadata.create_all(bind=engine)
+if fresh_database:
+    Base.metadata.create_all(bind=engine)
 
 database_schema_version = ensure_database_version(
     fresh_database=fresh_database,
@@ -51,10 +67,10 @@ validate_database_compatibility(database_schema_version)
 
 def initialize_database():
     db = SessionLocal()
-
     try:
         seed_default_fields(db)
         seed_managed_asset_fields(db)
+        seed_default_feeds(db)
     finally:
         db.close()
 
@@ -62,10 +78,24 @@ def initialize_database():
 initialize_database()
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler_task = asyncio.create_task(scheduler_loop())
+    try:
+        yield
+    finally:
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            pass
+
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Vulnerability Management Platform",
+    lifespan=lifespan,
 )
 
 
@@ -84,6 +114,13 @@ app.include_router(asset_fields_router)
 app.include_router(operating_system_router)
 app.include_router(application_router)
 app.include_router(library_router)
+app.include_router(feeds_router)
+app.include_router(security_identifiers_router)
+app.include_router(intelligence_router)
+app.include_router(remediation_router)
+app.include_router(sync_jobs_router)
+app.include_router(vulnerability_candidates_router)
+app.include_router(vulnerability_scan_router)
 
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
