@@ -6,13 +6,22 @@
     <title>Vulnerabilities - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
+        .page-header-actions { display:flex; align-items:center; gap:10px; }
+        .scan-menu { position:relative; }
+        .scan-menu-panel { position:absolute; right:0; top:calc(100% + 8px); width:280px; padding:8px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12); z-index:50; display:none; }
+        .scan-menu-panel.open { display:block; }
+        .scan-menu-item { width:100%; text-align:left; border:0; background:transparent; padding:12px; border-radius:7px; cursor:pointer; }
+        .scan-menu-item:hover { background:#f5f6f8; }
+        .scan-menu-item strong { display:block; margin-bottom:3px; }
+        .scan-menu-item span { color:#6b7280; font-size:12px; }
         .scan-status-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; }
         .scan-status-item { padding:16px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; }
         .scan-status-label { font-size:12px; color:#6b7280; margin-bottom:6px; }
         .scan-status-value { font-size:18px; font-weight:700; }
-        .scan-controls { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-top:18px; }
-        .scan-controls label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
-        .scan-controls input[type="time"] { min-width:110px; }
+        .scan-schedule-controls { display:none; margin-top:18px; padding:14px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; }
+        .scan-schedule-controls.open { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+        .scan-schedule-controls label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
+        .scan-schedule-controls input[type="time"] { min-width:110px; }
         .scan-schedule-label { display:flex !important; flex-direction:row !important; align-items:center; gap:8px !important; padding-bottom:8px; }
         .status-badge { display:inline-flex; align-items:center; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; }
         .status-pending { background:#fff3cd; color:#664d03; }
@@ -21,7 +30,6 @@
         .status-affected { background:#f8d7da; color:#842029; }
         .status-potential { background:#cff4fc; color:#055160; }
         .status-not-affected { background:#e2e3e5; color:#41464b; }
-        .scan-state { font-weight:600; }
         @media(max-width:1000px){ .scan-status-grid{grid-template-columns:repeat(2,1fr);} }
         @media(max-width:600px){ .scan-status-grid{grid-template-columns:1fr;} }
     </style>
@@ -31,15 +39,31 @@
     <section class="page-header">
         <div>
             <h1>Vulnerabilities</h1>
-            <p>Every discovered finding stays in a review state until an administrator takes action.</p>
+            <p>Discovered vulnerabilities are tied to assets and remain in a review state until an administrator takes action.</p>
+        </div>
+        <div class="page-header-actions">
+            <div class="scan-menu">
+                <button id="scan-menu-button" class="primary-button" type="button">Scan ▾</button>
+                <div id="scan-menu-panel" class="scan-menu-panel">
+                    <button id="one-time-scan-button" class="scan-menu-item" type="button">
+                        <strong>One-time Scan</strong>
+                        <span>Start vulnerability discovery against the current asset inventory.</span>
+                    </button>
+                    <button id="scheduled-scan-button" class="scan-menu-item" type="button">
+                        <strong>Scheduled Scan</strong>
+                        <span>Configure a daily vulnerability discovery time.</span>
+                    </button>
+                </div>
+            </div>
+            <button id="sync-kev-button" class="secondary-button" type="button">Update CISA KEV</button>
         </div>
     </section>
 
     <section class="content-card">
         <div class="section-header">
             <div>
-                <h2>Discovery Status</h2>
-                <p class="section-description">Run vulnerability discovery now or schedule it once every day at a specific time.</p>
+                <h2>Scan Status</h2>
+                <p class="section-description">Scanning uses the asset inventory. Findings discovered from assets appear below for administrator review.</p>
             </div>
         </div>
 
@@ -62,7 +86,7 @@
             </div>
         </div>
 
-        <div class="scan-controls">
+        <div id="scan-schedule-controls" class="scan-schedule-controls">
             <label>
                 Daily scan time
                 <input id="scan-time" type="time" value="02:00">
@@ -72,8 +96,6 @@
                 Enable daily scan
             </label>
             <button id="save-schedule-button" class="secondary-button" type="button">Save Schedule</button>
-            <button id="run-scan-button" class="primary-button" type="button">Scan Now</button>
-            <button id="sync-kev-button" class="secondary-button" type="button">Update CISA KEV</button>
         </div>
 
         <p id="scan-message" class="section-description"></p>
@@ -83,7 +105,7 @@
         <div class="section-header">
             <div>
                 <h2>Vulnerability Findings</h2>
-                <p class="section-description">Status is part of each finding. Pending findings require administrator review.</p>
+                <p class="section-description">Each finding is associated with an asset. Pending findings require administrator review.</p>
             </div>
             <div id="finding-count" class="item-count">0 Findings</div>
         </div>
