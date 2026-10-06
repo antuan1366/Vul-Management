@@ -4,7 +4,7 @@
 
 Application Version: 2.0.0
 Minimum DB Schema: 1
-Maximum DB Schema: 4
+Maximum DB Schema: 5
 
 ## Database Engine
 
@@ -47,6 +47,14 @@ by application startup.
 
 This destructive reset is a development-only decision and must not be
 reused for production migrations.
+
+### 0005
+Adds:
+- scan_schedules
+- persistent daily vulnerability scan configuration
+- last/next scan metadata
+
+The scheduler is disabled by default.
 
 ## Compatibility Policy
 
