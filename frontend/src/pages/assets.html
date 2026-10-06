@@ -48,11 +48,14 @@
 
 
                 <button
-                    id="extract-all-cpe-button"
+                    id="online-identification-button"
+                    data-online-identifier-check
+                    data-asset-type="equipment"
+                    data-asset-label="Equipment"
                     class="secondary-button"
                     type="button"
                 >
-                    Extract CPEs
+                    Online CPE Check
                 </button>
 
                 <button
@@ -209,7 +212,7 @@
 
 
     <script src="../services/api.js"></script>
-
+    <script src="../services/identifier-check.js"></script>
     <script src="../services/assets.js"></script>
 
     <script src="../services/sidebar.js"></script>
