@@ -4,10 +4,9 @@
 
 The project is being prepared for the 2.0.0 major release candidate.
 
-The user requested that the application use a file-based database. Git inspection
-confirmed that the application already uses SQLite, so the work is being
-formalized around the SQLite single-file architecture rather than introducing
-a different database technology.
+The user requested a file-based database and then clarified the Vulnerabilities workflow: scanning must have an in-page status/control window, scans must be schedulable by day/time, the old standalone Sync Status and NVD Days Back controls must be removed, and each finding must carry an actionable administrator review state.
+
+Git inspection confirmed that the application already uses SQLite, so the work remains formalized around the SQLite single-file architecture.
 
 ## Current Branch
 
@@ -29,32 +28,58 @@ backend/data/vul_management.db
 
 The database file is excluded from Git.
 
-SQLAlchemy remains the data-access layer and Alembic remains the schema
-versioning mechanism.
+SQLAlchemy remains the data-access layer and Alembic remains the schema versioning mechanism.
 
 ## Current Application Version
 
 2.0.0 release candidate
 
 Supported database schema:
-1-4
+1-5
 
-## Current Major Features
+## Current Vulnerability UX
 
-- Four asset categories
-- Generic Asset Fields
-- Feed administration
-- NVD CPE/CVE intelligence
-- CPE applicability foundation
-- OSV PURL intelligence
-- Vulnerability Candidates
-- Admin review workflow
-- Approved Vulnerability inventory
-- CISA KEV enrichment
-- Remediation status
-- Sync Jobs and progress
-- Five-day NVD discovery window
-- SQLite single-file storage
+The Vulnerabilities page is now the single control point for discovery and review.
+
+Discovery status shows:
+- Last Scan
+- Next Scan
+- Scan Status
+- Pending Review count
+
+Controls:
+- Daily scan enable/disable
+- Daily scan time
+- Save Schedule
+- Scan Now
+- CISA KEV update
+
+Findings are shown in one table with:
+- CVE
+- Asset
+- Severity
+- CVSS
+- Applicability
+- Status
+- CISA KEV
+- Admin actions
+
+Finding states:
+- Pending Review
+- Approved
+- Rejected
+
+A newly discovered candidate starts as Pending Review. Approval creates/updates the approved vulnerability and its asset mapping. Rejection remains visible as Rejected until a future discovery updates the candidate.
+
+The standalone Sync Status page has been removed. NVD Days Back is no longer exposed in the Vulnerabilities UI.
+
+## Scan Scheduling
+
+A persistent scan_schedules table stores the daily schedule and last/next scan metadata.
+
+The FastAPI lifespan starts a lightweight scheduler loop. It checks the persisted schedule and starts an NVD discovery job when the configured daily time is reached.
+
+The scheduler is intentionally disabled by default.
 
 ## Git Workflow
 
