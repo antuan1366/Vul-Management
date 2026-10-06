@@ -85,7 +85,6 @@
                     <div id="vulnerabilities-menu" class="sidebar-submenu ${currentPage === "vulnerabilities.html" ? "open" : ""}">
                         <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                         <a href="#" class="sidebar-subitem disabled" title="Coming soon">Remediation</a>
-                        <a href="#" class="sidebar-subitem disabled" title="Coming soon">Scan Results</a>
                     </div>
                 </div>
 
