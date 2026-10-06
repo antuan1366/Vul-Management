@@ -127,6 +127,15 @@ Each asset may have:
 - custom field definitions
 - custom field values
 - security identifiers
+- identifier check history
+
+### Online Asset Identification
+
+Equipment, Operating Systems and Applications are resolved against the configured NVD CPE feed. Libraries use package metadata to generate a PURL and use OSV for package vulnerability discovery.
+
+Identification results are never silently treated as administrator-approved. A result can be pending verification, have multiple matches, be not found, lack required data, or fail because a feed is unavailable.
+
+Long-running category checks use Sync Jobs and expose progress in a floating frontend window. Verified identifiers are stored separately from automatically discovered candidates.
 
 Security identifiers include CPE and PURL data.
 
