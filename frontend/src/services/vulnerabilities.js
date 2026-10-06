@@ -150,6 +150,9 @@ async function loadScanStatus() {
             status.last_status || "Idle";
         document.getElementById("scan-time").value = status.scan_time || "02:00";
         document.getElementById("scan-enabled").checked = Boolean(status.enabled);
+        if (status.enabled) {
+            document.getElementById("scan-schedule-controls")?.classList.add("open");
+        }
 
         if (status.last_error) {
             document.getElementById("scan-message").textContent = status.last_error;
@@ -162,6 +165,22 @@ async function loadScanStatus() {
         }
     } catch (error) {
         document.getElementById("scan-message").textContent = error.message;
+    }
+}
+
+function toggleScanMenu() {
+    document.getElementById("scan-menu-panel")?.classList.toggle("open");
+}
+
+function openScheduleControls() {
+    document.getElementById("scan-menu-panel")?.classList.remove("open");
+    document.getElementById("scan-schedule-controls")?.classList.add("open");
+}
+
+function closeScanMenuOnOutsideClick(event) {
+    const menu = document.querySelector(".scan-menu");
+    if (menu && !menu.contains(event.target)) {
+        document.getElementById("scan-menu-panel")?.classList.remove("open");
     }
 }
 
@@ -208,7 +227,7 @@ async function runScan() {
     try {
         await apiRequest("/api/vulnerability-scan/run", { method: "POST" });
         document.getElementById("scan-message").textContent =
-            "Vulnerability discovery started. The status above will update automatically.";
+            "Vulnerability scan started. The scan is using the current asset inventory. If no assets are defined, the scan will finish with a No Assets status.";
         await loadScanStatus();
         await loadFindings();
     } catch (error) {
@@ -276,9 +295,12 @@ async function refreshVulnerabilityPage() {
 }
 
 function initializeVulnerabilitiesPage() {
+    document.getElementById("scan-menu-button")?.addEventListener("click", toggleScanMenu);
+    document.getElementById("one-time-scan-button")?.addEventListener("click", runScan);
+    document.getElementById("scheduled-scan-button")?.addEventListener("click", openScheduleControls);
     document.getElementById("save-schedule-button")?.addEventListener("click", saveSchedule);
-    document.getElementById("run-scan-button")?.addEventListener("click", runScan);
     document.getElementById("sync-kev-button")?.addEventListener("click", syncCisaKev);
+    document.addEventListener("click", closeScanMenuOnOutsideClick);
 
     refreshVulnerabilityPage();
 
