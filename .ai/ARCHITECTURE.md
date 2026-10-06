@@ -55,16 +55,13 @@ Contains:
 - Validation
 - Data transformation
 - External intelligence integration
+- Vulnerability scan scheduling
 
 ### Model Layer
 
 SQLAlchemy models represent persistent database entities.
 
-### Schema Layer
-
-Pydantic schemas define API request/response contracts.
-
-## Database Architecture
+### Database Architecture
 
 Current engine: SQLite.
 
@@ -73,12 +70,29 @@ backend/data/vul_management.db
 
 The complete database is stored in one file.
 
-The application uses SQLAlchemy, so API/service code should not depend on
-SQLite-specific SQL unless there is a deliberate reason.
+The application uses SQLAlchemy, so API/service code should not depend on SQLite-specific SQL unless there is a deliberate reason.
 
 Alembic is the schema migration mechanism.
 
 The database file is excluded from Git.
+
+### Scan Scheduling
+
+The vulnerability scan schedule is persisted in scan_schedules.
+
+The scheduler stores:
+- enabled
+- frequency
+- daily scan time
+- last job ID
+- last scan timestamp
+- next scan timestamp
+- last status
+- last error
+
+The FastAPI lifespan starts a lightweight scheduler loop. The loop checks the persisted daily schedule and starts the existing NVD discovery job when due.
+
+The schedule is disabled by default so application startup never unexpectedly launches an external scan.
 
 ### Why SQLite
 
@@ -98,8 +112,7 @@ It provides:
 
 PostgreSQL remains a possible future deployment database.
 
-The replacement should be handled through the SQLAlchemy/Alembic data layer
-rather than by rewriting application business logic.
+The replacement should be handled through the SQLAlchemy/Alembic data layer rather than by rewriting application business logic.
 
 ## Asset Architecture
 
@@ -126,17 +139,33 @@ Asset
 -> NVD/OSV
 -> Applicability
 -> Candidate
--> Review
--> Approved Vulnerability
+-> Pending Review
+-> Administrator action
+-> Approved / Rejected
 -> Asset/Vulnerability mapping
 -> CISA KEV
 -> Remediation
 
 Candidate data is not the same thing as approved vulnerability inventory.
 
+### Finding State Model
+
+The candidate review state is:
+- pending
+- approved
+- rejected
+
+New discoveries enter pending.
+
+The Vulnerabilities page renders candidate review state directly as the finding status. Approved vulnerability records without a candidate row are also shown as approved.
+
+Admin actions currently available from the findings table:
+- Approve
+- Reject
+
 ## Synchronization Architecture
 
-Long-running discovery operations use Sync Jobs.
+Long-running discovery operations use Sync Jobs internally.
 
 A Sync Job tracks:
 - status
@@ -148,7 +177,7 @@ A Sync Job tracks:
 - error
 - timestamps
 
-The frontend polls Sync Job status.
+Sync Jobs are an internal execution mechanism. They are no longer exposed as a standalone frontend page.
 
 ## Frontend
 
@@ -161,8 +190,14 @@ Structure:
 - styles/
 - layouts/
 
-The frontend is a lightweight HTML/CSS/JavaScript application served by
-FastAPI.
+The frontend is a lightweight HTML/CSS/JavaScript application served by FastAPI.
+
+The Vulnerabilities page is the single UI surface for:
+- scan status
+- scan scheduling
+- manual scan
+- CISA KEV update
+- finding review
 
 ## External Integrations
 
