@@ -1,4 +1,4 @@
-﻿# PROJECT MAP
+# PROJECT MAP
 
 ## Root
 
@@ -26,6 +26,9 @@ backend/app/services/
 ### Database
 backend/app/database.py
 
+### Migrations
+backend/alembic/versions/
+
 ### Application Entry Point
 backend/app/main.py
 
@@ -45,9 +48,11 @@ frontend/src/styles/
 ### Layouts
 frontend/src/layouts/
 
-## Project Requirements
+## Runtime Database
 
-requirements.txt
+backend/data/vul_management.db
+
+This file is ignored by Git.
 
 ## Project Memory
 
@@ -55,18 +60,24 @@ requirements.txt
 
 ## Important Runtime
 
-Backend development server:
-
-python -m uvicorn app.main:app --reload
-
-The backend is normally started from:
+Start backend from:
 
 backend/
 
-Because the current Windows environment has PowerShell execution-policy
-restrictions, the local virtual-environment Python executable may be used
-directly.
+Command:
 
-Example:
+python -m uvicorn app.main:app --reload
 
-.\..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+If PowerShell execution policy blocks activation, use the virtual environment
+Python executable directly.
+
+## Main Verification URLs
+
+Dashboard:
+http://127.0.0.1:8000/
+
+API info:
+http://127.0.0.1:8000/api/info
+
+Swagger:
+http://127.0.0.1:8000/docs
