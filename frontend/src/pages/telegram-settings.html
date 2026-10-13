@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Settings - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .telegram-settings-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:20px}
+        .telegram-status{padding:14px 16px;border:1px solid var(--border-color,#d1d5db);border-radius:8px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+        .telegram-status strong{display:block;margin-bottom:4px}
+        .telegram-status p{margin:0;color:var(--text-secondary,#6b7280);font-size:.9rem}
+        .telegram-status[data-state="connected"]{border-color:#16a34a}
+        .telegram-status[data-state="error"]{border-color:#dc2626}
+        .telegram-status[data-state="pending"]{border-color:#d97706}
+        .telegram-note{font-size:.9rem;line-height:1.55;color:var(--text-secondary,#6b7280)}
+        .telegram-message{margin-top:14px;padding:12px 14px;border-radius:7px;display:none;white-space:pre-wrap;overflow-wrap:anywhere}
+        .telegram-message.visible{display:block}
+        .telegram-message.success{background:rgba(22,163,74,.1);color:#15803d}
+        .telegram-message.error{background:rgba(220,38,38,.1);color:#b91c1c}
+        .telegram-message.info{background:rgba(59,130,246,.1);color:#1d4ed8}
+        .telegram-form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+        .telegram-security-list{padding-left:20px;line-height:1.8}
+        @media(max-width:850px){.telegram-settings-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <main class="page-container">
+        <section class="page-header">
+            <div>
+                <h1>Telegram Settings</h1>
+                <p>Connect a Telegram user account to collect messages from public channels for Threat Intelligence.</p>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Connection Status</h2>
+                    <p class="section-description">Verify that the local Telegram session is ready before starting a scan.</p>
+                </div>
+                <button id="telegram-refresh-status" class="secondary-button" type="button">Refresh Status</button>
+            </div>
+            <div id="telegram-status" class="telegram-status" data-state="unknown" role="status" aria-live="polite">
+                <div><strong id="telegram-status-title">Checking Telegram status…</strong><p id="telegram-status-detail">Please wait.</p></div>
+            </div>
+            <div id="telegram-message" class="telegram-message" role="status" aria-live="polite"></div>
+        </section>
+
+        <div class="telegram-settings-grid" style="margin-top:20px">
+            <section class="content-card">
+                <div class="section-header">
+                    <div>
+                        <h2>Account Configuration</h2>
+                        <p class="section-description">Enter the API credentials from my.telegram.org and your account phone number.</p>
+                    </div>
+                </div>
+                <form id="telegram-credentials-form">
+                    <div class="form-field">
+                        <label for="telegram-api-id">API ID</label>
+                        <input id="telegram-api-id" name="api_id" type="text" inputmode="numeric" autocomplete="off" placeholder="Telegram API ID">
+                    </div>
+                    <div class="form-field">
+                        <label for="telegram-api-hash">API Hash</label>
+                        <input id="telegram-api-hash" name="api_hash" type="password" autocomplete="new-password" placeholder="Saved locally; leave blank to reuse">
+                        <small class="section-description">The saved API Hash is never sent back to the browser. Leave this blank to reuse the locally stored value.</small>
+                    </div>
+                    <div class="form-field">
+                        <label for="telegram-phone">Phone Number</label>
+                        <input id="telegram-phone" name="phone_number" type="tel" autocomplete="tel" placeholder="+374XXXXXXXX" required>
+                        <small class="section-description">Use international format, including the country code.</small>
+                    </div>
+                    <div class="telegram-form-actions">
+                        <button id="telegram-send-code" class="primary-button" type="submit">Send Verification Code</button>
+                    </div>
+                </form>
+
+                <form id="telegram-verification-form" hidden style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-color,#d1d5db)">
+                    <h3>Verification Code</h3>
+                    <p id="telegram-code-instructions" class="telegram-note">Enter the code Telegram sent to your account. Depending on your account, it may arrive inside the Telegram app or by SMS.</p>
+                    <div class="form-field">
+                        <label for="telegram-verification-code">Verification Code</label>
+                        <input id="telegram-verification-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" required>
+                    </div>
+                    <div id="telegram-2fa-field" class="form-field" hidden>
+                        <label for="telegram-2fa-password">Telegram Two-Step Verification Password</label>
+                        <input id="telegram-2fa-password" name="password" type="password" autocomplete="current-password">
+                    </div>
+                    <div class="telegram-form-actions">
+                        <button id="telegram-verify-code" class="primary-button" type="submit">Verify &amp; Connect</button>
+                        <button id="telegram-cancel-verification" class="secondary-button" type="button">Cancel</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="content-card">
+                <div class="section-header"><div><h2>Setup Guide</h2><p class="section-description">Complete these steps once before scanning Telegram channels.</p></div></div>
+                <ol class="telegram-security-list">
+                    <li>Open <a href="https://my.telegram.org" target="_blank" rel="noopener noreferrer">my.telegram.org</a> and sign in with your Telegram account.</li>
+                    <li>Open API development tools and create or view your API ID and API Hash.</li>
+                    <li>Enter both values on this page, then enter your phone number in international format.</li>
+                    <li>Click <strong>Send Verification Code</strong> and enter the code received from Telegram.</li>
+                    <li>If requested, enter your Telegram two-step verification password.</li>
+                    <li>Confirm that the status says <strong>Connected</strong>, then return to Threat Intelligence to configure feeds.</li>
+                </ol>
+                <div class="telegram-message visible info">Security: this page is intended for a local, trusted instance. API credentials are saved in the ignored backend/.env file; the Telegram session file stays on this machine. Never commit or share either file.</div>
+                <p class="telegram-note">A verification code or two-step password is used only to complete the current sign-in and is not written to configuration or application logs.</p>
+            </section>
+        </div>
+    </main>
+    <script src="../services/api.js"></script>
+    <script src="../services/telegram-settings.js"></script>
+    <script src="../services/sidebar.js"></script>
+</body>
+</html>
