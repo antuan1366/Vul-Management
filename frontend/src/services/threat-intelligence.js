@@ -29,7 +29,16 @@
         $("ti-feeds-count").textContent=data.total+" Channels"; window.__tiFeeds=data.items;
         $("ti-feeds-body").innerHTML=data.items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td><a href="https://t.me/'+encodeURIComponent(x.channel_username)+'" target="_blank" rel="noopener">@'+esc(x.channel_username)+'</a></td><td>'+(x.enabled?"Enabled":"Disabled")+'</td><td>'+(x.last_message_id??"—")+'</td><td><div class="ti-actions">'+btn(x.enabled?"Disable":"Enable","toggle-feed",x.id)+btn("Delete","delete-feed",x.id)+'</div></td></tr>').join("")||'<tr><td colspan="6">No Telegram channels configured.</td></tr>';
     }
-    async function refreshAll(){ await Promise.all([loadResults(),loadIntelligence(),loadRuns(),loadFeeds()]); }
+    async function loadSchedule(){
+        const x=await req("/api/threat-intelligence/schedule");
+        $("ti-schedule-enabled").checked=Boolean(x.enabled);
+        $("ti-schedule-frequency").value=x.frequency||"daily";
+        $("ti-schedule-time").value=x.scan_time||"02:00";
+        $("ti-schedule-day").value=String(x.day_of_week??0);
+        $("ti-schedule-status").textContent=x.last_run_date?"Last scheduled run: "+dt(x.last_run_date):"No scheduled run yet";
+        $("ti-schedule-day").disabled=x.frequency!=="weekly";
+    }
+    async function refreshAll(){ await Promise.all([loadResults(),loadIntelligence(),loadRuns(),loadFeeds(),loadSchedule()]); }
     function openModal(x, mode) {
         activeDetail=x; detailMode=mode;
         $("ti-modal-title").textContent=x.cve_id||"CVE Details";
@@ -103,5 +112,13 @@
     $("ti-intelligence-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)action(b.dataset.action,b.dataset.id).catch(error);});
     $("ti-feeds-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)action(b.dataset.action,b.dataset.id).catch(error);});
     $("ti-feed-form").addEventListener("submit",async e=>{e.preventDefault();try{await req("/api/threat-intelligence/feeds",{method:"POST",body:JSON.stringify({name:$("ti-feed-name").value.trim(),channel_username:$("ti-feed-channel").value.trim(),enabled:true})});$("ti-feed-form").reset();await loadFeeds();}catch(ex){error(ex);}});
+    $("ti-schedule-frequency").addEventListener("change",()=>{$("ti-schedule-day").disabled=$("ti-schedule-frequency").value!=="weekly";});
+    $("ti-schedule-form").addEventListener("submit",async e=>{
+        e.preventDefault();
+        try{
+            const x=await req("/api/threat-intelligence/schedule",{method:"PUT",body:JSON.stringify({enabled:$("ti-schedule-enabled").checked,frequency:$("ti-schedule-frequency").value,scan_time:$("ti-schedule-time").value,day_of_week:Number($("ti-schedule-day").value)})});
+            $("ti-schedule-status").textContent="Schedule saved. Last run: "+dt(x.last_run_date);
+        }catch(ex){error(ex);}
+    });
     refreshAll().catch(error);
 })();
