@@ -5,6 +5,7 @@ from app.schemas.threat_intelligence import (
     TelegramVerificationSubmit,
 )
 from app.services.telegram_auth import (
+    cancel_telegram_verification,
     get_telegram_status,
     send_telegram_verification_code,
     verify_telegram_code,
@@ -46,3 +47,9 @@ async def telegram_verify_code(data: TelegramVerificationSubmit):
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+
+@router.delete("/verification/{challenge_id}")
+async def telegram_cancel_verification(challenge_id: str):
+    return await cancel_telegram_verification(challenge_id)
