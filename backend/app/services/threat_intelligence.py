@@ -233,7 +233,7 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     if feed.api_key:
         headers["apiKey"] = feed.api_key
     with httpx.Client(timeout=feed.timeout_seconds, follow_redirects=True, headers=headers) as client:
-        response = client.get(feed.url, params={"cveId": item.cve_id})
+        response = client.get("https://services.nvd.nist.gov/rest/json/cves/2.0", params={"cveId": item.cve_id})
         if response.status_code == 404:
             raise LookupError(f"{item.cve_id}: requested CVE data was not found in NVD.")
         response.raise_for_status()
