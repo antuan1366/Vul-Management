@@ -17,6 +17,7 @@ from app.api.remediation import router as remediation_router
 from app.api.security_identifiers import router as security_identifiers_router
 from app.api.sync_jobs import router as sync_jobs_router
 from app.api.threat_intelligence import router as threat_intelligence_router
+from app.api.telegram_settings import router as telegram_settings_router
 from app.api.vulnerability_candidates import router as vulnerability_candidates_router
 from app.api.vulnerability_scan import router as vulnerability_scan_router
 from app.api.managed_assets import (
@@ -129,6 +130,7 @@ app.include_router(sync_jobs_router)
 app.include_router(vulnerability_candidates_router)
 app.include_router(vulnerability_scan_router)
 app.include_router(threat_intelligence_router)
+app.include_router(telegram_settings_router)
 
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend" / "src"
