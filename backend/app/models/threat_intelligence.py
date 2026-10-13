@@ -91,3 +91,15 @@ class ThreatIntelligence(Base):
     jira_status: Mapped[str] = mapped_column(String(30), nullable=False, default="not_sent")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TelegramScanSchedule(Base):
+    __tablename__ = "telegram_scan_schedules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    frequency: Mapped[str] = mapped_column(String(20), nullable=False, default="daily")
+    scan_time: Mapped[str] = mapped_column(String(5), nullable=False, default="02:00")
+    day_of_week: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_run_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
