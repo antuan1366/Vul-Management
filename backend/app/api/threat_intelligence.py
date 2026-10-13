@@ -18,6 +18,7 @@ from app.models.threat_intelligence import (
     TelegramFeed,
     TelegramScanResult,
     TelegramScanRun,
+    TelegramScanSchedule,
     ThreatIntelligence,
 )
 from app.schemas.threat_intelligence import (
@@ -26,6 +27,7 @@ from app.schemas.threat_intelligence import (
     TelegramFeedCreate,
     TelegramFeedUpdate,
     TelegramScanRequest,
+    TelegramScheduleUpdate,
 )
 from app.services.threat_intelligence import (
     collect_telegram_scan,
@@ -35,6 +37,7 @@ from app.services.threat_intelligence import (
     serialize_scan_result,
     serialize_scan_run,
     send_jira_ticket,
+    telegram_scheduler_loop,
 )
 
 router = APIRouter(prefix="/api/threat-intelligence", tags=["Threat Intelligence"])
@@ -117,6 +120,49 @@ async def start_telegram_scan(data: TelegramScanRequest, background_tasks: Backg
     return {"scan_run_id": run.id, "status": run.status, "channels_total": run.channels_total}
 
 
+
+
+@router.get("/schedule")
+def get_telegram_schedule(db: Session = Depends(get_db)):
+    item = db.scalar(select(TelegramScanSchedule).order_by(TelegramScanSchedule.id))
+    if item is None:
+        item = TelegramScanSchedule(enabled=False, frequency="daily", scan_time="02:00", day_of_week=0)
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+    return {
+        "enabled": item.enabled,
+        "frequency": item.frequency,
+        "scan_time": item.scan_time,
+        "day_of_week": item.day_of_week,
+        "last_run_date": item.last_run_date,
+    }
+
+
+@router.put("/schedule")
+def update_telegram_schedule(data: TelegramScheduleUpdate, db: Session = Depends(get_db)):
+    if data.frequency not in {"daily", "weekly"}:
+        raise HTTPException(status_code=400, detail="frequency must be daily or weekly.")
+    item = db.scalar(select(TelegramScanSchedule).order_by(TelegramScanSchedule.id))
+    if item is None:
+        item = TelegramScanSchedule()
+        db.add(item)
+    item.enabled = data.enabled
+    item.frequency = data.frequency
+    item.scan_time = data.scan_time
+    item.day_of_week = data.day_of_week
+    item.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(item)
+    return {
+        "enabled": item.enabled,
+        "frequency": item.frequency,
+        "scan_time": item.scan_time,
+        "day_of_week": item.day_of_week,
+        "last_run_date": item.last_run_date,
+    }
+
+
 @router.get("/scan-runs")
 def list_scan_runs(limit: int = Query(default=50, ge=1, le=200), db: Session = Depends(get_db)):
     items = db.scalars(select(TelegramScanRun).order_by(TelegramScanRun.created_at.desc()).limit(limit)).all()
@@ -193,6 +239,34 @@ def enrich_scan_result(result_id: int, db: Session = Depends(get_db)):
         item.nvd_error = f"NVD request failed: {error.__class__.__name__}."
         db.commit()
         raise HTTPException(status_code=502, detail=item.nvd_error)
+    db.refresh(item)
+    return serialize_scan_result(item)
+
+
+
+
+@router.put("/scan-results/{result_id}")
+def update_scan_result(result_id: int, data: IntelligenceUpdate, db: Session = Depends(get_db)):
+    item = db.get(TelegramScanResult, result_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Scan result not found.")
+    if item.review_status == "rejected":
+        raise HTTPException(status_code=409, detail="Rejected scan results cannot be edited.")
+    values = data.model_dump(exclude_unset=True)
+    mapping = {
+        "severity": "severity",
+        "cvss_score": "cvss_score",
+        "affected_product": "affected_product",
+        "affected_versions": "affected_versions",
+        "remediation": "remediation",
+        "mitigation": "mitigation",
+        "description": "nvd_description",
+        "references_text": "references_text",
+    }
+    for key, value in values.items():
+        setattr(item, mapping[key], value)
+    item.updated_at = datetime.utcnow()
+    db.commit()
     db.refresh(item)
     return serialize_scan_result(item)
 
