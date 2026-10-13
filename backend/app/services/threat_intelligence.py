@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.database import SessionLocal
+from app.core.config import settings
 from app.models.feed import Feed
 from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, TelegramScanSchedule, ThreatIntelligence
 
@@ -101,9 +102,9 @@ def serialize_intelligence(item: ThreatIntelligence) -> dict:
 
 
 def _get_telegram_client():
-    api_id = os.getenv("TELEGRAM_API_ID")
-    api_hash = os.getenv("TELEGRAM_API_HASH")
-    session_path = os.getenv("TELEGRAM_SESSION", "./data/telegram")
+    api_id = settings.telegram_api_id
+    api_hash = settings.telegram_api_hash
+    session_path = settings.telegram_session
     if not api_id or not api_hash:
         raise RuntimeError("Telegram is not configured. Set TELEGRAM_API_ID and TELEGRAM_API_HASH, then run backend/scripts/login_telegram.py once.")
     try:
@@ -293,11 +294,11 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
 
 
 def send_jira_ticket(item: ThreatIntelligence) -> dict:
-    base_url = os.getenv("JIRA_BASE_URL", "").rstrip("/")
-    email = os.getenv("JIRA_EMAIL")
-    token = os.getenv("JIRA_API_TOKEN")
-    project_key = os.getenv("JIRA_PROJECT_KEY")
-    issue_type = os.getenv("JIRA_ISSUE_TYPE", "Task")
+    base_url = (settings.jira_base_url or "").rstrip("/")
+    email = settings.jira_email
+    token = settings.jira_api_token
+    project_key = settings.jira_project_key
+    issue_type = settings.jira_issue_type
     if not all((base_url, email, token, project_key)):
         raise RuntimeError("Jira is not configured. Set JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN, and JIRA_PROJECT_KEY.")
     summary = f"{item.cve_id} - {item.affected_product or 'Vulnerability review'}"
