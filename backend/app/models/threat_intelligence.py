@@ -23,7 +23,7 @@ class TelegramScanRun(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     mode: Mapped[str] = mapped_column(String(20), nullable=False)
     start_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
+    status: Mapped[str] = mapped_column(String(30), nullable=False, default="pending", index=True)
     channels_total: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     channels_processed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     messages_processed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
