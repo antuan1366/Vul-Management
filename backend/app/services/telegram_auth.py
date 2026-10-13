@@ -78,6 +78,9 @@ async def get_telegram_status() -> dict:
     }
     if not configured:
         return result
+    if _PENDING:
+        result["pending_verification"] = True
+        return result
     try:
         client = _new_client(settings.telegram_api_id, settings.telegram_api_hash, settings.telegram_session)
         await client.connect()
