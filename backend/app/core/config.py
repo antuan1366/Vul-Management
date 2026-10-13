@@ -11,6 +11,16 @@ class Settings(BaseSettings):
     db_schema_min: int = 1
     db_schema_max: int = 7
 
+    telegram_api_id: str | None = None
+    telegram_api_hash: str | None = None
+    telegram_session: str = "./data/telegram"
+
+    jira_base_url: str | None = None
+    jira_email: str | None = None
+    jira_api_token: str | None = None
+    jira_project_key: str | None = None
+    jira_issue_type: str = "Task"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
