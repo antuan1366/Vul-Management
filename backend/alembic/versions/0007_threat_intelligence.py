@@ -47,7 +47,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("mode", sa.String(length=20), nullable=False),
         sa.Column("start_date", sa.DateTime(), nullable=True),
-        sa.Column("status", sa.String(length=20), nullable=False, server_default="pending"),
+        sa.Column("status", sa.String(length=30), nullable=False, server_default="pending"),
         sa.Column("channels_total", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("channels_processed", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("messages_processed", sa.Integer(), nullable=False, server_default="0"),
