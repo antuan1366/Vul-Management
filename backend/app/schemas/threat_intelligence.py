@@ -44,8 +44,8 @@ class TelegramScheduleUpdate(BaseModel):
 
 
 class TelegramVerificationCodeRequest(BaseModel):
-    api_id: str = Field(min_length=1, max_length=20)
-    api_hash: str = Field(min_length=1, max_length=200)
+    api_id: str | None = Field(default=None, max_length=20)
+    api_hash: str | None = Field(default=None, max_length=200)
     phone_number: str = Field(min_length=6, max_length=30)
 
 
