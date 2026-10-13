@@ -45,13 +45,14 @@ from app.models.scan_schedule import ScanSchedule
 from app.models.security_identifier import SecurityIdentifier
 from app.models.security_identifier_check import SecurityIdentifierCheck
 from app.models.sync_job import SyncJob
-from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, ThreatIntelligence
+from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, TelegramScanSchedule, ThreatIntelligence
 from app.models.vulnerability import AssetVulnerability, Vulnerability
 from app.models.vulnerability_candidate import VulnerabilityCandidate
 from app.services.asset_fields import seed_default_fields
 from app.services.feeds import seed_default_feeds
 from app.services.managed_asset_fields import seed_managed_asset_fields
 from app.services.scan_scheduler import scheduler_loop
+from app.services.threat_intelligence import telegram_scheduler_loop
 
 
 existing_tables = set(inspect(engine).get_table_names())
@@ -84,14 +85,17 @@ initialize_database()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler_task = asyncio.create_task(scheduler_loop())
+    telegram_scheduler_task = asyncio.create_task(telegram_scheduler_loop())
     try:
         yield
     finally:
         scheduler_task.cancel()
-        try:
-            await scheduler_task
-        except asyncio.CancelledError:
-            pass
+        telegram_scheduler_task.cancel()
+        for task in (scheduler_task, telegram_scheduler_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app = FastAPI(
