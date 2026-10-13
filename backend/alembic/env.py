@@ -13,6 +13,7 @@ from app.models.library import Library
 from app.models.operating_system import OperatingSystem
 from app.models.feed import Feed
 from app.models.security_identifier import SecurityIdentifier
+from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, ThreatIntelligence
 from app.models.vulnerability import AssetVulnerability, Vulnerability
 
 
