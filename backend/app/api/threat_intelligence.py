@@ -213,8 +213,8 @@ def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depend
     item = db.get(TelegramScanResult, result_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
-    if item.review_status == "approved":
-        raise HTTPException(status_code=409, detail="This CVE is already approved into Intelligence.")
+    if item.review_status in {"approved", "rejected"}:
+        raise HTTPException(status_code=409, detail="Approved and rejected scan results cannot be reviewed again.")
     item.review_status = data.status
     item.review_notes = data.notes
     item.reviewed_at = datetime.utcnow()
