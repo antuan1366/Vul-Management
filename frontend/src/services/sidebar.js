@@ -59,11 +59,12 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent" data-sidebar-target="intelligence-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${currentPage === "threat-intelligence.html" ? "active" : ""}" data-sidebar-target="intelligence-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Intelligence</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="intelligence-menu" class="sidebar-submenu">
+                    <div id="intelligence-menu" class="sidebar-submenu ${currentPage === "threat-intelligence.html" ? "open" : ""}">
+                        <a href="threat-intelligence.html" class="sidebar-subitem ${currentPage === "threat-intelligence.html" ? "active" : ""}">Threat Intelligence</a>
                         <a href="#" class="sidebar-subitem disabled" title="Coming soon">NVD</a>
                         <a href="#" class="sidebar-subitem disabled" title="Use Scan to update vulnerability data">CISA KEV</a>
                     </div>
@@ -94,7 +95,7 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v2.0.1</span></div>
+            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.0.0</span></div>
         `;
 
         document.body.prepend(sidebar);
