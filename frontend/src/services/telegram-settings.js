@@ -112,8 +112,16 @@
         }
     });
 
-    $("telegram-cancel-verification").addEventListener("click", () => {
+    $("telegram-cancel-verification").addEventListener("click", async () => {
+        const currentChallenge = challengeId;
         challengeId = null;
+        if (currentChallenge) {
+            try {
+                await apiRequest("/api/administration/telegram/verification/" + encodeURIComponent(currentChallenge), { method: "DELETE" });
+            } catch (error) {
+                showMessage(error.message || String(error), "error");
+            }
+        }
         $("telegram-verification-form").hidden = true;
         $("telegram-2fa-field").hidden = true;
         $("telegram-2fa-password").required = false;
