@@ -41,3 +41,15 @@ class TelegramScheduleUpdate(BaseModel):
     frequency: str = "daily"
     scan_time: str = Field(default="02:00", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
     day_of_week: int = Field(default=0, ge=0, le=6)
+
+
+class TelegramVerificationCodeRequest(BaseModel):
+    api_id: str = Field(min_length=1, max_length=20)
+    api_hash: str = Field(min_length=1, max_length=200)
+    phone_number: str = Field(min_length=6, max_length=30)
+
+
+class TelegramVerificationSubmit(BaseModel):
+    challenge_id: str = Field(min_length=10, max_length=200)
+    code: str = Field(min_length=3, max_length=20)
+    password: str | None = Field(default=None, max_length=256)
