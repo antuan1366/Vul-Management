@@ -41,6 +41,20 @@
         </div>
     </section>
 
+    <section class="content-card" style="margin-bottom:16px">
+        <div class="section-header"><div><h2>Automatic Scan Schedule</h2><p class="section-description">Schedule a scan of new messages daily or weekly. Manual scans remain available.</p></div></div>
+        <form id="ti-schedule-form" class="ti-toolbar">
+            <label><input id="ti-schedule-enabled" type="checkbox"> Enable schedule</label>
+            <select id="ti-schedule-frequency"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>
+            <input id="ti-schedule-time" type="time" value="02:00" required>
+            <select id="ti-schedule-day">
+                <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+            </select>
+            <button class="primary-button" type="submit">Save Schedule</button>
+            <span id="ti-schedule-status" class="ti-muted"></span>
+        </form>
+    </section>
+
     <div class="ti-tabs" role="tablist">
         <button class="ti-tab active" data-tab="scan-results" type="button">Scan Results</button>
         <button class="ti-tab" data-tab="intelligence" type="button">Intelligence</button>
