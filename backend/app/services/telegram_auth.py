@@ -202,3 +202,15 @@ async def verify_telegram_code(challenge_id: str, code: str, password: str | Non
     except Exception as error:
         # Do not include submitted codes, passwords, or credentials in errors/logs.
         raise ValueError(f"Telegram verification failed ({error.__class__.__name__}). Check the code or request a new one.") from error
+
+
+
+async def cancel_telegram_verification(challenge_id: str) -> dict:
+    async with _PENDING_LOCK:
+        pending = _PENDING.pop(challenge_id, None)
+        if pending:
+            try:
+                await pending["client"].disconnect()
+            except Exception:
+                pass
+    return {"cancelled": True}
