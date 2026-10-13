@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intelligence - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .ti-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+        .ti-tab{border:1px solid var(--border-color,#394150);background:transparent;color:inherit;padding:9px 14px;border-radius:7px;cursor:pointer}
+        .ti-tab.active{background:var(--primary-color,#2563eb);color:#fff}
+        .ti-panel[hidden]{display:none}
+        .ti-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+        .ti-toolbar input,.ti-toolbar select{max-width:280px}
+        .ti-message{display:inline-block;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;cursor:help}
+        .ti-actions{display:flex;gap:6px;flex-wrap:wrap}
+        .ti-actions button{white-space:nowrap}
+        .ti-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+        .ti-modal.open{display:flex}
+        .ti-modal-card{width:min(900px,100%);max-height:90vh;overflow:auto;background:var(--card-bg,#171c26);border:1px solid var(--border-color,#394150);border-radius:12px;padding:22px}
+        .ti-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+        .ti-form-grid .full{grid-column:1/-1}
+        .ti-form-grid label{display:block;margin-bottom:5px;font-size:13px}
+        .ti-form-grid input,.ti-form-grid textarea,.ti-form-grid select{width:100%;box-sizing:border-box}
+        .ti-modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+        .ti-error{color:#ef6b73;white-space:pre-wrap}
+        .ti-muted{opacity:.75;font-size:12px}
+        @media(max-width:700px){.ti-form-grid{grid-template-columns:1fr}.ti-form-grid .full{grid-column:auto}.ti-message{max-width:170px}}
+    </style>
+</head>
+<body>
+<main class="page-container">
+    <section class="page-header">
+        <div>
+            <h1>Threat Intelligence</h1>
+            <p>Discover CVEs from public Telegram channels, enrich records with NVD, review them, and create Jira issues.</p>
+        </div>
+        <div class="table-actions">
+            <button id="ti-scan-new" class="secondary-button" type="button">Scan New Messages</button>
+            <button id="ti-scan-history" class="primary-button" type="button">Scan From Date</button>
+        </div>
+    </section>
+
+    <div class="ti-tabs" role="tablist">
+        <button class="ti-tab active" data-tab="scan-results" type="button">Scan Results</button>
+        <button class="ti-tab" data-tab="intelligence" type="button">Intelligence</button>
+        <button class="ti-tab" data-tab="scan-history" type="button">Scan History</button>
+        <button class="ti-tab" data-tab="telegram-feeds" type="button">Telegram Feeds</button>
+    </div>
+
+    <section id="panel-scan-results" class="content-card ti-panel">
+        <div class="section-header">
+            <div><h2>Scan Results</h2><p class="section-description">All discovered CVE messages remain available across scans. Hover over Message to read the full text.</p></div>
+            <div id="ti-scan-count" class="item-count">0 Results</div>
+        </div>
+        <div class="ti-toolbar">
+            <input id="ti-search-results" type="search" placeholder="Search CVE, channel, or message">
+            <select id="ti-status-filter">
+                <option value="all">All statuses</option><option value="new">New</option><option value="under_review">Under Review</option><option value="rejected">Rejected</option><option value="approved">Approved</option>
+            </select>
+            <button id="ti-refresh-results" class="secondary-button" type="button">Refresh</button>
+        </div>
+        <div class="table-container"><table>
+            <thead><tr><th>#</th><th>CVE ID</th><th>Message</th><th>DATE</th><th>Channel</th><th>Status</th><th>NVD</th><th>Actions</th></tr></thead>
+            <tbody id="ti-results-body"></tbody>
+        </table></div>
+        <p class="ti-muted">DATE is the time the result first entered Vul-Management, not the Telegram message publication time.</p>
+    </section>
+
+    <section id="panel-intelligence" class="content-card ti-panel" hidden>
+        <div class="section-header">
+            <div><h2>Intelligence</h2><p class="section-description">Only CVEs approved by an administrator are listed here.</p></div>
+            <div id="ti-intelligence-count" class="item-count">0 CVEs</div>
+        </div>
+        <div class="ti-toolbar"><input id="ti-search-intelligence" type="search" placeholder="Search CVE or product"><button id="ti-refresh-intelligence" class="secondary-button" type="button">Refresh</button></div>
+        <div class="table-container"><table>
+            <thead><tr><th>#</th><th>CVE ID</th><th>Severity</th><th>Affected Product</th><th>DATE</th><th>Jira</th><th>Actions</th></tr></thead>
+            <tbody id="ti-intelligence-body"></tbody>
+        </table></div>
+    </section>
+
+    <section id="panel-scan-history" class="content-card ti-panel" hidden>
+        <div class="section-header"><div><h2>Scan History</h2><p class="section-description">Every manual or scheduled run is recorded here.</p></div><div id="ti-runs-count" class="item-count">0 Runs</div></div>
+        <div class="table-container"><table><thead><tr><th>#</th><th>Mode</th><th>DATE</th><th>Status</th><th>Channels</th><th>Messages</th><th>CVE Occurrences</th><th>Error</th></tr></thead><tbody id="ti-runs-body"></tbody></table></div>
+    </section>
+
+    <section id="panel-telegram-feeds" class="content-card ti-panel" hidden>
+        <div class="section-header"><div><h2>Telegram Feeds</h2><p class="section-description">Register public channel usernames. The collector uses your authenticated Telegram account.</p></div><div id="ti-feeds-count" class="item-count">0 Channels</div></div>
+        <form id="ti-feed-form" class="ti-toolbar">
+            <input id="ti-feed-name" required maxlength="150" placeholder="Display name">
+            <input id="ti-feed-channel" required maxlength="150" placeholder="@public_channel">
+            <button class="primary-button" type="submit">Add Channel</button>
+        </form>
+        <div class="table-container"><table><thead><tr><th>#</th><th>Name</th><th>Public Channel</th><th>Enabled</th><th>Last Message ID</th><th>Actions</th></tr></thead><tbody id="ti-feeds-body"></tbody></table></div>
+        <p class="ti-muted">One-time setup is required for Telegram API credentials and the local Telethon session. Never commit that session file or credentials.</p>
+    </section>
+</main>
+
+<div id="ti-modal" class="ti-modal" aria-hidden="true">
+    <div class="ti-modal-card" role="dialog" aria-modal="true" aria-labelledby="ti-modal-title">
+        <div class="section-header"><div><h2 id="ti-modal-title">CVE Details</h2><p id="ti-modal-subtitle" class="section-description"></p></div><button id="ti-modal-close" class="secondary-button" type="button">Close</button></div>
+        <div id="ti-modal-message" class="content-card" style="margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere"></div>
+        <form id="ti-detail-form">
+            <div class="ti-form-grid">
+                <div><label for="ti-severity">Severity</label><input id="ti-severity"></div>
+                <div><label for="ti-cvss">CVSS Score</label><input id="ti-cvss" type="number" min="0" max="10" step="0.1"></div>
+                <div class="full"><label for="ti-product">Affected Product</label><textarea id="ti-product" rows="2"></textarea></div>
+                <div class="full"><label for="ti-versions">Affected Version</label><textarea id="ti-versions" rows="2"></textarea></div>
+                <div class="full"><label for="ti-remediation">Remediation</label><textarea id="ti-remediation" rows="3" placeholder="Data not found in NVD"></textarea></div>
+                <div class="full"><label for="ti-mitigation">Mitigation</label><textarea id="ti-mitigation" rows="3" placeholder="Data not found in NVD"></textarea></div>
+                <div class="full"><label for="ti-description">Description</label><textarea id="ti-description" rows="4"></textarea></div>
+                <div class="full"><label for="ti-references">NVD References</label><textarea id="ti-references" rows="3"></textarea></div>
+                <div class="full"><div id="ti-nvd-note" class="ti-muted"></div><div id="ti-detail-error" class="ti-error"></div></div>
+            </div>
+            <div class="ti-modal-actions">
+                <button id="ti-save-details" class="primary-button" type="submit">Save Changes</button>
+                <button id="ti-approve-result" class="primary-button" type="button">Approve &amp; Add to Intelligence</button>
+                <button id="ti-enrich-again" class="secondary-button" type="button">Fetch NVD Data</button>
+                <button id="ti-send-jira" class="primary-button" type="button" hidden>Send Jira Ticket</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../services/api.js"></script>
+<script src="../services/threat-intelligence.js"></script>
+<script src="../services/sidebar.js"></script>
+</body>
+</html>
