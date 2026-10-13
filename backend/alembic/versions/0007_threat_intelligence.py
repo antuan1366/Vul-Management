@@ -18,6 +18,18 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table(
+        "telegram_scan_schedules",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
+        sa.Column("frequency", sa.String(length=20), nullable=False, server_default="daily"),
+        sa.Column("scan_time", sa.String(length=5), nullable=False, server_default="02:00"),
+        sa.Column("day_of_week", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column("last_run_date", sa.DateTime(), nullable=True),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+    )
+    op.create_index("ix_telegram_scan_schedules_id", "telegram_scan_schedules", ["id"])
+
+    op.create_table(
         "telegram_feeds",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("name", sa.String(length=150), nullable=False),
@@ -111,6 +123,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_table("telegram_scan_schedules")
     op.drop_table("threat_intelligence")
     op.drop_table("telegram_scan_results")
     op.drop_table("telegram_scan_runs")
