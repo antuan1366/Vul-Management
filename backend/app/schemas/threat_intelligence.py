@@ -34,3 +34,10 @@ class IntelligenceUpdate(BaseModel):
     mitigation: str | None = None
     description: str | None = None
     references_text: str | None = None
+
+
+class TelegramScheduleUpdate(BaseModel):
+    enabled: bool
+    frequency: str = "daily"
+    scan_time: str = Field(default="02:00", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    day_of_week: int = Field(default=0, ge=0, le=6)
