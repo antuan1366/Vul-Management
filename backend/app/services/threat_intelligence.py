@@ -111,8 +111,11 @@ def _get_telegram_client():
         from telethon import TelegramClient
     except ImportError as error:
         raise RuntimeError("Telethon is not installed. Install the project requirements first.") from error
-    Path(session_path).parent.mkdir(parents=True, exist_ok=True)
-    return TelegramClient(session_path, int(api_id), api_hash)
+    session_file = Path(session_path)
+    if not session_file.is_absolute():
+        session_file = Path(__file__).resolve().parents[2] / session_file
+    session_file.parent.mkdir(parents=True, exist_ok=True)
+    return TelegramClient(str(session_file), int(api_id), api_hash)
 
 
 async def collect_telegram_scan(run_id: int) -> None:
