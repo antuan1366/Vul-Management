@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
 from urllib.parse import quote
 
@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.database import SessionLocal
 from app.models.feed import Feed
-from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, ThreatIntelligence
+from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, TelegramScanSchedule, ThreatIntelligence
 
 CVE_PATTERN = re.compile(r"\bCVE-\d{4}-\d{4,}\b", re.IGNORECASE)
 
@@ -336,3 +336,44 @@ def send_jira_ticket(item: ThreatIntelligence) -> dict:
     if not key:
         raise httpx.HTTPStatusError("Jira response did not include an issue key.", request=response.request, response=response)
     return {"key": key, "url": f"{base_url}/browse/{quote(key)}"}
+
+
+async def telegram_scheduler_loop() -> None:
+    while True:
+        db = SessionLocal()
+        try:
+            schedule = db.scalar(select(TelegramScanSchedule).order_by(TelegramScanSchedule.id))
+            now = datetime.utcnow()
+            if schedule and schedule.enabled:
+                try:
+                    hour, minute = (int(part) for part in schedule.scan_time.split(":"))
+                    scheduled_time = time(hour=hour, minute=minute)
+                except (ValueError, TypeError):
+                    scheduled_time = time(hour=2, minute=0)
+                due_today = now.time() >= scheduled_time
+                same_day = schedule.last_run_date is not None and schedule.last_run_date.date() == now.date()
+                day_matches = schedule.frequency == "daily" or now.weekday() == schedule.day_of_week
+                feeds_exist = db.scalar(select(TelegramFeed.id).where(TelegramFeed.enabled.is_(True)).limit(1)) is not None
+                if due_today and day_matches and not same_day and feeds_exist:
+                    run = TelegramScanRun(
+                        mode="new",
+                        status="pending",
+                        channels_total=db.query(TelegramFeed).filter(TelegramFeed.enabled.is_(True)).count(),
+                    )
+                    db.add(run)
+                    schedule.last_run_date = now
+                    db.commit()
+                    db.refresh(run)
+                    run_id = run.id
+                    db.close()
+                    await collect_telegram_scan(run_id)
+                    await asyncio.sleep(30)
+                    continue
+        except Exception:
+            db.rollback()
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
+        await asyncio.sleep(30)
