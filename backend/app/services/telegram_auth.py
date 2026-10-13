@@ -91,8 +91,8 @@ async def get_telegram_status() -> dict:
 
 
 async def send_telegram_verification_code(api_id: str, api_hash: str, phone_number: str) -> dict:
-    api_id = api_id.strip()
-    api_hash = api_hash.strip()
+    api_id = (api_id or settings.telegram_api_id or "").strip()
+    api_hash = (api_hash or settings.telegram_api_hash or "").strip()
     phone_number = phone_number.strip()
     if not api_id.isdigit():
         raise ValueError("API ID must contain digits only.")
