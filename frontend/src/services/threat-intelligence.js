@@ -24,11 +24,6 @@
         $("ti-runs-count").textContent=data.total+" Runs";
         $("ti-runs-body").innerHTML=data.items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+(x.mode==="from_date"?"From date":"New messages")+'</td><td>'+esc(dt(x.date))+'</td><td>'+esc(label(x.status))+'</td><td>'+x.channels_processed+'/'+x.channels_total+'</td><td>'+x.messages_processed+'</td><td>'+x.cve_occurrences+'</td><td class="ti-error">'+esc(x.error_message||"—")+'</td></tr>').join("")||'<tr><td colspan="8">No scans have run yet.</td></tr>';
     }
-    async function loadFeeds() {
-        const data=await req("/api/threat-intelligence/feeds");
-        $("ti-feeds-count").textContent=data.total+" Channels"; window.__tiFeeds=data.items;
-        $("ti-feeds-body").innerHTML=data.items.map((x,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'</td><td><a href="https://t.me/'+encodeURIComponent(x.channel_username)+'" target="_blank" rel="noopener">@'+esc(x.channel_username)+'</a></td><td>'+(x.enabled?"Enabled":"Disabled")+'</td><td>'+(x.last_message_id??"—")+'</td><td><div class="ti-actions">'+btn(x.enabled?"Disable":"Enable","toggle-feed",x.id)+btn("Delete","delete-feed",x.id)+'</div></td></tr>').join("")||'<tr><td colspan="6">No Telegram channels configured.</td></tr>';
-    }
     async function loadSchedule(){
         const x=await req("/api/threat-intelligence/schedule");
         $("ti-schedule-enabled").checked=Boolean(x.enabled);
@@ -38,7 +33,7 @@
         $("ti-schedule-status").textContent=x.last_run_date?"Last scheduled run: "+dt(x.last_run_date):"No scheduled run yet";
         $("ti-schedule-day").disabled=x.frequency!=="weekly";
     }
-    async function refreshAll(){ await Promise.all([loadResults(),loadIntelligence(),loadRuns(),loadFeeds(),loadSchedule()]); }
+    async function refreshAll(){ await Promise.all([loadResults(),loadIntelligence(),loadRuns(),loadSchedule()]); }
     function openModal(x, mode) {
         activeDetail=x; detailMode=mode;
         $("ti-modal-title").textContent=x.cve_id||"CVE Details";
@@ -95,11 +90,9 @@
         if(name==="reject"){if(!window.confirm("Reject this scan result?"))return;await req("/api/threat-intelligence/scan-results/"+id+"/review",{method:"POST",body:JSON.stringify({status:"rejected"})});return loadResults();}
         if(name==="edit-intelligence")return openModal(await req("/api/threat-intelligence/intelligence/"+id),"intelligence");
         if(name==="jira"){const r=await req("/api/threat-intelligence/intelligence/"+id+"/jira",{method:"POST"});window.alert("Jira issue: "+r.issue_key+"\n"+r.issue_url);return loadIntelligence();}
-        if(name==="toggle-feed"){const f=(window.__tiFeeds||[]).find(x=>x.id===Number(id));if(!f)return;await req("/api/threat-intelligence/feeds/"+id,{method:"PUT",body:JSON.stringify({enabled:!f.enabled})});return loadFeeds();}
-        if(name==="delete-feed"){if(!window.confirm("Delete this Telegram feed? Existing scan results will be kept."))return;await req("/api/threat-intelligence/feeds/"+id,{method:"DELETE"});return loadFeeds();}
     }
     function error(e){const m=e?.message||String(e);$("ti-detail-error").textContent=m;window.alert(m);}
-    document.querySelectorAll(".ti-tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".ti-tab").forEach(x=>x.classList.toggle("active",x===t));document.querySelectorAll(".ti-panel").forEach(p=>p.hidden=p.id!=="panel-"+t.dataset.tab);if(t.dataset.tab==="scan-history")loadRuns().catch(error);if(t.dataset.tab==="telegram-feeds")loadFeeds().catch(error);}));
+    document.querySelectorAll(".ti-tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".ti-tab").forEach(x=>x.classList.toggle("active",x===t));document.querySelectorAll(".ti-panel").forEach(p=>p.hidden=p.id!=="panel-"+t.dataset.tab);if(t.dataset.tab==="scan-history")loadRuns().catch(error);}));
     $("ti-scan-new").addEventListener("click",()=>startScan("new").catch(error)); $("ti-scan-history").addEventListener("click",()=>startScan("from_date").catch(error));
     $("ti-refresh-results").addEventListener("click",()=>loadResults().catch(error)); $("ti-refresh-intelligence").addEventListener("click",()=>loadIntelligence().catch(error));
     $("ti-status-filter").addEventListener("change",()=>loadResults().catch(error)); $("ti-search-results").addEventListener("input",()=>loadResults().catch(error)); $("ti-search-intelligence").addEventListener("input",()=>loadIntelligence().catch(error));
@@ -110,8 +103,6 @@
     $("ti-send-jira").addEventListener("click",async()=>{if(!activeDetail)return;try{const r=await req("/api/threat-intelligence/intelligence/"+activeDetail.id+"/jira",{method:"POST"});window.alert("Jira issue: "+r.issue_key+"\n"+r.issue_url);closeModal();await loadIntelligence();}catch(ex){error(ex);}});
     $("ti-results-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)action(b.dataset.action,b.dataset.id).catch(error);});
     $("ti-intelligence-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)action(b.dataset.action,b.dataset.id).catch(error);});
-    $("ti-feeds-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)action(b.dataset.action,b.dataset.id).catch(error);});
-    $("ti-feed-form").addEventListener("submit",async e=>{e.preventDefault();try{await req("/api/threat-intelligence/feeds",{method:"POST",body:JSON.stringify({name:$("ti-feed-name").value.trim(),channel_username:$("ti-feed-channel").value.trim(),enabled:true})});$("ti-feed-form").reset();await loadFeeds();}catch(ex){error(ex);}});
     $("ti-schedule-frequency").addEventListener("change",()=>{$("ti-schedule-day").disabled=$("ti-schedule-frequency").value!=="weekly";});
     $("ti-schedule-form").addEventListener("submit",async e=>{
         e.preventDefault();
