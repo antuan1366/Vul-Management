@@ -56,15 +56,14 @@
     </section>
 
     <div class="ti-tabs" role="tablist">
-        <button class="ti-tab active" data-tab="scan-results" type="button">Scan Results</button>
+        <button class="ti-tab active" data-tab="scan-results" type="button">Discovered CVEs</button>
         <button class="ti-tab" data-tab="intelligence" type="button">Intelligence</button>
         <button class="ti-tab" data-tab="scan-history" type="button">Scan History</button>
-        <button class="ti-tab" data-tab="telegram-feeds" type="button">Telegram Feeds</button>
     </div>
 
     <section id="panel-scan-results" class="content-card ti-panel">
         <div class="section-header">
-            <div><h2>Scan Results</h2><p class="section-description">All discovered CVE messages remain available across scans. Hover over Message to read the full text.</p></div>
+            <div><h2>Discovered CVEs</h2><p class="section-description">CVEs collected from configured intelligence sources. Review findings and enrich them with NVD data.</p></div>
             <div id="ti-scan-count" class="item-count">0 Results</div>
         </div>
         <div class="ti-toolbar">
@@ -96,17 +95,6 @@
     <section id="panel-scan-history" class="content-card ti-panel" hidden>
         <div class="section-header"><div><h2>Scan History</h2><p class="section-description">Every manual or scheduled run is recorded here.</p></div><div id="ti-runs-count" class="item-count">0 Runs</div></div>
         <div class="table-container"><table><thead><tr><th>#</th><th>Mode</th><th>DATE</th><th>Status</th><th>Channels</th><th>Messages</th><th>CVE Occurrences</th><th>Error</th></tr></thead><tbody id="ti-runs-body"></tbody></table></div>
-    </section>
-
-    <section id="panel-telegram-feeds" class="content-card ti-panel" hidden>
-        <div class="section-header"><div><h2>Telegram Feeds</h2><p class="section-description">Register public channel usernames. The collector uses your authenticated Telegram account.</p></div><div id="ti-feeds-count" class="item-count">0 Channels</div></div>
-        <form id="ti-feed-form" class="ti-toolbar">
-            <input id="ti-feed-name" required maxlength="150" placeholder="Display name">
-            <input id="ti-feed-channel" required maxlength="150" placeholder="@public_channel">
-            <button class="primary-button" type="submit">Add Channel</button>
-        </form>
-        <div class="table-container"><table><thead><tr><th>#</th><th>Name</th><th>Public Channel</th><th>Enabled</th><th>Last Message ID</th><th>Actions</th></tr></thead><tbody id="ti-feeds-body"></tbody></table></div>
-        <p class="ti-muted">One-time setup is required for Telegram API credentials and the local Telethon session. Never commit that session file or credentials.</p>
     </section>
 </main>
 
