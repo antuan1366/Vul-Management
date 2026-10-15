@@ -213,34 +213,43 @@ async def collect_telegram_scan(run_id: int) -> None:
 
 
 async def enrich_scan_run_from_nvd(run_id: int) -> None:
-    """Enrich each finding in a scan run in the background with a conservative NVD request rate."""
+    """Enrich unique CVEs in the background, saving each result as soon as its lookup finishes."""
     db = SessionLocal()
     try:
         run = db.get(TelegramScanRun, run_id)
         if run is None:
             return
         run.status = "nvd_scanning"
-        result_ids = list(db.scalars(
-            select(TelegramScanResult.id)
+        rows = db.scalars(
+            select(TelegramScanResult)
             .where(TelegramScanResult.scan_run_id == run_id)
             .order_by(TelegramScanResult.date.asc(), TelegramScanResult.id.asc())
-        ).all())
-        # Preserve prior successful lookups for duplicate findings, and retry only unfinished/errors.
-        work_ids = []
-        for result_id in result_ids:
-            item = db.get(TelegramScanResult, result_id)
-            if item and item.nvd_status not in {"success", "partial", "not_found"}:
+        ).all()
+        by_cve: dict[str, list[TelegramScanResult]] = {}
+        for item in rows:
+            by_cve.setdefault(item.cve_id, []).append(item)
+
+        work_cves = []
+        terminal_success = {"success", "partial", "not_found"}
+        for cve_id, items in by_cve.items():
+            existing = next((item for item in items if item.nvd_status in terminal_success), None)
+            if existing is not None:
+                for item in items:
+                    if item.id != existing.id and item.nvd_status not in terminal_success:
+                        _copy_nvd_fields(existing, item)
+                continue
+            for item in items:
                 item.nvd_status = "queued"
                 item.nvd_error = None
-                work_ids.append(result_id)
+            work_cves.append(cve_id)
         db.commit()
         db.close()
 
-        for index, result_id in enumerate(work_ids):
-            await asyncio.to_thread(_enrich_result_in_worker, result_id)
-            # NVD's unauthenticated public API is rate-limited. Six seconds is a conservative
-            # cadence (about five requests per 30 seconds); keep it even when an API key exists.
-            if index < len(work_ids) - 1:
+        # CVEs repeated across messages/channels are looked up only once per scan run.
+        for index, cve_id in enumerate(work_cves):
+            await asyncio.to_thread(_enrich_cve_for_scan_run, run_id, cve_id)
+            # About five public NVD requests per 30 seconds, with extra backoff on 429/503.
+            if index < len(work_cves) - 1:
                 await asyncio.sleep(6)
 
         db = SessionLocal()
@@ -272,23 +281,43 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             pass
 
 
-def _enrich_result_in_worker(result_id: int) -> None:
-    """Use an isolated SQLAlchemy session so synchronous HTTP requests never block the event loop."""
+def _copy_nvd_fields(source: TelegramScanResult, target: TelegramScanResult) -> None:
+    for field in (
+        "severity", "cvss_score", "affected_product", "affected_versions",
+        "remediation", "mitigation", "nvd_description", "references_text",
+        "nvd_missing_fields", "nvd_status", "nvd_error",
+    ):
+        setattr(target, field, getattr(source, field))
+    target.updated_at = datetime.utcnow()
+
+
+def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
+    """Look up a CVE once and copy the returned NVD fields to all matching scan rows."""
     db = SessionLocal()
     try:
-        item = db.get(TelegramScanResult, result_id)
-        if item is None:
+        items = db.scalars(
+            select(TelegramScanResult)
+            .where(
+                TelegramScanResult.scan_run_id == run_id,
+                TelegramScanResult.cve_id == cve_id,
+            )
+            .order_by(TelegramScanResult.id.asc())
+        ).all()
+        if not items:
             return
-        # Enrich every discovered CVE even if the administrator has already changed its review status.
+        representative = items[0]
         try:
-            enrich_scan_result_from_nvd(db, item)
+            enrich_scan_result_from_nvd(db, representative)
         except LookupError:
-            # A not-found response is already saved as nvd_status=not_found.
+            # The not-found result has already been saved on the representative.
             pass
         except (httpx.HTTPError, ValueError) as error:
-            item.nvd_status = "error"
-            item.nvd_error = f"NVD request failed: {error.__class__.__name__}."
+            representative.nvd_status = "error"
+            representative.nvd_error = f"NVD request failed: {error.__class__.__name__}."
             db.commit()
+        for item in items[1:]:
+            _copy_nvd_fields(representative, item)
+        db.commit()
     finally:
         db.close()
 
