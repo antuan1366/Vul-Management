@@ -10,7 +10,8 @@
         const q=$("vulnerability-search").value.trim();
         const data=await req("/api/threat-intelligence/intelligence?q="+encodeURIComponent(q)+"&limit=500");
         records=data.items||[];
-        $("vulnerability-count").textContent=(data.total??records.length)+" Vulnerabilities";
+        const total=data.total??records.length;
+        $("vulnerability-count").textContent=total+" "+(total===1?"Vulnerability":"Vulnerabilities");
         $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'</div></td></tr>').join("")||'<tr><td colspan="9">No vulnerabilities yet. Accept a finding in Scan Result or select Add New.</td></tr>';
     }
     function resetForm(){
