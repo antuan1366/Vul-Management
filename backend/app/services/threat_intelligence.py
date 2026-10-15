@@ -278,6 +278,11 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             run.status = "completed_with_errors" if run.error_message or failures else "completed"
             run.finished_at = datetime.utcnow()
             db.commit()
+            record_event("WARNING" if run.status == "completed_with_errors" else "INFO",
+                         "nvd", "NVD enrichment", "scan_enrichment_finished",
+                         f"NVD enrichment phase finished with status {run.status}.",
+                         scan_run_id=run_id,
+                         details={"failed_lookups": failures, "finished_at": str(run.finished_at)})
     except Exception as error:
         db = SessionLocal()
         try:
@@ -288,6 +293,8 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
                 run.error_message = (run.error_message + "\n" if run.error_message else "") + detail
                 run.finished_at = datetime.utcnow()
                 db.commit()
+                record_event("ERROR", "nvd", "NVD enrichment", "worker_failed",
+                             detail, scan_run_id=run_id, details=exception_details(error))
         finally:
             db.close()
     finally:
