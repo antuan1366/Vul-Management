@@ -18,7 +18,8 @@
     function openModal(id) {
         const modal = $(id);
         if (!modal) return;
-        modal.hidden = false;
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
         const first = modal.querySelector("input:not(:disabled),select:not(:disabled),button:not(:disabled)");
         if (first) first.focus();
@@ -26,8 +27,9 @@
     function closeModal(id) {
         const modal = $(id);
         if (!modal) return;
-        modal.hidden = true;
-        if (![...document.querySelectorAll(".scan-modal-backdrop")].some(x => !x.hidden)) {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        if (![...document.querySelectorAll(".modal-overlay")].some(x => x.classList.contains("is-open"))) {
             document.body.style.overflow = "";
         }
     }
@@ -52,7 +54,7 @@
         const body = $("scan-log-body");
         $("scan-log-count").textContent = items.length + " Runs";
         if (!items.length) {
-            body.innerHTML = '<tr><td colspan="9">No scans have run yet. Use Scan Now to start the first scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="9" class="empty-cell">No scans have run yet. Use Scan Now to start the first scan.</td></tr>';
             return;
         }
         body.innerHTML = items.map((run, i) => {
@@ -167,7 +169,7 @@
         const failed = results.find(x => x.status === "rejected");
         if (failed) {
             $("scan-schedule-message").textContent = failed.reason?.message || String(failed.reason);
-            $("scan-log-body").innerHTML = '<tr><td colspan="9">Could not load scan history: '+esc(failed.reason?.message || failed.reason)+'</td></tr>';
+            $("scan-log-body").innerHTML = '<tr><td colspan="9" class="error-cell">Could not load scan history: '+esc(failed.reason?.message || failed.reason)+'</td></tr>';
         }
     }
 
@@ -182,14 +184,14 @@
         document.querySelectorAll("[data-close-modal]").forEach(button => {
             button.addEventListener("click", () => closeModal(button.dataset.closeModal));
         });
-        document.querySelectorAll(".scan-modal-backdrop").forEach(modal => {
+        document.querySelectorAll(".modal-overlay").forEach(modal => {
             modal.addEventListener("click", event => {
                 if (event.target === modal) closeModal(modal.id);
             });
         });
         document.addEventListener("keydown", event => {
             if (event.key === "Escape") {
-                document.querySelectorAll(".scan-modal-backdrop:not([hidden])").forEach(modal => closeModal(modal.id));
+                document.querySelectorAll(".modal-overlay.is-open").forEach(modal => closeModal(modal.id));
             }
         });
         $("scan-schedule-enabled").addEventListener("change", syncScheduleControls);
