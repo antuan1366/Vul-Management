@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -164,10 +164,32 @@ def update_telegram_schedule(data: TelegramScheduleUpdate, db: Session = Depends
     }
 
 
+def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
+    result_total = db.scalar(
+        select(func.count(TelegramScanResult.id)).where(TelegramScanResult.scan_run_id == item.id)
+    ) or 0
+    processed_statuses = ("success", "partial", "not_found", "error", "skipped")
+    result_processed = db.scalar(
+        select(func.count(TelegramScanResult.id)).where(
+            TelegramScanResult.scan_run_id == item.id,
+            TelegramScanResult.nvd_status.in_(processed_statuses),
+        )
+    ) or 0
+    remaining = max(0, result_total - result_processed)
+    return {
+        **serialize_scan_run(item),
+        "nvd_total": result_total,
+        "nvd_processed": result_processed,
+        "nvd_remaining": remaining,
+        # Conservative estimate assumes at least six seconds per remaining public NVD request.
+        "nvd_estimated_seconds": remaining * 6 if item.status == "nvd_scanning" else 0,
+    }
+
+
 @router.get("/scan-runs")
 def list_scan_runs(limit: int = Query(default=50, ge=1, le=200), db: Session = Depends(get_db)):
     items = db.scalars(select(TelegramScanRun).order_by(TelegramScanRun.created_at.desc()).limit(limit)).all()
-    return {"items": [serialize_scan_run(item) for item in items], "total": len(items)}
+    return {"items": [_scan_run_progress(db, item) for item in items], "total": len(items)}
 
 
 @router.get("/scan-runs/{run_id}")
@@ -175,7 +197,7 @@ def get_scan_run(run_id: int, db: Session = Depends(get_db)):
     item = db.get(TelegramScanRun, run_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan run not found.")
-    return serialize_scan_run(item)
+    return _scan_run_progress(db, item)
 
 
 @router.get("/scan-results")
@@ -183,9 +205,12 @@ def list_scan_results(
     status: str = "all",
     q: str | None = None,
     limit: int = Query(default=200, ge=1, le=500),
+    run_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     query = select(TelegramScanResult).order_by(TelegramScanResult.date.desc()).limit(limit)
+    if run_id is not None:
+        query = query.where(TelegramScanResult.scan_run_id == run_id)
     if status != "all":
         query = query.where(TelegramScanResult.review_status == status)
     if q:
@@ -220,13 +245,13 @@ def delete_scan_result(result_id: int, db: Session = Depends(get_db)):
 
 @router.post("/scan-results/{result_id}/review")
 def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depends(get_db)):
-    if data.status not in {"under_review", "rejected"}:
-        raise HTTPException(status_code=400, detail="Review status must be under_review or rejected.")
+    if data.status not in {"new", "under_review", "rejected"}:
+        raise HTTPException(status_code=400, detail="Review status must be new, under_review, or rejected.")
     item = db.get(TelegramScanResult, result_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
-    if item.review_status in {"approved", "rejected"}:
-        raise HTTPException(status_code=409, detail="Approved and rejected scan results cannot be reviewed again.")
+    if item.review_status == "approved":
+        raise HTTPException(status_code=409, detail="Accepted results cannot be moved back to review.");
     item.review_status = data.status
     item.review_notes = data.notes
     item.reviewed_at = datetime.utcnow()
