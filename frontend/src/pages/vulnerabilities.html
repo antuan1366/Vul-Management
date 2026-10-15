@@ -6,7 +6,15 @@
     <title>Scan Result - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.nvd-live-status{margin-bottom:16px;padding:14px 16px;border:1px solid var(--border-color,#394150);border-radius:10px;background:var(--card-bg,#171c26)}
+        .nvd-live-status[hidden]{display:none}
+        .nvd-live-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+        .nvd-live-detail{font-size:12px;opacity:.8;margin:8px 0 0;overflow-wrap:anywhere}
+        .nvd-live-track{height:8px;border-radius:999px;overflow:hidden;background:rgba(128,128,128,.2)}
+        .nvd-live-bar{height:100%;width:0;background:var(--primary-color,#4388f5);transition:width .3s ease}
+        .nvd-live-bar.indeterminate{width:30%;animation:nvd-live-pulse 1.2s ease-in-out infinite alternate}
+        @keyframes nvd-live-pulse{from{transform:translateX(0)}to{transform:translateX(230%)}}
+                .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
         .review-toolbar input,.review-toolbar select{max-width:300px}
         .review-actions{display:flex;gap:6px;flex-wrap:wrap}
         .review-actions button{white-space:nowrap}
@@ -31,6 +39,11 @@
         <div class="table-actions"></div>
     </section>
 
+    <section id="nvd-live-status" class="nvd-live-status" aria-live="polite" hidden>
+        <div class="nvd-live-head"><strong id="nvd-live-title">NVD enrichment in progress</strong><span id="nvd-live-value">Starting…</span></div>
+        <div class="nvd-live-track" role="progressbar" aria-label="NVD enrichment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="nvd-live-bar" class="nvd-live-bar"></div></div>
+        <p id="nvd-live-detail" class="nvd-live-detail">The scan continues in the background.</p>
+    </section>
     <section class="content-card">
         <div class="section-header"><div><h2>Discovered CVEs</h2><p class="section-description">NVD data is retrieved in the background. You can review findings while enrichment continues.</p></div><div id="result-count" class="item-count">0 Results</div></div>
         <div class="review-toolbar">
