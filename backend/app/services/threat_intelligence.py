@@ -274,7 +274,12 @@ def _enrich_result_in_worker(result_id: int) -> None:
     db = SessionLocal()
     try:
         item = db.get(TelegramScanResult, result_id)
-        if item is None or item.review_status == "rejected":
+        if item is None:
+            return
+        if item.review_status == "rejected":
+            item.nvd_status = "skipped"
+            item.nvd_error = "Skipped because the administrator rejected this finding."
+            db.commit()
             return
         try:
             enrich_scan_result_from_nvd(db, item)
