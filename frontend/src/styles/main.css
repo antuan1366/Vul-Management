@@ -21,6 +21,18 @@ body {
 
 body {
     min-height: 100vh;
+    font-size: 14px;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    font-size: 14px;
 }
 
 
@@ -505,13 +517,18 @@ body.sidebar-collapsed .page-container {
 
 .page-header h1 {
     margin: 0 0 8px;
+    color: #222;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.25;
 }
 
 
 .page-header p {
     margin: 0;
-
     color: #666;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 

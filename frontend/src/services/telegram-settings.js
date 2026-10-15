@@ -129,6 +129,5 @@
         showMessage("Verification cancelled. You can request a new code when ready.", "info");
     });
 
-    $("telegram-refresh-status").addEventListener("click", refreshStatus);
     refreshStatus();
 })();

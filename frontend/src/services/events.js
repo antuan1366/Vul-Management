@@ -91,7 +91,6 @@
         if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
         render();
     });
-    $("events-refresh").addEventListener("click", load);
     $("events-export").addEventListener("click", exportCsv);
     load();
     setInterval(load, 5000);

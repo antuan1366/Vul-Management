@@ -77,7 +77,6 @@
     }
     function init(){
         $("add-vulnerability-button").addEventListener("click",()=>openModal());
-        $("refresh-vulnerabilities-button").addEventListener("click",()=>loadRecords().catch(e=>message(e.message,true)));
         $("vulnerability-search").addEventListener("input",()=>loadRecords().catch(e=>message(e.message,true)));
         $("vulnerabilities-table-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)handleAction(b.dataset.action,Number(b.dataset.id)).catch(err=>message(err.message,true));});
         $("vulnerability-form").addEventListener("submit",saveRecord);

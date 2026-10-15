@@ -49,6 +49,5 @@
         if (!button) return;
         try { await handleAction(button.dataset.action, button.dataset.id); } catch (error) { showError(error); }
     });
-    $("telegram-refresh").addEventListener("click", () => loadFeeds().catch(showError));
     loadFeeds().catch(showError);
 })();
