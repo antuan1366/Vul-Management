@@ -48,11 +48,11 @@
 
                 <div class="sidebar-section">
                     <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
-                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Vulnerabilities</span></span>
+                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Threat Intelligence</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
                     <div id="intelligence-menu" class="sidebar-submenu ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Scan</a>
+                        <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Vulnerability Scan</a>
                         <a href="scan-result.html" class="sidebar-subitem ${currentPage === "scan-result.html" ? "active" : ""}">Scan Result</a>
                         <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                     </div>
