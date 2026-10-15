@@ -22,6 +22,49 @@
         const text = String(value || "").trim();
         return text ? text.replace(/\s+/g, " ").slice(0, 90) : fallback;
     }
+    function nvdRank(item) {
+        if (["success","partial"].includes(item.nvd_status)) return 0;
+        if (["queued","waiting",""].includes(item.nvd_status || "")) return 1;
+        if (item.nvd_status === "error") return 2;
+        if (item.nvd_status === "not_found") return 3;
+        if (item.nvd_status === "skipped") return 4;
+        return 1;
+    }
+    function sortNvdFirst(items) {
+        return items.sort((a,b) => nvdRank(a)-nvdRank(b) || new Date(b.date || 0)-new Date(a.date || 0));
+    }
+    function duration(seconds) {
+        const value=Math.max(0,Math.ceil(Number(seconds||0)));
+        if(value<60)return value+" sec";
+        const mins=Math.floor(value/60),secs=value%60;
+        return mins+" min"+(secs?" "+secs+" sec":"");
+    }
+    async function loadNvdProgress() {
+        const banner=$("nvd-live-status");
+        if(!banner)return;
+        const data=await req("/api/threat-intelligence/scan-runs?limit=100");
+        const runs=data.items||[];
+        const run=runs.find(x=>["pending","running","nvd_scanning"].includes(x.status))||runs[0];
+        if(!run){banner.hidden=true;return;}
+        banner.hidden=false;
+        const active=["pending","running","nvd_scanning"].includes(run.status);
+        const nvdRunning=run.status==="nvd_scanning";
+        const total=Number(run.nvd_total||0),done=Number(run.nvd_processed||0);
+        const remaining=Number(run.nvd_remaining??Math.max(0,total-done));
+        const channelsTotal=Number(run.channels_total||0),channelsDone=Number(run.channels_processed||0);
+        const pct=nvdRunning?(total?Math.min(100,Math.round(done/total*100)):0):(active?(channelsTotal?Math.min(100,Math.round(channelsDone/channelsTotal*100)):0):100);
+        $("nvd-live-title").textContent=nvdRunning?"NVD enrichment is running":(active?"Telegram scan is running":"Latest scan: "+human(run.status));
+        $("nvd-live-value").textContent=nvdRunning?(done+" / "+total+" CVEs"):(active?"In progress":human(run.status));
+        let detail=nvdRunning
+            ?("NVD checked "+done+" of "+total+" unique CVEs · "+remaining+" remaining · Estimated time: "+duration(run.nvd_estimated_seconds))
+            :(active?("Channels processed "+channelsDone+" of "+channelsTotal+" · Messages: "+(run.messages_processed||0)+" · CVE occurrences: "+(run.cve_occurrences||0)):"Last scan "+(run.finished_at?dt(run.finished_at):dt(run.started_at))+" · CVE occurrences: "+(run.cve_occurrences||0));
+        if(run.error_message)detail+=" · "+run.error_message;
+        $("nvd-live-detail").textContent=detail;
+        const bar=$("nvd-live-bar");
+        bar.classList.toggle("indeterminate",active&&!nvdRunning&&channelsTotal===0);
+        bar.style.width=active&&!nvdRunning&&channelsTotal===0?"30%":pct+"%";
+        banner.querySelector('[role="progressbar"]').setAttribute("aria-valuenow",String(pct));
+    }
     function statusOptions(status) {
         return [
             ["new","New"],["under_review","Under Review"],["approved","Accepted"],["rejected","Rejected"]
@@ -62,7 +105,7 @@
     async function loadResults() {
         const query = new URLSearchParams({status:$("result-status").value,q:$("result-search").value.trim(),limit:"500"});
         const data = await req("/api/threat-intelligence/scan-results?"+query.toString());
-        rows = data.items || [];
+        rows = sortNvdFirst(data.items || []);
         const visibleIds = new Set(rows.map(x=>x.id));
         for (const id of selected) if (!visibleIds.has(id)) selected.delete(id);
         render();
@@ -183,7 +226,6 @@
         if(action==="accept") return accept(id);
     }
     function init() {
-        $("refresh-results-button").addEventListener("click",()=>loadResults().catch(e=>showMessage(e.message,true)));
         $("result-status").addEventListener("change",()=>loadResults().catch(e=>showMessage(e.message,true)));
         $("result-search").addEventListener("input",()=>loadResults().catch(e=>showMessage(e.message,true)));
         $("results-table-body").addEventListener("click",e=>{const b=e.target.closest("button[data-action]");if(b)handleRowAction(b.dataset.action,Number(b.dataset.id)).catch(err=>showMessage(err.message,true));});
@@ -202,10 +244,13 @@
         $("accept-result-button").addEventListener("click",()=>{if(active)accept(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         $("reject-result-button").addEventListener("click",()=>{if(active)reject(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         loadResults().catch(e=>showMessage(e.message,true));
+        loadNvdProgress().catch(e=>showMessage(e.message,true));
         refreshTimer = window.setInterval(()=>{
-            if(document.activeElement && document.activeElement.closest("#results-table-body")) return;
-            loadResults().catch(e=>showMessage(e.message,true));
-        },5000);
+            if(!(document.activeElement && document.activeElement.closest("#results-table-body"))) {
+                loadResults().catch(e=>showMessage(e.message,true));
+            }
+            loadNvdProgress().catch(e=>showMessage(e.message,true));
+        },3000);
     }
     document.addEventListener("DOMContentLoaded",init,{once:true});
 })();
