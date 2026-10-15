@@ -39,7 +39,7 @@
                     <div id="assets-menu" class="sidebar-submenu ${[
                         "equipment.html","operating-systems.html","applications.html","libraries.html"
                     ].includes(currentPage) ? "open" : ""}">
-                        <a href="equipment.html" class="sidebar-subitem ${currentPage === "assets.html" ? "active" : ""}">Equipment</a>
+                        <a href="equipment.html" class="sidebar-subitem ${currentPage === "equipment.html" ? "active" : ""}">Equipment</a>
                         <a href="operating-systems.html" class="sidebar-subitem ${currentPage === "operating-systems.html" ? "active" : ""}">Operating Systems</a>
                         <a href="applications.html" class="sidebar-subitem ${currentPage === "applications.html" ? "active" : ""}">Applications</a>
                         <a href="libraries.html" class="sidebar-subitem ${currentPage === "libraries.html" ? "active" : ""}">Libraries</a>
@@ -47,12 +47,12 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Vulnerabilities</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="intelligence-menu" class="sidebar-submenu ${["scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="scan.html" class="sidebar-subitem ${currentPage === "scan.html" ? "active" : ""}">Scan</a>
+                    <div id="intelligence-menu" class="sidebar-submenu ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Scan</a>
                         <a href="scan-result.html" class="sidebar-subitem ${currentPage === "scan-result.html" ? "active" : ""}">Scan Result</a>
                         <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                     </div>
@@ -72,15 +72,15 @@
                 <div class="sidebar-divider"></div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["feeds.html","telegram-feeds.html","telegram-settings.html","events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">⚙</span><span class="sidebar-label">Administration</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="administration-menu" class="sidebar-submenu ${["feeds.html","telegram-feeds.html","telegram-settings.html","events.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="feeds.html" class="sidebar-subitem ${currentPage === "feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
+                    <div id="administration-menu" class="sidebar-submenu ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="vulnerability-feeds.html" class="sidebar-subitem ${currentPage === "vulnerability-feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
                         <a href="telegram-feeds.html" class="sidebar-subitem ${currentPage === "telegram-feeds.html" ? "active" : ""}">Telegram Feeds</a>
                         <a href="telegram-settings.html" class="sidebar-subitem ${currentPage === "telegram-settings.html" ? "active" : ""}">Telegram Settings</a>
-                        <a href="events.html" class="sidebar-subitem ${currentPage === "events.html" ? "active" : ""}">Logs &amp; Events</a>
+                        <a href="logs-events.html" class="sidebar-subitem ${currentPage === "logs-events.html" ? "active" : ""}">Logs &amp; Events</a>
                     </div>
                 </div>
             </div>
