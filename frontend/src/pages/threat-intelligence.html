@@ -3,127 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Threat Intelligence - Vul-Management</title>
+    <title>Vulnerabilities - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .ti-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-        .ti-tab{border:1px solid var(--border-color,#394150);background:transparent;color:inherit;padding:9px 14px;border-radius:7px;cursor:pointer}
-        .ti-tab.active{background:var(--primary-color,#2563eb);color:#fff}
-        .ti-panel[hidden]{display:none}
-        .ti-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-        .ti-toolbar input,.ti-toolbar select{max-width:280px}
-        .ti-message{display:inline-block;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;cursor:help}
-        .ti-actions{display:flex;gap:6px;flex-wrap:wrap}
-        .ti-actions button{white-space:nowrap}
-        .ti-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
-        .ti-modal.open{display:flex}
-        .ti-modal-card{width:min(900px,100%);max-height:90vh;overflow:auto;background:var(--card-bg,#171c26);border:1px solid var(--border-color,#394150);border-radius:12px;padding:22px}
-        .ti-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-        .ti-form-grid .full{grid-column:1/-1}
-        .ti-form-grid label{display:block;margin-bottom:5px;font-size:13px}
-        .ti-form-grid input,.ti-form-grid textarea,.ti-form-grid select{width:100%;box-sizing:border-box}
-        .ti-modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-        .ti-error{color:#ef6b73;white-space:pre-wrap}
-        .ti-muted{opacity:.75;font-size:12px}
-        @media(max-width:700px){.ti-form-grid{grid-template-columns:1fr}.ti-form-grid .full{grid-column:auto}.ti-message{max-width:170px}}
+        .vul-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+        .vul-toolbar input{max-width:360px}
+        .vul-actions{display:flex;gap:6px;flex-wrap:wrap}
+        .vul-actions button{white-space:nowrap}
+        .vul-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+        .vul-modal.open{display:flex}
+        .vul-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:var(--card-bg,#171c26);border:1px solid var(--border-color,#394150);border-radius:12px;padding:22px}
+        .vul-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+        .vul-form-grid label{display:block;font-size:12px;opacity:.8;margin-bottom:5px}
+        .vul-form-grid input,.vul-form-grid textarea{width:100%;box-sizing:border-box}
+        .vul-form-grid .full{grid-column:1/-1}
+        .vul-message{font-size:12px;opacity:.8}
+        .vul-message.error{color:#ef6b73;opacity:1}
+        @media(max-width:700px){.vul-form-grid{grid-template-columns:1fr}.vul-form-grid .full{grid-column:auto}}
     </style>
 </head>
 <body>
 <main class="page-container">
     <section class="page-header">
-        <div>
-            <h1>Threat Intelligence</h1>
-            <p>Discover CVEs from public Telegram channels, enrich findings with NVD data, review them, and create Jira issues for tracking and remediation.</p>
-        </div>
-        <div class="table-actions">
-            <button id="ti-scan-new" class="secondary-button" type="button">Scan New Messages</button>
-            <button id="ti-scan-history" class="primary-button" type="button">Scan From Date</button>
-        </div>
+        <div><h1>Vulnerabilities</h1><p>Manage CVEs accepted by an administrator from Scan Result or added manually.</p></div>
+        <div class="table-actions"><button id="add-vulnerability-button" class="primary-button" type="button">Add New</button><button id="refresh-vulnerabilities-button" class="secondary-button" type="button">Refresh</button></div>
     </section>
-
-    <section class="content-card" style="margin-bottom:16px">
-        <div class="section-header"><div><h2>Automatic Scan Schedule</h2><p class="section-description">Schedule a scan of new messages daily or weekly. Manual scans remain available.</p></div></div>
-        <form id="ti-schedule-form" class="ti-toolbar">
-            <label><input id="ti-schedule-enabled" type="checkbox"> Enable schedule</label>
-            <select id="ti-schedule-frequency"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>
-            <input id="ti-schedule-time" type="time" value="02:00" required>
-            <select id="ti-schedule-day">
-                <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
-            </select>
-            <button class="primary-button" type="submit">Save Schedule</button>
-            <span id="ti-schedule-status" class="ti-muted"></span>
-        </form>
-    </section>
-
-    <div class="ti-tabs" role="tablist">
-        <button class="ti-tab active" data-tab="scan-results" type="button">Discovered CVEs</button>
-        <button class="ti-tab" data-tab="intelligence" type="button">Intelligence</button>
-        <button class="ti-tab" data-tab="scan-history" type="button">Scan History</button>
-    </div>
-
-    <section id="panel-scan-results" class="content-card ti-panel">
-        <div class="section-header">
-            <div><h2>Discovered CVEs</h2><p class="section-description">CVEs collected from configured intelligence sources. Review findings and enrich them with NVD data.</p></div>
-            <div id="ti-scan-count" class="item-count">0 Results</div>
-        </div>
-        <div class="ti-toolbar">
-            <input id="ti-search-results" type="search" placeholder="Search CVE, channel, or message">
-            <select id="ti-status-filter">
-                <option value="all">All statuses</option><option value="new">New</option><option value="under_review">Under Review</option><option value="rejected">Rejected</option><option value="approved">Approved</option>
-            </select>
-            <button id="ti-refresh-results" class="secondary-button" type="button">Refresh</button>
-        </div>
+    <section class="content-card">
+        <div class="section-header"><div><h2>Vulnerabilities</h2><p class="section-description">Only accepted or manually added vulnerability records appear here.</p></div><div id="vulnerability-count" class="item-count">0 Vulnerabilities</div></div>
+        <div class="vul-toolbar"><input id="vulnerability-search" type="search" placeholder="Search CVE or affected product"></div>
         <div class="table-container"><table>
-            <thead><tr><th>#</th><th>CVE ID</th><th>Message</th><th>DATE</th><th>Channel</th><th>Status</th><th>NVD</th><th>Actions</th></tr></thead>
-            <tbody id="ti-results-body"></tbody>
+            <thead><tr><th>#</th><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Affected Product</th><th>Affected Version</th><th>DATE</th><th>Jira</th><th>Actions</th></tr></thead>
+            <tbody id="vulnerabilities-table-body"><tr><td colspan="9">Loading vulnerabilities…</td></tr></tbody>
         </table></div>
-        <p class="ti-muted">DATE is the time the result first entered Vul-Management, not the Telegram message publication time.</p>
-    </section>
-
-    <section id="panel-intelligence" class="content-card ti-panel" hidden>
-        <div class="section-header">
-            <div><h2>Intelligence</h2><p class="section-description">Only CVEs approved by an administrator are listed here.</p></div>
-            <div id="ti-intelligence-count" class="item-count">0 CVEs</div>
-        </div>
-        <div class="ti-toolbar"><input id="ti-search-intelligence" type="search" placeholder="Search CVE or product"><button id="ti-refresh-intelligence" class="secondary-button" type="button">Refresh</button></div>
-        <div class="table-container"><table>
-            <thead><tr><th>#</th><th>CVE ID</th><th>Severity</th><th>Affected Product</th><th>DATE</th><th>Jira</th><th>Actions</th></tr></thead>
-            <tbody id="ti-intelligence-body"></tbody>
-        </table></div>
-    </section>
-
-    <section id="panel-scan-history" class="content-card ti-panel" hidden>
-        <div class="section-header"><div><h2>Scan History</h2><p class="section-description">Every manual or scheduled run is recorded here.</p></div><div id="ti-runs-count" class="item-count">0 Runs</div></div>
-        <div class="table-container"><table><thead><tr><th>#</th><th>Mode</th><th>DATE</th><th>Status</th><th>Channels</th><th>Messages</th><th>CVE Occurrences</th><th>Error</th></tr></thead><tbody id="ti-runs-body"></tbody></table></div>
+        <p id="vulnerability-message" class="vul-message" role="status"></p>
     </section>
 </main>
 
-<div id="ti-modal" class="ti-modal" aria-hidden="true">
-    <div class="ti-modal-card" role="dialog" aria-modal="true" aria-labelledby="ti-modal-title">
-        <div class="section-header"><div><h2 id="ti-modal-title">CVE Details</h2><p id="ti-modal-subtitle" class="section-description"></p></div><button id="ti-modal-close" class="secondary-button" type="button">Close</button></div>
-        <div id="ti-modal-message" class="content-card" style="margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere"></div>
-        <form id="ti-detail-form">
-            <div class="ti-form-grid">
-                <div><label for="ti-severity">Severity</label><input id="ti-severity"></div>
-                <div><label for="ti-cvss">CVSS Score</label><input id="ti-cvss" type="number" min="0" max="10" step="0.1"></div>
-                <div class="full"><label for="ti-product">Affected Product</label><textarea id="ti-product" rows="2"></textarea></div>
-                <div class="full"><label for="ti-versions">Affected Version</label><textarea id="ti-versions" rows="2"></textarea></div>
-                <div class="full"><label for="ti-remediation">Remediation</label><textarea id="ti-remediation" rows="3" placeholder="Data not found in NVD"></textarea></div>
-                <div class="full"><label for="ti-mitigation">Mitigation</label><textarea id="ti-mitigation" rows="3" placeholder="Data not found in NVD"></textarea></div>
-                <div class="full"><label for="ti-description">Description</label><textarea id="ti-description" rows="4"></textarea></div>
-                <div class="full"><label for="ti-references">NVD References</label><textarea id="ti-references" rows="3"></textarea></div>
-                <div class="full"><div id="ti-nvd-note" class="ti-muted"></div><div id="ti-detail-error" class="ti-error"></div></div>
+<div id="vulnerability-modal" class="vul-modal" aria-hidden="true">
+    <div class="vul-modal-card" role="dialog" aria-modal="true" aria-labelledby="vulnerability-modal-title">
+        <div class="section-header"><div><h2 id="vulnerability-modal-title">Add Vulnerability</h2><p class="section-description">Add a CVE manually or update its details.</p></div><button id="close-vulnerability-modal" class="secondary-button" type="button">Close</button></div>
+        <form id="vulnerability-form">
+            <div class="vul-form-grid">
+                <div><label for="vul-cve-id">CVE ID *</label><input id="vul-cve-id" required pattern="CVE-[0-9]{4}-[0-9]{4,}" placeholder="CVE-2025-12345"></div>
+                <div><label for="vul-severity">Severity</label><input id="vul-severity" placeholder="Critical / High / Medium / Low"></div>
+                <div><label for="vul-cvss">CVSS Score</label><input id="vul-cvss" type="number" min="0" max="10" step="0.1"></div>
+                <div class="full"><label for="vul-product">Affected Product</label><textarea id="vul-product" rows="2"></textarea></div>
+                <div class="full"><label for="vul-versions">Affected Version</label><textarea id="vul-versions" rows="2"></textarea></div>
+                <div class="full"><label for="vul-remediation">Remediation</label><textarea id="vul-remediation" rows="2"></textarea></div>
+                <div class="full"><label for="vul-mitigation">Mitigation</label><textarea id="vul-mitigation" rows="2"></textarea></div>
+                <div class="full"><label for="vul-description">Description</label><textarea id="vul-description" rows="3"></textarea></div>
+                <div class="full"><label for="vul-references">References</label><textarea id="vul-references" rows="3"></textarea></div>
+                <div class="full"><p id="vulnerability-form-message" class="vul-message"></p></div>
             </div>
-            <div class="ti-modal-actions">
-                <button id="ti-save-details" class="primary-button" type="submit">Save Changes</button>
-                <button id="ti-approve-result" class="primary-button" type="button">Approve &amp; Add to Intelligence</button>
-                <button id="ti-enrich-again" class="secondary-button" type="button">Fetch NVD Data</button>
-                <button id="ti-send-jira" class="primary-button" type="button" hidden>Send Jira Ticket</button>
-            </div>
+            <div class="vul-actions" style="margin-top:16px"><button id="save-vulnerability-button" class="primary-button" type="submit">Save Vulnerability</button></div>
         </form>
     </div>
 </div>
-
 <script src="../services/api.js"></script>
 <script src="../services/threat-intelligence.js"></script>
 <script src="../services/sidebar.js"></script>
