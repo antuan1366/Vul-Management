@@ -1,19 +1,11 @@
 let editingEquipmentId = null;
 
 let equipmentFields = [];
-let equipmentIdentifiers = {};
-
-
 async function loadEquipmentFields() {
     equipmentFields = await apiRequest(
         "/api/asset-fields?asset_type=equipment"
     );
 }
-
-async function loadEquipmentIdentifiers() {
-    equipmentIdentifiers = await loadIdentifierMap("equipment");
-}
-
 
 function getFieldValue(
     field,
@@ -410,10 +402,7 @@ async function loadAssets() {
             await apiRequest(
                 "/api/equipments"
             );
-
-        await loadEquipmentIdentifiers();
-
-        if (equipmentCount) {
+if (equipmentCount) {
             equipmentCount.textContent =
                 `${equipments.length} ${equipments.length === 1 ? "Asset" : "Assets"}`;
         }
@@ -506,8 +495,6 @@ async function loadAssets() {
                                         equipment.environment || "-"
                                     )}
                                 </td>
-
-                                <td>${renderIdentifierStatus(equipmentIdentifiers[String(equipment.id)], "equipment", equipment.id)}</td>
 
                                 <td>
                                     <div class="table-actions">
@@ -621,10 +608,6 @@ function renderEquipmentTableHeader(
         {
             fieldKey: "environment",
             label: "Environment",
-        },
-        {
-            fieldKey: null,
-            label: "Identification",
         },
         {
             fieldKey: null,
@@ -906,31 +889,6 @@ async function saveEquipment(event) {
 }
 
 
-async function extractEquipmentCpe(id) {
-    try {
-        const result = await apiRequest(
-            "/api/intelligence/assets/equipment/" + id + "/refresh-identifiers",
-            { method: "POST" }
-        );
-        alert(result.resolved_cpe ? "CPE extracted:\n\n" + result.resolved_cpe : "No CPE could be resolved for this equipment.");
-    } catch (error) {
-        alert("CPE extraction failed.\n\n" + error.message);
-    }
-}
-
-async function extractAllCpes() {
-    const button = document.getElementById("extract-all-cpe-button");
-    if (button) { button.disabled = true; button.textContent = "Starting..."; }
-    try {
-        const result = await apiRequest("/api/intelligence/assets/refresh-identifiers", { method: "POST" });
-        window.location.href = "../pages/sync-status.html?job=" + result.job_id;
-    } catch (error) {
-        alert("CPE extraction failed to start.\n\n" + error.message);
-    } finally {
-        if (button) { button.disabled = false; button.textContent = "Extract CPEs"; }
-    }
-}
-
 async function deleteEquipment(id) {
 
     const confirmed =
@@ -1015,9 +973,6 @@ document.addEventListener(
             document.getElementById(
                 "equipment-form"
             );
-
-        const extractAllCpeButton = document.getElementById("extract-all-cpe-button");
-        extractAllCpeButton?.addEventListener("click", extractAllCpes);
 
         // Bind the form controls before any API call so the UI remains
         // usable even if backend initialization or an API request fails.
