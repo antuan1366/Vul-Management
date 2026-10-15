@@ -13,6 +13,13 @@
     function pretty(value) {
         return String(value || "unknown").replaceAll("_", " ").replace(/\b\w/g, ch => ch.toUpperCase());
     }
+    function duration(seconds) {
+        const value = Math.max(0, Math.ceil(Number(seconds || 0)));
+        if (value < 60) return value + " sec";
+        const minutes = Math.floor(value / 60);
+        const remaining = value % 60;
+        return minutes + " min" + (remaining ? " " + remaining + " sec" : "");
+    }
     async function req(url, options) { return apiRequest(url, options); }
 
     function openModal(id) {
@@ -58,7 +65,7 @@
             return;
         }
         body.innerHTML = items.map((run, i) => {
-            const log = run.error_message || (run.status === "running" || run.status === "pending" ? "Scan in progress…" : "Completed without reported errors");
+            const log = run.error_message || (run.status === "nvd_scanning" ? "Telegram scan finished; NVD enrichment is running…" : (run.status === "running" || run.status === "pending" ? "Scan in progress…" : "Completed without reported errors"));
             return '<tr><td>'+(i+1)+'</td><td>'+esc(run.mode === "from_date" ? "From date" : "New messages")+'</td><td>'+esc(date(run.started_at || run.date))+'</td><td>'+esc(date(run.finished_at))+'</td><td><span class="scan-log-status">'+esc(pretty(run.status))+'</span></td><td>'+esc(run.channels_processed)+' / '+esc(run.channels_total)+'</td><td>'+esc(run.messages_processed)+'</td><td>'+esc(run.cve_occurrences)+'</td><td title="'+esc(log)+'">'+esc(log.length > 150 ? log.slice(0,147)+"…" : log)+'</td></tr>';
         }).join("");
     }
@@ -70,19 +77,34 @@
             return;
         }
         wrap.hidden = false;
-        const running = ["pending","running"].includes(run.status);
+        const nvdRunning = run.status === "nvd_scanning";
+        const running = ["pending","running","nvd_scanning"].includes(run.status);
         const total = Number(run.channels_total || 0);
         const done = Number(run.channels_processed || 0);
-        const pct = running ? (total > 0 ? Math.min(100, Math.round(done / total * 100)) : 0) : 100;
-        $("scan-progress-label").textContent = running ? (run.status === "pending" ? "Scan is queued…" : "Scan is running…") : "Scan finished";
-        $("scan-progress-value").textContent = running ? (total > 0 ? pct + "%" : "Starting") : pretty(run.status);
-        $("scan-progress-detail").textContent = "Channels processed: " + done + " of " + total + " · Messages: " + (run.messages_processed || 0) + " · CVE occurrences: " + (run.cve_occurrences || 0) + (run.error_message ? " · " + run.error_message : "");
+        const nvdTotal = Number(run.nvd_total || 0);
+        const nvdDone = Number(run.nvd_processed || 0);
+        const nvdRemaining = Number(run.nvd_remaining ?? Math.max(0,nvdTotal-nvdDone));
+        const pct = nvdRunning
+            ? (nvdTotal > 0 ? Math.min(100, Math.round(nvdDone / nvdTotal * 100)) : 100)
+            : (running ? (total > 0 ? Math.min(100, Math.round(done / total * 100)) : 0) : 100);
+        $("scan-progress-label").textContent = nvdRunning
+            ? "Telegram scan finished — checking NVD…"
+            : (running ? (run.status === "pending" ? "Scan is queued…" : "Scan is running…") : "Scan finished");
+        $("scan-progress-value").textContent = nvdRunning
+            ? (nvdDone + " / " + nvdTotal + " CVEs")
+            : (running ? (total > 0 ? pct + "%" : "Starting") : pretty(run.status));
+        let detail = "Channels processed: " + done + " of " + total + " · Messages: " + (run.messages_processed || 0) + " · CVE occurrences: " + (run.cve_occurrences || 0);
+        if (nvdRunning) {
+            detail += " · NVD: " + nvdDone + " of " + nvdTotal + " checked · " + nvdRemaining + " remaining · Estimated time: " + duration(run.nvd_estimated_seconds);
+        }
+        if (run.error_message) detail += " · " + run.error_message;
+        $("scan-progress-detail").textContent = detail;
         const bar = $("scan-progress-bar");
-        bar.classList.toggle("indeterminate", running && total === 0);
-        bar.style.width = (running && total === 0) ? "35%" : pct + "%";
+        bar.classList.toggle("indeterminate", running && !nvdRunning && total === 0);
+        bar.style.width = (running && !nvdRunning && total === 0) ? "35%" : pct + "%";
         wrap.querySelector('[role="progressbar"]').setAttribute("aria-valuenow", String(pct));
         if (!running && activeRunId === run.id) {
-            $("scan-now-message").textContent = "Scan " + pretty(run.status).toLowerCase() + ". " + (run.cve_occurrences || 0) + " CVE occurrences found. Details are recorded in Last Scan Log.";
+            $("scan-now-message").textContent = "Scan " + pretty(run.status).toLowerCase() + ". " + (run.cve_occurrences || 0) + " CVE occurrences found. NVD enrichment has finished; see Scan Result for individual records.";
             activeRunId = null;
             $("start-scan-submit").disabled = false;
             $("start-scan-submit").textContent = "Start Scan";
@@ -93,8 +115,13 @@
         const data = await req("/api/threat-intelligence/scan-runs?limit=100");
         const items = data.items || [];
         renderRuns(items);
-        const current = activeRunId ? items.find(x => x.id === activeRunId) : items.find(x => ["pending","running"].includes(x.status));
-        if (current) renderProgress(current);
+        const current = activeRunId
+            ? items.find(x => x.id === activeRunId)
+            : items.find(x => ["pending","running","nvd_scanning"].includes(x.status));
+        if (current) {
+            if (!activeRunId && ["pending","running","nvd_scanning"].includes(current.status)) activeRunId = current.id;
+            renderProgress(current);
+        }
     }
 
     async function startScan(event) {
