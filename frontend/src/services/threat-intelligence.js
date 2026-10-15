@@ -38,10 +38,10 @@
             $("vul-description").value=record.description||"";
             $("vul-references").value=record.references_text||"";
         }
-        $("vulnerability-modal").classList.add("open");
+        $("vulnerability-modal").classList.add("is-open");
         $("vulnerability-modal").setAttribute("aria-hidden","false");
     }
-    function closeModal(){$("vulnerability-modal").classList.remove("open");$("vulnerability-modal").setAttribute("aria-hidden","true");activeId=null;}
+    function closeModal(){$("vulnerability-modal").classList.remove("is-open");$("vulnerability-modal").setAttribute("aria-hidden","true");activeId=null;}
     function formPayload(){
         return {cve_id:$("vul-cve-id").value.trim().toUpperCase(),severity:$("vul-severity").value.trim()||null,cvss_score:$("vul-cvss").value===""?null:Number($("vul-cvss").value),affected_product:$("vul-product").value.trim()||null,affected_versions:$("vul-versions").value.trim()||null,remediation:$("vul-remediation").value.trim()||null,mitigation:$("vul-mitigation").value.trim()||null,description:$("vul-description").value.trim()||null,references_text:$("vul-references").value.trim()||null};
     }
@@ -82,6 +82,7 @@
         $("vulnerabilities-table-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)handleAction(b.dataset.action,Number(b.dataset.id)).catch(err=>message(err.message,true));});
         $("vulnerability-form").addEventListener("submit",saveRecord);
         $("close-vulnerability-modal").addEventListener("click",closeModal);
+        $("cancel-vulnerability-modal").addEventListener("click",closeModal);
         $("vulnerability-modal").addEventListener("click",e=>{if(e.target===$("vulnerability-modal"))closeModal();});
         loadRecords().catch(e=>message(e.message,true));
     }
