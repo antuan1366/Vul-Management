@@ -9,6 +9,10 @@ const assetTypeLabels = {
 };
 
 function getSelectedAssetType() {
+    const requestedType = new URLSearchParams(window.location.search).get("asset_type");
+    if (requestedType && Object.prototype.hasOwnProperty.call(assetTypeLabels, requestedType)) {
+        return requestedType;
+    }
     return document.getElementById("asset-type-selector")?.value || "equipment";
 }
 
@@ -243,6 +247,34 @@ function escapeHtml(value) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    const scopedType = new URLSearchParams(window.location.search).get("asset_type");
+    const selector = document.getElementById("asset-type-selector");
+    const pageTitle = document.getElementById("asset-fields-page-title");
+    const pageDescription = document.getElementById("asset-fields-page-description");
+    const backButton = document.getElementById("back-to-assets-button");
+    const assetPages = {
+        equipment: "assets.html",
+        operating_system: "operating-systems.html",
+        application: "applications.html",
+        library: "libraries.html"
+    };
+
+    if (scopedType && Object.prototype.hasOwnProperty.call(assetTypeLabels, scopedType)) {
+        const label = assetTypeLabels[scopedType];
+        if (selector) {
+            selector.value = scopedType;
+            selector.closest("label")?.setAttribute("hidden", "");
+        }
+        if (pageTitle) pageTitle.textContent = `${label} Field Configuration`;
+        if (pageDescription) pageDescription.textContent = `Manage the fields displayed on the ${label.toLowerCase()} page. Changes apply only to this asset type.`;
+        if (backButton) {
+            backButton.href = assetPages[scopedType];
+            backButton.textContent = `Back to ${label}`;
+            backButton.hidden = false;
+        }
+        document.title = `${label} Fields - Vul-Management`;
+    }
+
     document.getElementById("add-field-button")
         ?.addEventListener("click", () => openFieldModal());
 
