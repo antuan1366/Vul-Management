@@ -251,7 +251,7 @@ def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depend
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
     if item.review_status == "approved":
-        raise HTTPException(status_code=409, detail="Accepted results cannot be moved back to review.");
+        raise HTTPException(status_code=409, detail="Accepted results cannot be moved back to review.")
     item.review_status = data.status
     item.review_notes = data.notes
     item.reviewed_at = datetime.utcnow()
