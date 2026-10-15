@@ -269,7 +269,7 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             if run:
                 run.status = "completed_with_errors"
                 detail = f"NVD enrichment worker: {error.__class__.__name__}: {str(error)[:250]}"
-                run.error_message = (run.error_message + "\\n" if run.error_message else "") + detail
+                run.error_message = (run.error_message + "\n" if run.error_message else "") + detail
                 run.finished_at = datetime.utcnow()
                 db.commit()
         finally:
