@@ -129,6 +129,9 @@ async def collect_telegram_scan(run_id: int) -> None:
     run.status = "running"
     run.started_at = datetime.utcnow()
     db.commit()
+    record_event("INFO", "telegram", "Telegram scanner", "scan_started",
+                 f"Telegram scan run {run_id} started in mode {run.mode}.",
+                 scan_run_id=run_id, details={"mode": run.mode, "start_date": str(run.start_date)})
     try:
         client = _get_telegram_client()
         await client.connect()
@@ -190,6 +193,9 @@ async def collect_telegram_scan(run_id: int) -> None:
             except Exception as error:
                 run.error_message = (run.error_message + "\n" if run.error_message else "") + f"{feed.channel_username}: {error.__class__.__name__}: {str(error)[:250]}"
                 db.commit()
+                record_event("ERROR", "telegram", "Telegram scanner", "feed_scan_failed",
+                             f"Failed to scan Telegram channel @{feed.channel_username}: {error.__class__.__name__}: {str(error)[:500]}",
+                             scan_run_id=run_id, details=exception_details(error))
         run.finished_at = datetime.utcnow()
         result_count = db.query(TelegramScanResult).filter(TelegramScanResult.scan_run_id == run.id).count()
         if result_count:
@@ -198,6 +204,11 @@ async def collect_telegram_scan(run_id: int) -> None:
             run.status = "completed_with_errors" if run.error_message else "completed"
         db.commit()
         completed_run_id = run.id
+        record_event("WARNING" if run.error_message else "INFO", "telegram", "Telegram scanner", "scan_collection_finished",
+                     f"Telegram collection phase finished with status {run.status}.",
+                     scan_run_id=run_id, details={"channels_total": run.channels_total,
+                     "channels_processed": run.channels_processed, "messages_processed": run.messages_processed,
+                     "cve_occurrences": run.cve_occurrences, "error_message": run.error_message})
         try:
             await client.disconnect()
         except Exception:
@@ -210,6 +221,9 @@ async def collect_telegram_scan(run_id: int) -> None:
         run.error_message = f"{error.__class__.__name__}: {str(error)[:500]}"
         run.finished_at = datetime.utcnow()
         db.commit()
+        record_event("ERROR", "telegram", "Telegram scanner", "scan_failed",
+                     f"Telegram scan run {run_id} failed: {error.__class__.__name__}: {str(error)[:500]}",
+                     scan_run_id=run_id, details=exception_details(error))
     finally:
         db.close()
 
