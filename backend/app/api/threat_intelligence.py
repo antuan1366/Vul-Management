@@ -165,16 +165,21 @@ def update_telegram_schedule(data: TelegramScheduleUpdate, db: Session = Depends
 
 
 def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
-    result_total = db.scalar(
-        select(func.count(TelegramScanResult.id)).where(TelegramScanResult.scan_run_id == item.id)
-    ) or 0
-    processed_statuses = ("success", "partial", "not_found", "error", "skipped")
-    result_processed = db.scalar(
-        select(func.count(TelegramScanResult.id)).where(
-            TelegramScanResult.scan_run_id == item.id,
-            TelegramScanResult.nvd_status.in_(processed_statuses),
+    # NVD is keyed by CVE ID, so progress counts unique CVEs rather than Telegram occurrences.
+    rows = db.execute(
+        select(TelegramScanResult.cve_id, TelegramScanResult.nvd_status).where(
+            TelegramScanResult.scan_run_id == item.id
         )
-    ) or 0
+    ).all()
+    by_cve: dict[str, list[str]] = {}
+    for cve_id, nvd_status in rows:
+        by_cve.setdefault(cve_id, []).append(nvd_status)
+    processed_statuses = {"success", "partial", "not_found", "error", "skipped"}
+    result_total = len(by_cve)
+    result_processed = sum(
+        1 for statuses in by_cve.values()
+        if statuses and all(status in processed_statuses for status in statuses)
+    )
     remaining = max(0, result_total - result_processed)
     return {
         **serialize_scan_run(item),
