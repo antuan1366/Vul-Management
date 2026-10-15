@@ -11,6 +11,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.database import SessionLocal
+from app.services.application_events import record_event, exception_details
+import time as monotonic_time
 from app.core.config import settings
 from app.models.feed import Feed
 from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, TelegramScanSchedule, ThreatIntelligence
@@ -306,15 +308,51 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
         if not items:
             return
         representative = items[0]
+        started = monotonic_time.perf_counter()
+        record_event(
+            "INFO", "nvd", "NVD enrichment", "lookup_started",
+            f"Started NVD lookup for {cve_id}.",
+            cve_id=cve_id, scan_run_id=run_id,
+            details={"matching_scan_results": len(items)},
+        )
         try:
             enrich_scan_result_from_nvd(db, representative)
-        except LookupError:
+            elapsed_ms = int((monotonic_time.perf_counter() - started) * 1000)
+            record_event(
+                "INFO" if representative.nvd_status in {"success", "partial"} else "WARNING",
+                "nvd", "NVD enrichment", "lookup_finished",
+                f"NVD lookup finished with status {representative.nvd_status}.",
+                cve_id=cve_id, scan_run_id=run_id, duration_ms=elapsed_ms,
+                details={"nvd_status": representative.nvd_status,
+                         "missing_fields": representative.nvd_missing_fields},
+            )
+        except LookupError as error:
             # The not-found result has already been saved on the representative.
-            pass
+            record_event(
+                "WARNING", "nvd", "NVD enrichment", "cve_not_found",
+                str(error), cve_id=cve_id, scan_run_id=run_id,
+                duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
+            )
         except (httpx.HTTPError, ValueError) as error:
             representative.nvd_status = "error"
-            representative.nvd_error = f"NVD request failed: {error.__class__.__name__}."
+            representative.nvd_error = f"NVD request failed: {error.__class__.__name__}: {str(error)[:500]}"
             db.commit()
+            record_event(
+                "ERROR", "nvd", "NVD enrichment", "lookup_failed",
+                f"NVD lookup failed for {cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
+                cve_id=cve_id, scan_run_id=run_id,
+                duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
+                details=exception_details(error),
+            )
+        except Exception as error:
+            record_event(
+                "ERROR", "nvd", "NVD enrichment", "unexpected_lookup_error",
+                f"Unexpected error while looking up {cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
+                cve_id=cve_id, scan_run_id=run_id,
+                duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
+                details=exception_details(error),
+            )
+            raise
         for item in items[1:]:
             _copy_nvd_fields(representative, item)
         db.commit()
@@ -357,10 +395,33 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     if feed and feed.api_key:
         headers["apiKey"] = feed.api_key
     timeout = feed.timeout_seconds if feed else 20
+    request_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         response = None
         for attempt in range(5):
-            response = client.get("https://services.nvd.nist.gov/rest/json/cves/2.0", params={"cveId": item.cve_id})
+            attempt_started = monotonic_time.perf_counter()
+            try:
+                response = client.get(request_url, params={"cveId": item.cve_id})
+                request_ms = int((monotonic_time.perf_counter() - attempt_started) * 1000)
+                record_event(
+                    "WARNING" if response.status_code in {429, 503} else "INFO",
+                    "nvd", "NVD HTTP client", "http_response",
+                    f"NVD returned HTTP {response.status_code} for {item.cve_id} (attempt {attempt + 1}/5).",
+                    cve_id=item.cve_id, duration_ms=request_ms,
+                    details={"http_status": response.status_code, "attempt": attempt + 1,
+                             "timeout_seconds": timeout, "endpoint": request_url,
+                             "retry_after": response.headers.get("Retry-After")},
+                )
+            except httpx.HTTPError as error:
+                request_ms = int((monotonic_time.perf_counter() - attempt_started) * 1000)
+                record_event(
+                    "ERROR", "nvd", "NVD HTTP client", "http_request_exception",
+                    f"NVD request exception for {item.cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
+                    cve_id=item.cve_id, duration_ms=request_ms,
+                    details={**exception_details(error), "attempt": attempt + 1,
+                             "timeout_seconds": timeout, "endpoint": request_url},
+                )
+                raise
             if response.status_code not in {429, 503}:
                 break
             if attempt == 4:
