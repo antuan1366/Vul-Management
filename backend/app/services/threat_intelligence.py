@@ -188,15 +188,103 @@ async def collect_telegram_scan(run_id: int) -> None:
             except Exception as error:
                 run.error_message = (run.error_message + "\n" if run.error_message else "") + f"{feed.channel_username}: {error.__class__.__name__}: {str(error)[:250]}"
                 db.commit()
-        run.status = "completed_with_errors" if run.error_message else "completed"
         run.finished_at = datetime.utcnow()
+        result_count = db.query(TelegramScanResult).filter(TelegramScanResult.scan_run_id == run.id).count()
+        if result_count:
+            run.status = "nvd_scanning"
+        else:
+            run.status = "completed_with_errors" if run.error_message else "completed"
         db.commit()
+        completed_run_id = run.id
         await client.disconnect()
+        if result_count:
+            # NVD enrichment is a separate background phase; the scan response and UI remain usable.
+            asyncio.create_task(enrich_scan_run_from_nvd(completed_run_id))
     except Exception as error:
         run.status = "failed"
         run.error_message = f"{error.__class__.__name__}: {str(error)[:500]}"
         run.finished_at = datetime.utcnow()
         db.commit()
+    finally:
+        db.close()
+
+
+async def enrich_scan_run_from_nvd(run_id: int) -> None:
+    """Enrich each finding in a scan run in the background with a conservative NVD request rate."""
+    db = SessionLocal()
+    try:
+        run = db.get(TelegramScanRun, run_id)
+        if run is None:
+            return
+        run.status = "nvd_scanning"
+        result_ids = list(db.scalars(
+            select(TelegramScanResult.id)
+            .where(TelegramScanResult.scan_run_id == run_id)
+            .order_by(TelegramScanResult.date.asc(), TelegramScanResult.id.asc())
+        ).all())
+        # Preserve prior successful lookups for duplicate findings, and retry only unfinished/errors.
+        work_ids = []
+        for result_id in result_ids:
+            item = db.get(TelegramScanResult, result_id)
+            if item and item.nvd_status not in {"success", "partial", "not_found"}:
+                item.nvd_status = "queued"
+                item.nvd_error = None
+                work_ids.append(result_id)
+        db.commit()
+        db.close()
+
+        for index, result_id in enumerate(work_ids):
+            await asyncio.to_thread(_enrich_result_in_worker, result_id)
+            # NVD's unauthenticated public API is rate-limited. Six seconds is a conservative
+            # cadence (about five requests per 30 seconds); keep it even when an API key exists.
+            if index < len(work_ids) - 1:
+                await asyncio.sleep(6)
+
+        db = SessionLocal()
+        run = db.get(TelegramScanRun, run_id)
+        if run:
+            failures = db.query(TelegramScanResult).filter(
+                TelegramScanResult.scan_run_id == run_id,
+                TelegramScanResult.nvd_status == "error",
+            ).count()
+            run.status = "completed_with_errors" if run.error_message or failures else "completed"
+            run.finished_at = datetime.utcnow()
+            db.commit()
+    except Exception as error:
+        db = SessionLocal()
+        try:
+            run = db.get(TelegramScanRun, run_id)
+            if run:
+                run.status = "completed_with_errors"
+                detail = f"NVD enrichment worker: {error.__class__.__name__}: {str(error)[:250]}"
+                run.error_message = (run.error_message + "\\n" if run.error_message else "") + detail
+                run.finished_at = datetime.utcnow()
+                db.commit()
+        finally:
+            db.close()
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
+
+def _enrich_result_in_worker(result_id: int) -> None:
+    """Use an isolated SQLAlchemy session so synchronous HTTP requests never block the event loop."""
+    db = SessionLocal()
+    try:
+        item = db.get(TelegramScanResult, result_id)
+        if item is None or item.review_status == "rejected":
+            return
+        try:
+            enrich_scan_result_from_nvd(db, item)
+        except LookupError:
+            # A not-found response is already saved as nvd_status=not_found.
+            pass
+        except (httpx.HTTPError, ValueError) as error:
+            item.nvd_status = "error"
+            item.nvd_error = f"NVD request failed: {error.__class__.__name__}."
+            db.commit()
     finally:
         db.close()
 
@@ -229,16 +317,36 @@ def _walk_cpe_matches(node):
 
 
 def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
+    # NVD's public API can be queried without a key. Use a configured key if one exists,
+    # but do not require an Administration feed just to perform a public CVE lookup.
     feed = db.scalar(select(Feed).where(Feed.feed_type == "nvd_cve", Feed.enabled.is_(True)).order_by(Feed.id))
-    if feed is None:
-        raise ValueError("No enabled NVD CVE feed is configured. Enable NVD CVE API under Administration > Feeds.")
     headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.0.0"}
-    if feed.api_key:
+    if feed and feed.api_key:
         headers["apiKey"] = feed.api_key
-    with httpx.Client(timeout=feed.timeout_seconds, follow_redirects=True, headers=headers) as client:
-        response = client.get("https://services.nvd.nist.gov/rest/json/cves/2.0", params={"cveId": item.cve_id})
+    timeout = feed.timeout_seconds if feed else 20
+    with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
+        response = None
+        for attempt in range(5):
+            response = client.get("https://services.nvd.nist.gov/rest/json/cves/2.0", params={"cveId": item.cve_id})
+            if response.status_code not in {429, 503}:
+                break
+            if attempt == 4:
+                response.raise_for_status()
+            retry_after = response.headers.get("Retry-After")
+            try:
+                wait_seconds = max(6, min(60, int(retry_after))) if retry_after else min(60, 15 * (2 ** attempt))
+            except ValueError:
+                wait_seconds = min(60, 15 * (2 ** attempt))
+            response.close()
+            import time as time_module
+            time_module.sleep(wait_seconds)
+        if response is None:
+            raise httpx.RequestError("NVD returned no response.")
         if response.status_code == 404:
-            raise LookupError(f"{item.cve_id}: requested CVE data was not found in NVD.")
+            item.nvd_status = "not_found"
+            item.nvd_error = f"{item.cve_id}: requested CVE data was not found in NVD."
+            db.commit()
+            raise LookupError(item.nvd_error)
         response.raise_for_status()
         payload = response.json()
     vulnerabilities = payload.get("vulnerabilities") or []
