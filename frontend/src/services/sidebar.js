@@ -72,15 +72,16 @@
                 <div class="sidebar-divider"></div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["asset-fields.html","feeds.html","telegram-feeds.html","telegram-settings.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["asset-fields.html","feeds.html","telegram-feeds.html","telegram-settings.html","events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">⚙</span><span class="sidebar-label">Administration</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="administration-menu" class="sidebar-submenu ${["asset-fields.html","feeds.html","telegram-feeds.html","telegram-settings.html"].includes(currentPage) ? "open" : ""}">
+                    <div id="administration-menu" class="sidebar-submenu ${["asset-fields.html","feeds.html","telegram-feeds.html","telegram-settings.html","events.html"].includes(currentPage) ? "open" : ""}">
                         <a href="asset-fields.html" class="sidebar-subitem ${currentPage === "asset-fields.html" ? "active" : ""}">Asset Fields</a>
                         <a href="feeds.html" class="sidebar-subitem ${currentPage === "feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
                         <a href="telegram-feeds.html" class="sidebar-subitem ${currentPage === "telegram-feeds.html" ? "active" : ""}">Telegram Feeds</a>
                         <a href="telegram-settings.html" class="sidebar-subitem ${currentPage === "telegram-settings.html" ? "active" : ""}">Telegram Settings</a>
+                        <a href="events.html" class="sidebar-subitem ${currentPage === "events.html" ? "active" : ""}">Logs &amp; Events</a>
                     </div>
                 </div>
             </div>
