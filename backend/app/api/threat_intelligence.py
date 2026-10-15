@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, get_db
+from app.services.application_events import record_event, exception_details
 from app.models.feed import Feed
 from app.models.threat_intelligence import (
     TelegramFeed,
@@ -244,8 +245,13 @@ def delete_scan_result(result_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Scan result not found.")
     if item.review_status == "approved":
         raise HTTPException(status_code=409, detail="Approved results cannot be deleted from Scan Results.")
+    deleted_cve = item.cve_id
+    run_id = item.scan_run_id
     db.delete(item)
     db.commit()
+    record_event("WARNING", "audit", "Scan Result", "finding_deleted",
+                 f"Scan result for {deleted_cve} was deleted.",
+                 cve_id=deleted_cve, scan_run_id=run_id)
 
 
 @router.post("/scan-results/{result_id}/review")
@@ -262,6 +268,11 @@ def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depend
     item.reviewed_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
+    record_event("INFO" if item.review_status != "rejected" else "WARNING",
+                 "audit", "Scan Result review", "review_status_changed",
+                 f"{item.cve_id} review status changed to {item.review_status}.",
+                 cve_id=item.cve_id, scan_run_id=item.scan_run_id,
+                 details={"review_notes": item.review_notes})
     return serialize_scan_result(item)
 
 
@@ -323,6 +334,9 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
         item.review_status = "approved"
         item.reviewed_at = datetime.utcnow()
         db.commit()
+        record_event("INFO", "audit", "Threat Intelligence", "cve_approved_existing",
+                     f"{item.cve_id} was accepted; a Vulnerabilities record already existed.",
+                     cve_id=item.cve_id, scan_run_id=item.scan_run_id)
         return {"status": "already_exists", "intelligence_id": existing.id, "cve_id": existing.cve_id}
     record = ThreatIntelligence(
         cve_id=item.cve_id,
@@ -348,6 +362,10 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=409, detail="This CVE was approved by another request.")
     db.refresh(record)
+    record_event("INFO", "audit", "Threat Intelligence", "cve_approved",
+                 f"{item.cve_id} was accepted into Vulnerabilities.",
+                 cve_id=item.cve_id, scan_run_id=item.scan_run_id,
+                 details={"intelligence_id": record.id})
     return {"status": "approved", "intelligence_id": record.id, "cve_id": record.cve_id}
 
 
@@ -429,10 +447,16 @@ def create_jira_ticket(record_id: int, db: Session = Depends(get_db)):
     except RuntimeError as error:
         raise HTTPException(status_code=400, detail=str(error))
     except httpx.HTTPError as error:
+        record_event("ERROR", "integration", "Jira", "jira_request_failed",
+                     f"Jira request failed: {error.__class__.__name__}: {str(error)[:500]}",
+                     cve_id=item.cve_id, details=exception_details(error))
         raise HTTPException(status_code=502, detail=f"Jira request failed: {error.__class__.__name__}.")
     item.jira_issue_key = result["key"]
     item.jira_issue_url = result["url"]
     item.jira_status = "sent"
     item.updated_at = datetime.utcnow()
     db.commit()
+    record_event("INFO", "integration", "Jira", "jira_ticket_created",
+                 f"Jira issue {item.jira_issue_key} created for {item.cve_id}.",
+                 cve_id=item.cve_id, details={"issue_key": item.jira_issue_key})
     return {"status": "sent", "issue_key": item.jira_issue_key, "issue_url": item.jira_issue_url}
