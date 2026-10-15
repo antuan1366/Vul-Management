@@ -6,8 +6,8 @@
     <title>Scan Result - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-.nvd-live-status{margin-bottom:16px;padding:14px 16px;border:1px solid #d9dee7;border-radius:10px;background:#ffffff;color:#222222;box-shadow:0 1px 2px rgba(15,23,42,.04)}
-        .nvd-live-status strong,.nvd-live-status span,.nvd-live-status p{color:#222222}
+        .nvd-live-status{margin-bottom:16px;padding:14px 16px;border:1px solid #d9dee7;border-radius:10px;background:#fff;color:#222;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+        .nvd-live-status strong,.nvd-live-status span,.nvd-live-status p{color:#222}
         .nvd-live-status[hidden]{display:none}
         .nvd-live-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
         .nvd-live-detail{font-size:12px;opacity:.8;margin:8px 0 0;overflow-wrap:anywhere}
@@ -15,26 +15,31 @@
         .nvd-live-bar{height:100%;width:0;background:var(--primary-color,#4388f5);transition:width .3s ease}
         .nvd-live-bar.indeterminate{width:30%;animation:nvd-live-pulse 1.2s ease-in-out infinite alternate}
         @keyframes nvd-live-pulse{from{transform:translateX(0)}to{transform:translateX(230%)}}
-                .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+        .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
         .review-toolbar input,.review-toolbar select{max-width:300px}
         .review-actions{display:flex;gap:6px;flex-wrap:wrap}
         .review-actions button{white-space:nowrap}
         .review-message{font-size:12px;opacity:.78}
-        .review-message.error{color:#ef6b73;opacity:1}
+        .review-message.error{color:#b42318;opacity:1}
         .review-status-select{min-width:125px;max-width:155px}
         .result-cell{max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .review-modal{position:fixed;inset:0;background:rgba(15,23,42,.28);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+        .review-modal{position:fixed;inset:0;background:rgba(15,23,42,.28);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px;color-scheme:light}
         .review-modal.open{display:flex}
-        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:#ffffff;color:#222222;border:1px solid #d9dee7;border-radius:12px;padding:22px;box-shadow:0 18px 48px rgba(15,23,42,.18)}
-        .review-modal-card h2,.review-modal-card strong,.review-modal-card label,.review-modal-card .section-description{color:#222222}
-        .review-modal-card input,.review-modal-card select,.review-modal-card textarea{background:#ffffff;color:#222222;border:1px solid #cbd5e1}
-        .review-modal-card input:focus,.review-modal-card select:focus,.review-modal-card textarea:focus{outline:2px solid rgba(67,136,245,.2);border-color:#4388f5}
-        .review-modal-card .content-card{background:#ffffff;color:#222222;border-color:#e2e8f0}
+        /* Explicitly force the entire dialog to use the same light palette as the main application. */
+        .review-modal-card,.review-modal-card *{color-scheme:light!important}
+        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:#fff!important;color:#222!important;border:1px solid #d9dee7;border-radius:12px;padding:22px;box-shadow:0 18px 48px rgba(15,23,42,.18)}
+        .review-modal-card h2,.review-modal-card h3,.review-modal-card strong,.review-modal-card label,.review-modal-card p,.review-modal-card .section-description,.review-modal-card a{color:#222!important}
+        .review-modal-card input,.review-modal-card select,.review-modal-card textarea{box-sizing:border-box;background:#fff!important;background-color:#fff!important;color:#222!important;-webkit-text-fill-color:#222;border:1px solid #cbd5e1!important;box-shadow:none}
+        .review-modal-card input::placeholder,.review-modal-card textarea::placeholder{color:#737373!important;-webkit-text-fill-color:#737373}
+        .review-modal-card input:focus,.review-modal-card select:focus,.review-modal-card textarea:focus{outline:2px solid rgba(67,136,245,.2);border-color:#4388f5!important}
+        .review-modal-card .content-card{background:#fff!important;color:#222!important;border-color:#e2e8f0}
+        .review-modal-card .section-header{background:transparent}
+        .review-modal-card .secondary-button{background:#e9eaed!important;color:#222!important}
         .review-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-        .review-detail-grid label{display:block;font-size:12px;opacity:.75;margin-bottom:5px}
-        .review-detail-grid input,.review-detail-grid textarea{box-sizing:border-box;width:100%}
+        .review-detail-grid label{display:block;font-size:12px;opacity:.85;margin-bottom:5px}
+        .review-detail-grid input,.review-detail-grid textarea{width:100%}
         .review-detail-grid .full{grid-column:1/-1}
-        @media(max-width:700px){.review-detail-grid{grid-template-columns:1fr}.review-detail-grid .full{grid-column:auto}}
+        @media(max-width:700px){.review-detail-grid{grid-template-columns:1fr}.review-detail-grid .full{grid-column:auto}.review-modal-card{padding:16px}}
     </style>
 </head>
 <body>
@@ -43,7 +48,6 @@
         <div><h1>Scan Result</h1><p>Review discovered CVEs. NVD enrichment starts automatically after each scan and updates results as data arrives.</p></div>
         <div class="table-actions"></div>
     </section>
-
     <section id="nvd-live-status" class="nvd-live-status" aria-live="polite" hidden>
         <div class="nvd-live-head"><strong id="nvd-live-title">NVD enrichment in progress</strong><span id="nvd-live-value">Starting…</span></div>
         <div class="nvd-live-track" role="progressbar" aria-label="NVD enrichment progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="nvd-live-bar" class="nvd-live-bar"></div></div>
@@ -59,17 +63,12 @@
         </div>
         <p id="bulk-message" class="review-message" role="status"></p>
         <div class="table-container"><table>
-            <thead><tr>
-                <th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th>
-                <th>#</th><th>Scan Date</th><th>CVE</th><th>Severity</th><th>Score</th>
-                <th>Affected</th><th>Affected Version</th><th>Remediation</th><th>Status</th><th>NVD</th><th>Actions</th>
-            </tr></thead>
+            <thead><tr><th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th>#</th><th>Scan Date</th><th>CVE</th><th>Severity</th><th>Score</th><th>Affected</th><th>Affected Version</th><th>Remediation</th><th>Status</th><th>NVD</th><th>Actions</th></tr></thead>
             <tbody id="results-table-body"><tr><td colspan="12">Loading results…</td></tr></tbody>
         </table></div>
         <p class="review-message">Scan Date is when Vul-Management collected the finding. Hover over a cell or open Details to inspect full data and the original Telegram message.</p>
     </section>
 </main>
-
 <div id="result-modal" class="review-modal" aria-hidden="true">
     <div class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
         <div class="section-header"><div><h2 id="result-modal-title">CVE Details</h2><p id="result-modal-subtitle" class="section-description"></p></div><button id="close-result-modal" class="secondary-button" type="button">Close</button></div>
@@ -88,7 +87,6 @@
         <div class="review-actions" style="margin-top:16px"><button id="save-result-details" class="primary-button" type="button">Save Details</button><button id="accept-result-button" class="primary-button" type="button">Accept</button><button id="reject-result-button" class="danger-button" type="button">Reject</button></div>
     </div>
 </div>
-
 <script src="../services/api.js"></script>
 <script src="../services/vulnerabilities.js"></script>
 <script src="../services/sidebar.js"></script>
