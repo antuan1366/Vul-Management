@@ -56,4 +56,4 @@ class TelegramVerificationSubmit(BaseModel):
 
 
 class IntelligenceCreate(IntelligenceUpdate):
-    cve_id: str = Field(min_length=4, max_length=30, pattern=r"^CVE-\\d{4}-\\d{4,}$")
+    cve_id: str = Field(min_length=4, max_length=30, pattern=r"^CVE-\d{4}-\d{4,}$")
