@@ -11,7 +11,6 @@ class ApplicationEvent(Base):
     __table_args__ = (
         Index("ix_application_events_created_at", "created_at"),
         Index("ix_application_events_level", "level"),
-        Index("ix_application_events_category", "category"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
