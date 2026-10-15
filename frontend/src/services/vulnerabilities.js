@@ -29,7 +29,7 @@
             const actionButtons = '<div class="review-actions">'+
                 '<button class="secondary-button small-button" data-action="details" data-id="'+x.id+'">Details</button>'+
                 '<button class="secondary-button small-button" data-action="nvd" data-id="'+x.id+'">NVD Lookup</button>'+
-                (x.review_status !== "approved" ? '<button class="primary-button small-button" data-action="accept" data-id="'+x.id+'">Accept</button>' : '')+
+                (x.review_status !== "approved" && x.review_status !== "rejected" ? '<button class="primary-button small-button" data-action="accept" data-id="'+x.id+'">Accept</button>' : '')+
                 (!closed ? '<button class="danger-button small-button" data-action="reject" data-id="'+x.id+'">Reject</button>' : '')+
                 '</div>';
             return '<tr><td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' '+(x.review_status==="approved"?"disabled":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
@@ -135,15 +135,16 @@
     }
     function selectedIds() { return Array.from(selected); }
     async function bulkAccept() {
-        const ids=selectedIds();
-        if (!ids.length) return showMessage("Select at least one result first.",true);
+        const ids=selectedIds().filter(id => { const x=rows.find(r=>r.id===id); return x && !["approved","rejected"].includes(x.review_status); });
+        if (!ids.length) return showMessage("Select at least one new or under-review result first.",true);
         if (!window.confirm("Accept "+ids.length+" selected result(s) and add them to Vulnerabilities?")) return;
         let ok=0, failed=0;
         for(const id of ids){try{await req("/api/threat-intelligence/scan-results/"+id+"/approve",{method:"POST"});selected.delete(id);ok++;}catch(e){failed++;}}
         await loadResults(); showMessage("Accepted: "+ok+". Failed: "+failed+".",failed>0);
     }
     async function bulkNvd(ids) {
-        if (!ids.length) return showMessage("Select at least one result first.",true);
+        ids=ids.filter(id => { const x=rows.find(r=>r.id===id); return x && x.review_status!=="rejected"; });
+        if (!ids.length) return showMessage("Select at least one result that has not been rejected.",true);
         let found=0, missing=0, failed=0;
         for(const id of ids){
             try{const x=await req("/api/threat-intelligence/scan-results/"+id+"/enrich",{method:"POST"});if(x.nvd_status==="not_found")missing++;else found++;}
