@@ -23,9 +23,13 @@
         .review-message.error{color:#ef6b73;opacity:1}
         .review-status-select{min-width:125px;max-width:155px}
         .result-cell{max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .review-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+        .review-modal{position:fixed;inset:0;background:rgba(15,23,42,.28);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
         .review-modal.open{display:flex}
-        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:var(--card-bg,#171c26);border:1px solid var(--border-color,#394150);border-radius:12px;padding:22px}
+        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:#ffffff;color:#222222;border:1px solid #d9dee7;border-radius:12px;padding:22px;box-shadow:0 18px 48px rgba(15,23,42,.18)}
+        .review-modal-card h2,.review-modal-card strong,.review-modal-card label,.review-modal-card .section-description{color:#222222}
+        .review-modal-card input,.review-modal-card select,.review-modal-card textarea{background:#ffffff;color:#222222;border:1px solid #cbd5e1}
+        .review-modal-card input:focus,.review-modal-card select:focus,.review-modal-card textarea:focus{outline:2px solid rgba(67,136,245,.2);border-color:#4388f5}
+        .review-modal-card .content-card{background:#ffffff;color:#222222;border-color:#e2e8f0}
         .review-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
         .review-detail-grid label{display:block;font-size:12px;opacity:.75;margin-bottom:5px}
         .review-detail-grid input,.review-detail-grid textarea{box-sizing:border-box;width:100%}
