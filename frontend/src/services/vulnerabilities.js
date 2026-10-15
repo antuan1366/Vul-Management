@@ -148,7 +148,7 @@
         let found=0, missing=0, failed=0;
         for(const id of ids){
             try{const x=await req("/api/threat-intelligence/scan-results/"+id+"/enrich",{method:"POST"});if(x.nvd_status==="not_found")missing++;else found++;}
-            catch(e){const x=rows.find(r=>r.id===id);if(x&&x.nvd_status==="not_found")missing++;else failed++;}
+            catch(e){try{const x=await req("/api/threat-intelligence/scan-results/"+id);if(x.nvd_status==="not_found")missing++;else failed++;}catch(_){failed++;}}
         }
         await loadResults();
         showMessage("NVD lookup finished. Data found/updated: "+found+". No NVD Detected: "+missing+". Errors: "+failed+".",failed>0);
@@ -176,7 +176,7 @@
         $("select-all-results").addEventListener("change",e=>{for(const x of rows){if(x.review_status==="approved")continue;if(e.target.checked)selected.add(x.id);else selected.delete(x.id);}render();});
         $("bulk-accept-button").addEventListener("click",()=>bulkAccept().catch(e=>showMessage(e.message,true)));
         $("bulk-nvd-button").addEventListener("click",()=>bulkNvd(selectedIds()).catch(e=>showMessage(e.message,true)));
-        $("nvd-all-button").addEventListener("click",()=>bulkNvd(rows.filter(x=>x.review_status!=="rejected").map(x=>x.id)).catch(e=>showMessage(e.message,true)));
+        $("nvd-all-button").addEventListener("click",async()=>{try{const data=await req("/api/threat-intelligence/scan-results?status=all&limit=500");await bulkNvd((data.items||[]).filter(x=>x.review_status!=="rejected").map(x=>x.id));}catch(e){showMessage(e.message,true);}});
         $("bulk-delete-button").addEventListener("click",()=>bulkDelete().catch(e=>showMessage(e.message,true)));
         $("close-result-modal").addEventListener("click",closeModal);
         $("result-modal").addEventListener("click",e=>{if(e.target===$("result-modal"))closeModal();});
