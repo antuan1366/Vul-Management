@@ -135,10 +135,10 @@
         $("result-modal-error").textContent = x.nvd_error || "";
         $("accept-result-button").hidden = x.review_status === "approved";
         $("reject-result-button").hidden = ["approved","rejected"].includes(x.review_status);
-        $("result-modal").classList.add("open");
+        $("result-modal").classList.add("is-open");
         $("result-modal").setAttribute("aria-hidden","false");
     }
-    function closeModal() { $("result-modal").classList.remove("open"); $("result-modal").setAttribute("aria-hidden","true"); active=null; }
+    function closeModal() { $("result-modal").classList.remove("is-open"); $("result-modal").setAttribute("aria-hidden","true"); active=null; }
     async function openDetails(id) { fillModal(await req("/api/threat-intelligence/scan-results/"+id)); }
     function payloadFromModal() {
         return {
