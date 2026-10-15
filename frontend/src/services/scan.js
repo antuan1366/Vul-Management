@@ -1,210 +1,194 @@
-let scanPollTimer = null;
+(() => {
+    const $ = (id) => document.getElementById(id);
+    let pollTimer = null;
+    let activeRunId = null;
 
-const scanFrequencyLabels = {
-    hourly: "Every hour",
-    every_2_hours: "Every 2 hours",
-    every_6_hours: "Every 6 hours",
-    daily: "Every day",
-    every_2_days: "Every 2 days",
-    weekly: "Every week"
-};
-
-function scanEscape(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function scanDate(value) {
-    if (!value) return "-";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
-}
-
-function scanStatusClass(status) {
-    return "status-badge status-" + String(status || "pending").replace(/[^a-z_]/g, "");
-}
-
-function resultText(job) {
-    if (job.error_message) return job.error_message;
-    if (job.result) {
-        if (job.result.message) return job.result.message;
-        if (job.result.status) return job.result.status;
-        return JSON.stringify(job.result);
+    function esc(value) {
+        return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
     }
-    return job.current_step || "-";
-}
+    function date(value) {
+        if (!value) return "—";
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleString();
+    }
+    function pretty(value) {
+        return String(value || "unknown").replaceAll("_", " ").replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+    async function req(url, options) { return apiRequest(url, options); }
 
-function renderScanResults(jobs) {
-    const body = document.getElementById("scan-results-body");
-    if (!body) return;
-
-    document.getElementById("scan-count").textContent = jobs.length + " Scans";
-
-    if (!jobs.length) {
-        body.innerHTML = '<tr><td colspan="8" class="empty-cell">No vulnerability scans have been executed yet.</td></tr>';
-        return;
+    function syncScheduleControls() {
+        const enabled = $("scan-schedule-enabled").checked;
+        $("scan-schedule-frequency").disabled = !enabled;
+        $("scan-schedule-time").disabled = !enabled;
+        $("scan-schedule-day").disabled = !enabled || $("scan-schedule-frequency").value !== "weekly";
+        $("save-schedule-button").disabled = false;
     }
 
-    body.innerHTML = jobs.map((job, index) =>
-        "<tr>" +
-        "<td>" + (index + 1) + "</td>" +
-        "<td>#" + job.id + "</td>" +
-        "<td>" + scanEscape(scanDate(job.started_at || job.created_at)) + "</td>" +
-        "<td>" + scanEscape(scanDate(job.finished_at)) + "</td>" +
-        "<td><span class=\"" + scanStatusClass(job.status) + "\">" + scanEscape(job.status) + "</span></td>" +
-        "<td>" + scanEscape(job.progress ?? 0) + "%</td>" +
-        "<td>" + scanEscape(job.current_step || "-") + "</td>" +
-        "<td>" + scanEscape(resultText(job)) + "</td>" +
-        "</tr>"
-    ).join("");
-}
-
-async function loadScanJobs() {
-    const data = await apiRequest("/api/sync-jobs?job_type=nvd");
-    renderScanResults(data.items || []);
-}
-
-function currentTimeHHMM() {
-    const now = new Date();
-    return String(now.getHours()).padStart(2, "0") + ":" +
-        String(now.getMinutes()).padStart(2, "0");
-}
-
-function renderScheduleStatus(schedule) {
-    const status = document.getElementById("schedule-status");
-    const frequency = document.getElementById("schedule-frequency-status");
-    const nextScan = document.getElementById("schedule-next-scan");
-    const lastScan = document.getElementById("schedule-last-scan");
-    const lastStatus = document.getElementById("schedule-last-status");
-    const disableButton = document.getElementById("disable-schedule-button");
-
-    if (!status) return;
-
-    status.textContent = schedule.enabled ? "Enabled" : "Disabled";
-    frequency.textContent = schedule.enabled
-        ? (scanFrequencyLabels[schedule.frequency] || schedule.frequency)
-        : "-";
-    nextScan.textContent = schedule.enabled ? scanDate(schedule.next_scan_at) : "-";
-    lastScan.textContent = scanDate(schedule.last_scan_at);
-    lastStatus.innerHTML = schedule.last_status
-        ? "<span class=\"" + scanStatusClass(schedule.last_status) + "\">" +
-          scanEscape(schedule.last_status) + "</span>"
-        : "-";
-
-    if (disableButton) {
-        disableButton.disabled = !schedule.enabled;
+    async function loadSchedule() {
+        const schedule = await req("/api/threat-intelligence/schedule");
+        $("scan-schedule-enabled").checked = Boolean(schedule.enabled);
+        $("scan-schedule-frequency").value = schedule.frequency || "daily";
+        $("scan-schedule-time").value = schedule.scan_time || "02:00";
+        $("scan-schedule-day").value = String(schedule.day_of_week ?? 0);
+        $("scan-schedule-status").textContent = schedule.enabled
+            ? pretty(schedule.frequency) + " at " + (schedule.scan_time || "02:00")
+            : "Disabled";
+        syncScheduleControls();
     }
-}
 
-async function loadScheduleStatus() {
-    const schedule = await apiRequest("/api/vulnerability-scan/status");
-    renderScheduleStatus(schedule);
-    return schedule;
-}
+    function renderRuns(items) {
+        const body = $("scan-log-body");
+        $("scan-log-count").textContent = items.length + " Runs";
+        if (!items.length) {
+            body.innerHTML = '<tr><td colspan="9">No scans have run yet. Use Scan Now to start the first scan.</td></tr>';
+            return;
+        }
+        body.innerHTML = items.map((run, i) => {
+            const progress = run.channels_total ? Math.round((run.channels_processed / run.channels_total) * 100) : 0;
+            const log = run.error_message || (run.status === "running" || run.status === "pending" ? "Scan in progress…" : "Completed without reported errors");
+            return '<tr><td>'+(i+1)+'</td><td>'+esc(run.mode === "from_date" ? "From date" : "New messages")+'</td><td>'+esc(date(run.started_at || run.date))+'</td><td>'+esc(date(run.finished_at))+'</td><td><span class="scan-log-status">'+esc(pretty(run.status))+'</span></td><td>'+esc(run.channels_processed)+' / '+esc(run.channels_total)+'</td><td>'+esc(run.messages_processed)+'</td><td>'+esc(run.cve_occurrences)+'</td><td title="'+esc(log)+'">'+esc(log.length > 150 ? log.slice(0,147)+"…" : log)+'</td></tr>';
+        }).join("");
+    }
 
-async function startSelectedScan() {
-    const frequency = document.getElementById("scan-frequency");
-    const button = document.getElementById("start-scan-button");
-    const message = document.getElementById("schedule-message");
-    const selectedFrequency = frequency ? frequency.value : "now";
+    function renderProgress(run) {
+        const wrap = $("scan-progress-wrap");
+        if (!run || !["pending","running"].includes(run.status)) {
+            wrap.hidden = true;
+            if (run) {
+                $("scan-last-run").textContent = date(run.finished_at || run.date);
+                $("scan-last-status").textContent = pretty(run.status);
+                $("scan-last-findings").textContent = String(run.cve_occurrences ?? 0);
+            }
+            return;
+        }
+        wrap.hidden = false;
+        const total = Number(run.channels_total || 0);
+        const done = Number(run.channels_processed || 0);
+        const pct = total > 0 ? Math.min(100, Math.round(done / total * 100)) : 0;
+        $("scan-progress-label").textContent = run.status === "pending" ? "Scan is queued…" : "Scan is running…";
+        $("scan-progress-value").textContent = total > 0 ? pct + "%" : "Starting";
+        $("scan-progress-detail").textContent = "Channels processed: " + done + " of " + total + " · Messages: " + (run.messages_processed || 0) + " · CVE occurrences: " + (run.cve_occurrences || 0);
+        const bar = $("scan-progress-bar");
+        bar.classList.toggle("indeterminate", total === 0);
+        if (total > 0) bar.style.width = pct + "%";
+        wrap.querySelector('[role="progressbar"]').setAttribute("aria-valuenow", String(pct));
+        $("scan-last-run").textContent = date(run.started_at || run.date);
+        $("scan-last-status").textContent = pretty(run.status);
+        $("scan-last-findings").textContent = String(run.cve_occurrences || 0);
+    }
 
-    button.disabled = true;
-    button.textContent = "Starting...";
-    message.textContent = "";
+    async function loadRuns() {
+        const data = await req("/api/threat-intelligence/scan-runs?limit=100");
+        const items = data.items || [];
+        renderRuns(items);
+        const current = activeRunId ? items.find(x => x.id === activeRunId) : items.find(x => ["pending","running"].includes(x.status));
+        if (current) renderProgress(current);
+        else if (items.length) renderProgress(items[0]);
+        else {
+            $("scan-last-run").textContent = "—";
+            $("scan-last-status").textContent = "—";
+            $("scan-last-findings").textContent = "—";
+            $("scan-progress-wrap").hidden = true;
+        }
+        if (activeRunId) {
+            const active = items.find(x => x.id === activeRunId);
+            if (active && !["pending","running"].includes(active.status)) {
+                activeRunId = null;
+                $("scan-progress-label").textContent = "Scan finished";
+                $("scan-progress-value").textContent = pretty(active.status);
+                $("scan-progress-wrap").hidden = false;
+                $("scan-progress-bar").classList.remove("indeterminate");
+                $("scan-progress-bar").style.width = "100%";
+                $("scan-progress-detail").textContent = (active.error_message || "Scan execution finished.") + " · " + (active.cve_occurrences || 0) + " CVE occurrences";
+            }
+        }
+    }
 
-    try {
-        if (selectedFrequency === "now") {
-            const result = await apiRequest("/api/vulnerability-scan/run", {
-                method: "POST"
+    async function refresh() {
+        const results = await Promise.allSettled([loadSchedule(), loadRuns()]);
+        const failed = results.find(x => x.status === "rejected");
+        if (failed) $("scan-schedule-message").textContent = failed.reason?.message || String(failed.reason);
+    }
+
+    async function startScan(mode) {
+        const button = mode === "from_date" ? $("scan-from-date-button") : $("scan-now-button");
+        const message = $("scan-schedule-message");
+        let start_date;
+        if (mode === "from_date") {
+            const value = window.prompt("Enter start date/time (YYYY-MM-DDTHH:mm), for example 2026-01-01T00:00");
+            if (!value) return;
+            if (Number.isNaN(new Date(value).getTime())) {
+                window.alert("The date/time format is invalid.");
+                return;
+            }
+            start_date = new Date(value).toISOString();
+        }
+        button.disabled = true;
+        const oldText = button.textContent;
+        button.textContent = "Starting…";
+        message.textContent = "Starting scan…";
+        $("scan-progress-wrap").hidden = false;
+        $("scan-progress-label").textContent = "Scan is starting…";
+        $("scan-progress-value").textContent = "Starting";
+        $("scan-progress-bar").classList.add("indeterminate");
+        $("scan-progress-bar").style.width = "35%";
+        try {
+            const result = await req("/api/threat-intelligence/scan", {
+                method: "POST",
+                body: JSON.stringify({mode, ...(start_date ? {start_date} : {})})
             });
+            activeRunId = result.scan_run_id;
+            message.textContent = "Scan #" + result.scan_run_id + " started. Progress and logs are shown below.";
+            await loadRuns();
+        } catch (error) {
+            message.textContent = error.message || String(error);
+            $("scan-progress-label").textContent = "Could not start scan";
+            $("scan-progress-value").textContent = "Failed";
+            $("scan-progress-detail").textContent = message.textContent;
+            window.alert("Could not start Telegram scan.\n\n" + message.textContent);
+        } finally {
+            button.disabled = false;
+            button.textContent = oldText;
+        }
+    }
 
-            message.textContent = "Scan #" + result.job_id + " started. Any existing schedule remains unchanged.";
-        } else {
-            const schedule = await apiRequest("/api/vulnerability-scan/schedule", {
+    async function saveSchedule(event) {
+        event.preventDefault();
+        const button = $("save-schedule-button");
+        button.disabled = true;
+        $("scan-schedule-message").textContent = "Saving schedule…";
+        try {
+            const saved = await req("/api/threat-intelligence/schedule", {
                 method: "PUT",
                 body: JSON.stringify({
-                    enabled: true,
-                    frequency: selectedFrequency,
-                    scan_time: currentTimeHHMM()
+                    enabled: $("scan-schedule-enabled").checked,
+                    frequency: $("scan-schedule-frequency").value,
+                    scan_time: $("scan-schedule-time").value,
+                    day_of_week: Number($("scan-schedule-day").value)
                 })
             });
-
-            message.textContent = "Scan schedule set to " +
-                frequency.options[frequency.selectedIndex].text +
-                ". Next scan: " + scanDate(schedule.next_scan_at) + ".";
+            $("scan-schedule-message").textContent = saved.enabled
+                ? "Schedule saved: " + pretty(saved.frequency) + " at " + saved.scan_time + "."
+                : "Automatic scan schedule disabled.";
+            await loadSchedule();
+        } catch (error) {
+            $("scan-schedule-message").textContent = error.message || String(error);
+        } finally {
+            button.disabled = false;
+            syncScheduleControls();
         }
-
-        await Promise.all([loadScanJobs(), loadScheduleStatus()]);
-    } catch (error) {
-        message.textContent = error.message;
-        alert("Could not start vulnerability scan.\n\n" + error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "Start";
-    }
-}
-
-async function disableSchedule() {
-    const button = document.getElementById("disable-schedule-button");
-    const message = document.getElementById("schedule-message");
-
-    button.disabled = true;
-    message.textContent = "";
-
-    try {
-        const schedule = await apiRequest("/api/vulnerability-scan/status");
-        await apiRequest("/api/vulnerability-scan/schedule", {
-            method: "PUT",
-            body: JSON.stringify({
-                enabled: false,
-                frequency: schedule.frequency || "daily",
-                scan_time: schedule.scan_time || currentTimeHHMM()
-            })
-        });
-
-        message.textContent = "Recurring scan schedule disabled.";
-        await loadScheduleStatus();
-    } catch (error) {
-        message.textContent = error.message;
-        alert("Could not disable vulnerability scan schedule.\n\n" + error.message);
-    } finally {
-        button.disabled = false;
-    }
-}
-
-async function refreshScanPage() {
-    try {
-        await Promise.all([
-            loadScanJobs(),
-            loadScheduleStatus()
-        ]);
-    } catch (error) {
-        document.getElementById("schedule-message").textContent = error.message;
-    }
-}
-
-function initializeScanPage() {
-    const frequency = document.getElementById("scan-frequency");
-
-    // Every new page load starts from "Scan Now".
-    // The persisted schedule is displayed separately in Scan Schedule.
-    if (frequency) {
-        frequency.value = "now";
     }
 
-    document.getElementById("start-scan-button")?.addEventListener("click", startSelectedScan);
-    document.getElementById("disable-schedule-button")?.addEventListener("click", disableSchedule);
-
-    refreshScanPage();
-    scanPollTimer = setInterval(refreshScanPage, 3000);
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeScanPage);
-} else {
-    initializeScanPage();
-}
+    function init() {
+        $("scan-schedule-enabled").addEventListener("change", syncScheduleControls);
+        $("scan-schedule-frequency").addEventListener("change", syncScheduleControls);
+        $("scan-schedule-form").addEventListener("submit", saveSchedule);
+        $("scan-now-button").addEventListener("click", () => startScan("new"));
+        $("scan-from-date-button").addEventListener("click", () => startScan("from_date"));
+        refresh();
+        pollTimer = window.setInterval(() => loadRuns().catch(error => {
+            $("scan-schedule-message").textContent = error.message || String(error);
+        }), 2500);
+    }
+    document.addEventListener("DOMContentLoaded", init, {once:true});
+})();
