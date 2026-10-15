@@ -3,45 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan Results - Vul-Management</title>
+    <title>Scan Result - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+        .review-toolbar input,.review-toolbar select{max-width:300px}
+        .review-actions{display:flex;gap:6px;flex-wrap:wrap}
+        .review-actions button{white-space:nowrap}
+        .review-message{font-size:12px;opacity:.78}
+        .review-message.error{color:#ef6b73;opacity:1}
+        .review-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+        .review-modal.open{display:flex}
+        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:var(--card-bg,#171c26);border:1px solid var(--border-color,#394150);border-radius:12px;padding:22px}
+        .review-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+        .review-detail-grid label{display:block;font-size:12px;opacity:.75;margin-bottom:5px}
+        .review-detail-grid input,.review-detail-grid textarea{box-sizing:border-box;width:100%}
+        .review-detail-grid .full{grid-column:1/-1}
+        @media(max-width:700px){.review-detail-grid{grid-template-columns:1fr}.review-detail-grid .full{grid-column:auto}}
+    </style>
 </head>
 <body>
 <main class="page-container">
     <section class="page-header">
-        <div>
-            <h1>Scan Results</h1>
-            <p>Vulnerability findings discovered by scans and reviewed against your asset inventory.</p>
-        </div>
+        <div><h1>Scan Result</h1><p>Review CVEs discovered from configured Telegram channels. Enrich with NVD, then accept approved findings into Vulnerabilities.</p></div>
+        <div class="table-actions"><button id="nvd-all-button" class="secondary-button" type="button">Fetch NVD for All</button><button id="refresh-results-button" class="secondary-button" type="button">Refresh</button></div>
     </section>
 
     <section class="content-card">
-        <div class="section-header">
-            <div>
-                <h2>Scan Results</h2>
-                <p class="section-description">Review scan findings, confirm applicability, and approve or reject pending candidates.</p>
-            </div>
-            <div id="finding-count" class="item-count">0 Findings</div>
+        <div class="section-header"><div><h2>Discovered CVEs</h2><p class="section-description">Select one or more findings for bulk review, NVD lookup, or deletion.</p></div><div id="result-count" class="item-count">0 Results</div></div>
+        <div class="review-toolbar">
+            <input id="result-search" type="search" placeholder="Search CVE, channel, or message">
+            <select id="result-status"><option value="all">All statuses</option><option value="new">New</option><option value="under_review">Under Review</option><option value="approved">Accepted</option><option value="rejected">Rejected</option></select>
+            <button id="bulk-accept-button" class="primary-button" type="button">Accept Selected</button>
+            <button id="bulk-nvd-button" class="secondary-button" type="button">Fetch NVD for Selected</button>
+            <button id="bulk-delete-button" class="danger-button" type="button">Delete Selected</button>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>CVE</th>
-                        <th>Asset</th>
-                        <th>Severity</th>
-                        <th>CVSS</th>
-                        <th>Applicability</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="findings-table-body"></tbody>
-            </table>
-        </div>
+        <p id="bulk-message" class="review-message" role="status"></p>
+        <div class="table-container"><table>
+            <thead><tr><th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th>#</th><th>CVE ID</th><th>Message</th><th>DATE</th><th>Channel</th><th>Status</th><th>NVD</th><th>Actions</th></tr></thead>
+            <tbody id="results-table-body"><tr><td colspan="9">Loading results…</td></tr></tbody>
+        </table></div>
+        <p class="review-message">DATE is when the finding was collected by Vul-Management. Full original message is available by hovering over the message summary or opening Details.</p>
     </section>
 </main>
+
+<div id="result-modal" class="review-modal" aria-hidden="true">
+    <div class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+        <div class="section-header"><div><h2 id="result-modal-title">CVE Details</h2><p id="result-modal-subtitle" class="section-description"></p></div><button id="close-result-modal" class="secondary-button" type="button">Close</button></div>
+        <div class="content-card" style="margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere"><strong>Original Telegram Message</strong><p id="result-original-message"></p><a id="result-message-link" href="#" target="_blank" rel="noopener" hidden>Open original Telegram message</a></div>
+        <div class="review-detail-grid">
+            <div><label for="result-severity">Severity</label><input id="result-severity"></div>
+            <div><label for="result-cvss">CVSS Score</label><input id="result-cvss" type="number" min="0" max="10" step="0.1"></div>
+            <div class="full"><label for="result-product">Affected Product</label><textarea id="result-product" rows="2"></textarea></div>
+            <div class="full"><label for="result-versions">Affected Version</label><textarea id="result-versions" rows="2"></textarea></div>
+            <div class="full"><label for="result-remediation">Remediation</label><textarea id="result-remediation" rows="2"></textarea></div>
+            <div class="full"><label for="result-mitigation">Mitigation</label><textarea id="result-mitigation" rows="2"></textarea></div>
+            <div class="full"><label for="result-description">NVD Description</label><textarea id="result-description" rows="3"></textarea></div>
+            <div class="full"><label for="result-references">NVD References</label><textarea id="result-references" rows="3"></textarea></div>
+            <div class="full"><p id="result-nvd-message" class="review-message"></p><p id="result-modal-error" class="review-message error"></p></div>
+        </div>
+        <div class="review-actions" style="margin-top:16px"><button id="save-result-details" class="primary-button" type="button">Save Details</button><button id="fetch-result-nvd" class="secondary-button" type="button">Fetch NVD Data</button><button id="accept-result-button" class="primary-button" type="button">Accept</button><button id="reject-result-button" class="danger-button" type="button">Reject</button></div>
+    </div>
+</div>
+
 <script src="../services/api.js"></script>
 <script src="../services/vulnerabilities.js"></script>
 <script src="../services/sidebar.js"></script>
