@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect
 
+from app.api.application_events import router as application_events_router
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
 from app.api.feeds import router as feeds_router
@@ -36,6 +37,7 @@ from app.database import (
     engine,
     migrate_equipment_name_nullable,
 )
+from app.models.application_event import ApplicationEvent
 from app.models.application import Application
 from app.models.asset_field import AssetFieldDefinition, AssetFieldValue
 from app.models.equipment import Equipment
@@ -63,6 +65,9 @@ migrate_equipment_name_nullable()
 
 if fresh_database:
     Base.metadata.create_all(bind=engine)
+
+# Create newly introduced tables on existing installations without altering existing tables.
+Base.metadata.create_all(bind=engine)
 
 database_schema_version = ensure_database_version(
     fresh_database=fresh_database,
@@ -117,6 +122,7 @@ app.add_middleware(
 
 
 app.include_router(health_router)
+app.include_router(application_events_router)
 app.include_router(equipment_router)
 app.include_router(asset_fields_router)
 app.include_router(operating_system_router)
