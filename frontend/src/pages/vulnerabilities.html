@@ -23,18 +23,8 @@
         .review-message.error{color:#b42318;opacity:1}
         .review-status-select{min-width:125px;max-width:155px}
         .result-cell{max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .review-modal{position:fixed;inset:0;background:rgba(15,23,42,.28);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px;color-scheme:light}
-        .review-modal.open{display:flex}
-        /* Explicitly force the entire dialog to use the same light palette as the main application. */
-        .review-modal-card,.review-modal-card *{color-scheme:light!important}
-        .review-modal-card{width:min(850px,100%);max-height:90vh;overflow:auto;background:#fff!important;color:#222!important;border:1px solid #d9dee7;border-radius:12px;padding:22px;box-shadow:0 18px 48px rgba(15,23,42,.18)}
-        .review-modal-card h2,.review-modal-card h3,.review-modal-card strong,.review-modal-card label,.review-modal-card p,.review-modal-card .section-description,.review-modal-card a{color:#222!important}
-        .review-modal-card input,.review-modal-card select,.review-modal-card textarea{box-sizing:border-box;background:#fff!important;background-color:#fff!important;color:#222!important;-webkit-text-fill-color:#222;border:1px solid #cbd5e1!important;box-shadow:none}
-        .review-modal-card input::placeholder,.review-modal-card textarea::placeholder{color:#737373!important;-webkit-text-fill-color:#737373}
-        .review-modal-card input:focus,.review-modal-card select:focus,.review-modal-card textarea:focus{outline:2px solid rgba(67,136,245,.2);border-color:#4388f5!important}
-        .review-modal-card .content-card{background:#fff!important;color:#222!important;border-color:#e2e8f0}
-        .review-modal-card .section-header{background:transparent}
-        .review-modal-card .secondary-button{background:#e9eaed!important;color:#222!important}
+        .review-modal-card{width:min(900px,100%)}
+        /* The dialog intentionally uses the same modal-overlay/modal-dialog classes as Add Equipment. */
         .review-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
         .review-detail-grid label{display:block;font-size:12px;opacity:.85;margin-bottom:5px}
         .review-detail-grid input,.review-detail-grid textarea{width:100%}
@@ -69,9 +59,9 @@
         <p class="review-message">Scan Date is when Vul-Management collected the finding. Hover over a cell or open Details to inspect full data and the original Telegram message.</p>
     </section>
 </main>
-<div id="result-modal" class="review-modal" aria-hidden="true">
-    <div class="review-modal-card" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
-        <div class="section-header"><div><h2 id="result-modal-title">CVE Details</h2><p id="result-modal-subtitle" class="section-description"></p></div><button id="close-result-modal" class="secondary-button" type="button">Close</button></div>
+<div id="result-modal" class="modal-overlay review-modal" aria-hidden="true">
+    <div class="modal-dialog equipment-modal-dialog review-modal-card" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+        <div class="modal-header"><div><h2 id="result-modal-title">CVE Details</h2><p id="result-modal-subtitle" class="section-description"></p></div><button id="close-result-modal" class="modal-close-button" type="button" aria-label="Close">&times;</button></div>
         <div class="content-card" style="margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere"><strong>Original Telegram Message</strong><p id="result-original-message"></p><a id="result-message-link" href="#" target="_blank" rel="noopener" hidden>Open original Telegram message</a></div>
         <div class="review-detail-grid">
             <div><label for="result-severity">Severity</label><input id="result-severity"></div>
