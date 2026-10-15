@@ -6,10 +6,10 @@
     <title>Scan - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .scan-page-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-        .scan-modal-dialog{width:min(620px,100%)}
+        .scan-page-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .scan-modal-dialog{width:min(560px,100%);border:1px solid #ddd}
         .scan-modal-dialog .form-grid{margin-top:0}
-        .scan-modal-dialog .modal-header{margin-bottom:20px}
+        .scan-modal-dialog .modal-header{margin-bottom:24px}
         .scan-modal-dialog .form-actions{justify-content:flex-end;flex-wrap:wrap}
         .scan-enable{display:flex;align-items:center;gap:9px;font-weight:600}
         .scan-enable input{width:16px;height:16px;margin:0}
@@ -32,7 +32,7 @@
             <h1>Vulnerability Scan</h1>
             <p>Run Telegram CVE discovery or configure an automatic schedule.</p>
         </div>
-        <div class="scan-page-actions">
+        <div class="table-actions scan-page-actions">
             <button id="open-scan-now" class="primary-button" type="button">Scan Now</button>
             <button id="open-scheduled-scan" class="secondary-button" type="button">Scheduled Scan</button>
         </div>
