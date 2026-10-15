@@ -48,7 +48,7 @@
 
                 <div class="sidebar-section">
                     <button type="button" class="sidebar-section-toggle sidebar-parent ${["scan.html","vulnerabilities.html","threat-intelligence.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
-                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Vulnerability</span></span>
+                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Vulnerabilities</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
                     <div id="intelligence-menu" class="sidebar-submenu ${["scan.html","vulnerabilities.html","threat-intelligence.html"].includes(currentPage) ? "open" : ""}">
