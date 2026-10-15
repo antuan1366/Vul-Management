@@ -6,122 +6,124 @@
     <title>Scan - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .scan-top-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 20px}
-        .scan-top-actions .primary-button,.scan-top-actions .secondary-button{min-width:150px}
-        .scan-intro{margin-bottom:18px}
-        .scan-modal-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
-        .scan-modal-backdrop[hidden]{display:none}
-        .scan-modal{width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;background:var(--card-background,#171c26);color:var(--text-color,inherit);border:1px solid var(--border-color,#394150);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
-        .scan-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:1px solid var(--border-color,#394150)}
-        .scan-modal-header h2{margin:0 0 5px;font-size:20px}
-        .scan-modal-header p{margin:0;font-size:13px;opacity:.72}
-        .scan-modal-close{border:0;background:transparent;color:inherit;font-size:25px;line-height:1;cursor:pointer;padding:0 4px}
-        .scan-modal-body{padding:22px}
-        .scan-modal-fields{display:grid;grid-template-columns:1fr;gap:15px}
-        .scan-modal-fields label{display:flex;flex-direction:column;gap:7px;font-size:13px}
-        .scan-modal-fields input,.scan-modal-fields select{box-sizing:border-box;width:100%;min-height:40px}
-        .scan-enable{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;font-weight:600}
-        .scan-enable input{width:18px;height:18px;min-height:0}
-        .scan-modal-fields :disabled{opacity:.45;cursor:not-allowed}
-        .scan-modal-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}
-        .scan-modal-message{margin:14px 0 0;font-size:13px;overflow-wrap:anywhere}
-        .scan-progress-wrap{margin-top:20px;padding:16px;border:1px solid var(--border-color,#394150);border-radius:9px}
+        .scan-page-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .scan-modal-dialog{width:min(620px,100%)}
+        .scan-modal-dialog .form-grid{margin-top:0}
+        .scan-modal-dialog .modal-header{margin-bottom:20px}
+        .scan-modal-dialog .form-actions{justify-content:flex-end;flex-wrap:wrap}
+        .scan-enable{display:flex;align-items:center;gap:9px;font-weight:600}
+        .scan-enable input{width:16px;height:16px;margin:0}
+        .scan-progress-wrap{margin-top:20px;padding:16px;border:1px solid #ddd;border-radius:8px;background:#fafafa}
         .scan-progress-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:10px;font-size:13px}
-        .scan-progress{height:9px;border-radius:999px;overflow:hidden;background:rgba(127,127,127,.2)}
-        .scan-progress-bar{height:100%;width:0%;background:var(--primary-color,#2563eb);transition:width .3s ease}
+        .scan-progress{height:9px;border-radius:999px;overflow:hidden;background:#e9eaed}
+        .scan-progress-bar{height:100%;width:0%;background:#222;transition:width .3s ease}
         .scan-progress-bar.indeterminate{width:35%;animation:scan-pulse 1.1s ease-in-out infinite alternate}
         @keyframes scan-pulse{from{transform:translateX(0)}to{transform:translateX(185%)}}
-        .scan-muted{font-size:12px;opacity:.72;margin-bottom:0}
+        .scan-muted{font-size:12px;color:#666;margin:10px 0 0;overflow-wrap:anywhere}
+        .scan-modal-message{margin:14px 0 0;font-size:13px;color:#555;overflow-wrap:anywhere}
         .scan-log-status{font-weight:600;text-transform:capitalize}
-        @media(max-width:560px){.scan-modal-backdrop{padding:10px}.scan-modal{max-height:calc(100vh - 20px)}.scan-modal-body{padding:16px}.scan-top-actions .primary-button,.scan-top-actions .secondary-button{flex:1}}
+        @media(max-width:600px){.scan-page-actions{width:100%}.scan-page-actions button{flex:1}.scan-modal-dialog{padding:18px}.scan-modal-dialog .form-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
 <main class="page-container">
-    <section class="page-header scan-intro">
+    <section class="page-header">
         <div>
             <h1>Vulnerability Scan</h1>
-            <p>Run Telegram CVE discovery on demand or configure an automatic schedule. New findings are reviewed in Scan Result.</p>
+            <p>Run Telegram CVE discovery or configure an automatic schedule.</p>
+        </div>
+        <div class="scan-page-actions">
+            <button id="open-scan-now" class="primary-button" type="button">Scan Now</button>
+            <button id="open-scheduled-scan" class="secondary-button" type="button">Scheduled Scan</button>
         </div>
     </section>
 
-    <div class="scan-top-actions" aria-label="Scan actions">
-        <button id="open-scan-now" class="primary-button" type="button">Scan Now</button>
-        <button id="open-scheduled-scan" class="secondary-button" type="button">Scheduled Scan</button>
-    </div>
-
-    <section class="content-card" style="margin-top:20px">
-        <div class="section-header"><div><h2>Last Scan Log</h2><p class="section-description">Recent manual and scheduled scan executions.</p></div><div id="scan-log-count" class="item-count">0 Runs</div></div>
+    <section class="content-card">
+        <div class="section-header">
+            <div>
+                <h2>Last Scan Log</h2>
+                <p class="section-description">Recent manual and scheduled scan executions.</p>
+            </div>
+            <div id="scan-log-count" class="item-count">0 Runs</div>
+        </div>
         <div class="table-container">
             <table>
                 <thead><tr><th>#</th><th>Mode</th><th>Started</th><th>Finished</th><th>Status</th><th>Channels</th><th>Messages</th><th>CVE Occurrences</th><th>Log / Error</th></tr></thead>
-                <tbody id="scan-log-body"><tr><td colspan="9">Loading scan history…</td></tr></tbody>
+                <tbody id="scan-log-body"><tr><td colspan="9" class="loading-cell">Loading scan history…</td></tr></tbody>
             </table>
         </div>
     </section>
 </main>
 
-<div id="scan-now-modal" class="scan-modal-backdrop" hidden>
-    <section class="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-now-title">
-        <div class="scan-modal-header">
-            <div><h2 id="scan-now-title">Scan Now</h2><p>Select the starting date and time for Telegram channel scanning.</p></div>
-            <button class="scan-modal-close" type="button" data-close-modal="scan-now-modal" aria-label="Close">×</button>
-        </div>
-        <div class="scan-modal-body">
-            <form id="scan-now-form">
-                <div class="scan-modal-fields">
-                    <label>Starting Date and Time
-                        <input id="scan-start-date" type="datetime-local" required>
-                    </label>
-                </div>
-                <div class="scan-modal-actions">
-                    <button class="secondary-button" type="button" data-close-modal="scan-now-modal">Cancel</button>
-                    <button id="start-scan-submit" class="primary-button" type="submit">Start Scan</button>
-                </div>
-            </form>
-            <p id="scan-now-message" class="scan-modal-message" role="status"></p>
-            <div id="scan-progress-wrap" class="scan-progress-wrap" hidden>
-                <div class="scan-progress-head"><strong id="scan-progress-label">Scan is starting…</strong><span id="scan-progress-value">Starting</span></div>
-                <div class="scan-progress" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="scan-progress-bar" class="scan-progress-bar indeterminate"></div></div>
-                <p id="scan-progress-detail" class="scan-muted">Waiting for scan progress…</p>
+<div id="scan-now-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog scan-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="scan-now-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="scan-now-title">Scan Now</h2>
+                <p class="section-description">Select the starting date and time for Telegram channel scanning.</p>
             </div>
+            <button class="modal-close-button" type="button" data-close-modal="scan-now-modal" aria-label="Close">&times;</button>
         </div>
-    </section>
+        <form id="scan-now-form">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="scan-start-date">Starting Date and Time</label>
+                    <input id="scan-start-date" type="datetime-local" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="primary-button" id="start-scan-submit" type="submit">Start Scan</button>
+                <button class="secondary-button" type="button" data-close-modal="scan-now-modal">Cancel</button>
+            </div>
+        </form>
+        <p id="scan-now-message" class="scan-modal-message" role="status"></p>
+        <div id="scan-progress-wrap" class="scan-progress-wrap" hidden>
+            <div class="scan-progress-head"><strong id="scan-progress-label">Scan is starting…</strong><span id="scan-progress-value">Starting</span></div>
+            <div class="scan-progress" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="scan-progress-bar" class="scan-progress-bar indeterminate"></div></div>
+            <p id="scan-progress-detail" class="scan-muted">Waiting for scan progress…</p>
+        </div>
+    </div>
 </div>
 
-<div id="scheduled-scan-modal" class="scan-modal-backdrop" hidden>
-    <section class="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scheduled-scan-title">
-        <div class="scan-modal-header">
-            <div><h2 id="scheduled-scan-title">Scheduled Scan</h2><p>Configure recurring scans of your configured public Telegram channels.</p></div>
-            <button class="scan-modal-close" type="button" data-close-modal="scheduled-scan-modal" aria-label="Close">×</button>
+<div id="scheduled-scan-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog scan-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="scheduled-scan-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="scheduled-scan-title">Scheduled Scan</h2>
+                <p class="section-description">Configure recurring scans of configured public Telegram channels.</p>
+            </div>
+            <button class="modal-close-button" type="button" data-close-modal="scheduled-scan-modal" aria-label="Close">&times;</button>
         </div>
-        <div class="scan-modal-body">
-            <form id="scan-schedule-form">
-                <div class="scan-modal-fields">
-                    <label class="scan-enable"><input id="scan-schedule-enabled" type="checkbox"> Enable automatic schedule</label>
-                    <label>Frequency
-                        <select id="scan-schedule-frequency" disabled>
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                        </select>
-                    </label>
-                    <label>Scan Time
-                        <input id="scan-schedule-time" type="time" value="02:00" required disabled>
-                    </label>
-                    <label id="scan-day-field">Day of Week
-                        <select id="scan-schedule-day" disabled>
-                            <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
-                        </select>
-                    </label>
+        <form id="scan-schedule-form">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label class="scan-enable" for="scan-schedule-enabled"><input id="scan-schedule-enabled" type="checkbox"> Enable automatic schedule</label>
                 </div>
-                <div class="scan-modal-actions">
-                    <button class="secondary-button" type="button" data-close-modal="scheduled-scan-modal">Close</button>
-                    <button id="save-schedule-button" class="primary-button" type="submit">Save Schedule</button>
+                <div class="form-field">
+                    <label for="scan-schedule-frequency">Frequency</label>
+                    <select id="scan-schedule-frequency" disabled>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
                 </div>
-            </form>
-            <p id="scan-schedule-message" class="scan-modal-message" role="status"></p>
-        </div>
-    </section>
+                <div class="form-field">
+                    <label for="scan-schedule-time">Scan Time</label>
+                    <input id="scan-schedule-time" type="time" value="02:00" required disabled>
+                </div>
+                <div class="form-field" id="scan-day-field">
+                    <label for="scan-schedule-day">Day of Week</label>
+                    <select id="scan-schedule-day" disabled>
+                        <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="primary-button" id="save-schedule-button" type="submit">Save Schedule</button>
+                <button class="secondary-button" type="button" data-close-modal="scheduled-scan-modal">Cancel</button>
+            </div>
+        </form>
+        <p id="scan-schedule-message" class="scan-modal-message" role="status"></p>
+    </div>
 </div>
 
 <script src="../services/api.js"></script>
