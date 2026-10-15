@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -63,7 +63,7 @@ def list_events(
             ApplicationEvent.cve_id.ilike(needle),
             ApplicationEvent.correlation_id.ilike(needle),
         ))
-    total = db.scalar(select(__import__("sqlalchemy").func.count()).select_from(query.subquery())) or 0
+    total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     items = db.scalars(
         query.order_by(ApplicationEvent.created_at.desc(), ApplicationEvent.id.desc())
         .offset(offset).limit(limit)
