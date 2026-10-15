@@ -6,18 +6,19 @@
     <title>Vulnerabilities - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
     <style>
-        .vulnerability-page{max-width:1600px}
+        .vulnerability-page{max-width:1600px;font-family:Arial,sans-serif;font-size:14px}
+        .vulnerability-page button,.vulnerability-page input,.vulnerability-page textarea{font-family:inherit}
         .vulnerability-heading{align-items:flex-start}
-        .vulnerability-eyebrow{margin:0 0 8px!important;color:#737780!important;font-size:11px!important;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
-        .vulnerability-heading h1{font-size:30px;letter-spacing:-.035em;color:#20242a}
-        .vulnerability-heading p:not(.vulnerability-eyebrow){max-width:680px;line-height:1.55}
+        .vulnerability-eyebrow{margin:0 0 8px!important;color:#737780!important;font-size:12px!important;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+        .vulnerability-heading h1{font-size:32px;letter-spacing:normal;color:#20242a}
+        .vulnerability-heading p:not(.vulnerability-eyebrow){max-width:680px;line-height:1.5;font-size:14px}
         .vulnerability-header-actions{display:flex;gap:8px;flex-wrap:wrap}
         .vulnerability-header-actions button{min-height:40px}
         .vulnerability-card{padding:0;overflow:hidden}
         .vulnerability-card-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 24px;border-bottom:1px solid #e8e9ec}
-        .vulnerability-card-header h2{margin:0 0 5px;font-size:18px;color:#20242a}
-        .vulnerability-card-header .section-description{line-height:1.5}
-        .vulnerability-count{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:4px 10px;border:1px solid #e0e2e6;border-radius:6px;background:#f8f9fa;color:#4b5058;font-size:12px;font-weight:600;white-space:nowrap}
+        .vulnerability-card-header h2{margin:0 0 5px;font-size:20px;color:#20242a}
+        .vulnerability-card-header .section-description{line-height:1.5;font-size:14px}
+        .vulnerability-count{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:4px 10px;border:1px solid #e0e2e6;border-radius:6px;background:#f8f9fa;color:#4b5058;font-size:13px;font-weight:600;white-space:nowrap}
         .vulnerability-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;background:#fff}
         .vulnerability-search-wrap{position:relative;flex:1;max-width:460px}
         .vulnerability-search-wrap:before{content:"⌕";position:absolute;left:12px;top:7px;color:#777d86;font-size:22px;pointer-events:none}
@@ -25,14 +26,14 @@
         #vulnerability-search:focus{border-color:#747b86;box-shadow:0 0 0 3px rgba(60,70,85,.08)}
         .vulnerability-table-wrap{overflow:auto;border-top:1px solid #e8e9ec}
         #vulnerabilities-table{min-width:1050px}
-        #vulnerabilities-table th{padding:12px 14px;background:#f8f9fb;color:#626873;font-size:11px;letter-spacing:.055em;text-transform:uppercase;border-bottom:1px solid #e5e7eb}
-        #vulnerabilities-table td{padding:14px;border-bottom:1px solid #eff0f2;color:#414650;font-size:13px;vertical-align:middle}
+        #vulnerabilities-table th{padding:12px 14px;background:#f8f9fb;color:#626873;font-size:12px;letter-spacing:normal;text-transform:none;border-bottom:1px solid #e5e7eb}
+        #vulnerabilities-table td{padding:14px;border-bottom:1px solid #eff0f2;color:#414650;font-size:14px;vertical-align:middle}
         #vulnerabilities-table tbody tr:hover{background:#fafbfc}
         #vulnerabilities-table tbody tr:last-child td{border-bottom:0}
         #vulnerabilities-table td:first-child{color:#8a9099;font-variant-numeric:tabular-nums}
-        #vulnerabilities-table td:nth-child(2) strong{color:#20242a;font-size:13px;font-weight:700}
+        #vulnerabilities-table td:nth-child(2) strong{color:#20242a;font-size:14px;font-weight:700}
         .vulnerability-text-cell{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#555b65}
-        .vulnerability-severity{display:inline-flex;align-items:center;padding:4px 8px;border-radius:5px;background:#f0f1f3;color:#555b65;font-size:11px;font-weight:700}
+        .vulnerability-severity{display:inline-flex;align-items:center;padding:4px 8px;border-radius:5px;background:#f0f1f3;color:#555b65;font-size:12px;font-weight:600}
         .vulnerability-severity[data-severity="critical"]{background:#fde9e8;color:#a52622}
         .vulnerability-severity[data-severity="high"]{background:#fff0e0;color:#a34b08}
         .vulnerability-severity[data-severity="medium"]{background:#fff7d8;color:#846400}
@@ -47,15 +48,15 @@
         .vulnerability-jira-link{color:#315b9a;text-decoration:none;font-weight:600}
         .vulnerability-jira-link:hover{text-decoration:underline}
         .vulnerability-modal-dialog{width:min(900px,100%);max-height:calc(100vh - 48px);padding:24px;background:#fff;color:#222;border:1px solid #e4e6e9;border-radius:12px;box-shadow:0 24px 70px rgba(20,25,35,.22);color-scheme:light}
-        .vulnerability-modal-dialog h2{margin:0 0 6px;color:#20242a;font-size:20px}
+        .vulnerability-modal-dialog h2{margin:0 0 6px;color:#20242a;font-size:22px}
         .vulnerability-modal-dialog .section-description{color:#6a707a;line-height:1.45}
         .vulnerability-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid #eceef0}
         .vulnerability-modal-header .modal-close-button{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #e0e2e6;border-radius:7px;background:#fff;color:#4c515a;font-size:22px}
         .vulnerability-modal-header .modal-close-button:hover{background:#f5f6f8}
         .vulnerability-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
         .vulnerability-form-grid .form-field{min-width:0;gap:7px}
-        .vulnerability-form-grid .form-field label{color:#414650;font-size:12px;font-weight:700}
-        .vulnerability-form-grid input,.vulnerability-form-grid textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #d5d8dd;border-radius:7px;background:#fff;color:#20242a;font:inherit;font-size:13px;padding:10px 11px;box-shadow:none}
+        .vulnerability-form-grid .form-field label{color:#414650;font-size:14px;font-weight:600}
+        .vulnerability-form-grid input,.vulnerability-form-grid textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #d5d8dd;border-radius:7px;background:#fff;color:#20242a;font:inherit;font-size:14px;padding:10px 11px;box-shadow:none}
         .vulnerability-form-grid input{height:40px}
         .vulnerability-form-grid textarea{resize:vertical;line-height:1.5}
         .vulnerability-form-grid input:focus,.vulnerability-form-grid textarea:focus{outline:none;border-color:#737b87;box-shadow:0 0 0 3px rgba(60,70,85,.09)}
