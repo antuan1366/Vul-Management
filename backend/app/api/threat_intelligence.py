@@ -22,6 +22,7 @@ from app.models.threat_intelligence import (
     ThreatIntelligence,
 )
 from app.schemas.threat_intelligence import (
+    IntelligenceCreate,
     IntelligenceUpdate,
     ReviewRequest,
     TelegramFeedCreate,
@@ -206,6 +207,17 @@ def get_scan_result(result_id: int, db: Session = Depends(get_db)):
     return serialize_scan_result(item)
 
 
+@router.delete("/scan-results/{result_id}", status_code=204)
+def delete_scan_result(result_id: int, db: Session = Depends(get_db)):
+    item = db.get(TelegramScanResult, result_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Scan result not found.")
+    if item.review_status == "approved":
+        raise HTTPException(status_code=409, detail="Approved results cannot be deleted from Scan Results.")
+    db.delete(item)
+    db.commit()
+
+
 @router.post("/scan-results/{result_id}/review")
 def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depends(get_db)):
     if data.status not in {"under_review", "rejected"}:
@@ -320,6 +332,38 @@ def list_intelligence(q: str | None = None, limit: int = Query(default=200, ge=1
         )
     items = db.scalars(query).all()
     return {"items": [serialize_intelligence(item) for item in items], "total": len(items)}
+
+
+@router.post("/intelligence", status_code=201)
+def create_intelligence(data: IntelligenceCreate, db: Session = Depends(get_db)):
+    cve_id = data.cve_id.strip().upper()
+    if not CVE_PATTERN.fullmatch(cve_id):
+        raise HTTPException(status_code=422, detail="Enter a valid CVE ID, for example CVE-2025-12345.")
+    existing = db.scalar(select(ThreatIntelligence).where(ThreatIntelligence.cve_id == cve_id))
+    if existing:
+        raise HTTPException(status_code=409, detail="This CVE already exists in Vulnerabilities.")
+    values = data.model_dump(exclude={"cve_id"})
+    item = ThreatIntelligence(
+        cve_id=cve_id,
+        severity=values.get("severity"),
+        cvss_score=values.get("cvss_score"),
+        affected_product=values.get("affected_product"),
+        affected_versions=values.get("affected_versions"),
+        remediation=values.get("remediation"),
+        mitigation=values.get("mitigation"),
+        description=values.get("description"),
+        references_text=values.get("references_text"),
+        nvd_url=f"https://nvd.nist.gov/vuln/detail/{cve_id}",
+        source_message="Manually added by administrator",
+    )
+    db.add(item)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="This CVE already exists in Vulnerabilities.")
+    db.refresh(item)
+    return serialize_intelligence(item)
 
 
 @router.get("/intelligence/{record_id}")
