@@ -1,8 +1,9 @@
 import asyncio
+import time as monotonic_time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -55,6 +56,7 @@ from app.services.asset_fields import seed_default_fields
 from app.services.feeds import seed_default_feeds
 from app.services.managed_asset_fields import seed_managed_asset_fields
 from app.services.scan_scheduler import scheduler_loop
+from app.services.application_events import record_event
 from app.services.threat_intelligence import telegram_scheduler_loop
 
 
@@ -119,6 +121,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_api_activity(request: Request, call_next):
+    started = monotonic_time.perf_counter()
+    path = request.url.path
+    method = request.method.upper()
+    try:
+        response = await call_next(request)
+        status = response.status_code
+    except Exception as error:
+        if path.startswith("/api/") and not path.startswith("/api/events"):
+            record_event(
+                "ERROR", "api", "HTTP API", "request_exception",
+                f"{method} {path} raised {error.__class__.__name__}: {str(error)[:500]}",
+                duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
+                details={"method": method, "path": path, "exception_type": error.__class__.__name__},
+            )
+        raise
+    duration_ms = int((monotonic_time.perf_counter() - started) * 1000)
+    # Record state-changing requests and all failed API responses. Avoid noisy successful
+    # polling/read events and avoid recursive logging of the event viewer itself.
+    if path.startswith("/api/") and not path.startswith("/api/events") and (
+        method in {"POST", "PUT", "PATCH", "DELETE"} or status >= 400
+    ):
+        level = "ERROR" if status >= 500 else "WARNING" if status >= 400 else "INFO"
+        record_event(
+            level, "api", "HTTP API", "request_completed",
+            f"{method} {path} returned HTTP {status}.",
+            duration_ms=duration_ms,
+            details={"method": method, "path": path, "status_code": status},
+        )
+    return response
 
 
 app.include_router(health_router)
