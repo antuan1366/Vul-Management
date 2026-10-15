@@ -53,3 +53,7 @@ class TelegramVerificationSubmit(BaseModel):
     challenge_id: str = Field(min_length=10, max_length=200)
     code: str = Field(min_length=3, max_length=20)
     password: str | None = Field(default=None, max_length=256)
+
+
+class IntelligenceCreate(IntelligenceUpdate):
+    cve_id: str = Field(min_length=4, max_length=30, pattern=r"^CVE-\\d{4}-\\d{4,}$")
