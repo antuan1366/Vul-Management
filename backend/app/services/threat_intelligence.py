@@ -196,7 +196,10 @@ async def collect_telegram_scan(run_id: int) -> None:
             run.status = "completed_with_errors" if run.error_message else "completed"
         db.commit()
         completed_run_id = run.id
-        await client.disconnect()
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
         if result_count:
             # NVD enrichment is a separate background phase; the scan response and UI remain usable.
             asyncio.create_task(enrich_scan_run_from_nvd(completed_run_id))
