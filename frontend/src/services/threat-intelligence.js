@@ -19,6 +19,7 @@
         $("vulnerability-form").reset();
         $("vul-cve-id").disabled=false;
         $("vulnerability-modal-title").textContent="Add Vulnerability";
+        $("vulnerability-modal-description").textContent="Enter the CVE details and available remediation information.";
         $("save-vulnerability-button").textContent="Save Vulnerability";
         $("vulnerability-form-message").textContent="";
     }
@@ -26,7 +27,8 @@
         resetForm();
         if(record){
             activeId=record.id;
-            $("vulnerability-modal-title").textContent=record.cve_id+" — Edit";
+            $("vulnerability-modal-title").textContent="Edit Vulnerability";
+            $("vulnerability-modal-description").textContent="Update vulnerability details for "+record.cve_id+".";
             $("save-vulnerability-button").textContent="Save Changes";
             $("vul-cve-id").value=record.cve_id;
             $("vul-cve-id").disabled=true;
