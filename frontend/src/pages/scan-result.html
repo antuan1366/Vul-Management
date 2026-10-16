@@ -15,7 +15,6 @@
         .nvd-live-bar{height:100%;width:0;background:var(--primary-color,#4388f5);transition:width .3s ease}
         .nvd-live-bar.indeterminate{width:30%;animation:nvd-live-pulse 1.2s ease-in-out infinite alternate}
         @keyframes nvd-live-pulse{from{transform:translateX(0)}to{transform:translateX(230%)}}
-        .scan-results-table-wrap{border:1px solid #e8e9ec;border-radius:8px;box-sizing:border-box;margin:0 0 14px;width:100%}
         .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
         .review-toolbar input,.review-toolbar select{max-width:300px}
         .review-status-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid #e1e3e7;padding-bottom:10px}
@@ -71,7 +70,7 @@
             <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="approved">Accept <span class="review-status-tab-count" data-status-count="approved">0</span></button>
             <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="rejected">Reject <span class="review-status-tab-count" data-status-count="rejected">0</span></button>
         </div>
-        <div class="table-container scan-results-table-wrap"><table id="scan-results-table">
+        <div class="table-container"><table id="scan-results-table">
             <thead><tr><th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th>#</th><th>Scan Date</th><th>CVE</th><th>Severity</th><th>Score</th><th>Affected</th><th>Affected Version</th><th>Remediation</th><th>Actions</th></tr></thead>
             <tbody id="results-table-body"><tr><td colspan="10">Loading results…</td></tr></tbody>
         </table></div>
