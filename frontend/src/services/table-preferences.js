@@ -58,14 +58,17 @@
 
     const host = document.createElement("div");
     host.className = "table-preferences-host";
-    // Place controls immediately before the table, keeping the existing page layout intact.
-    table.parentElement.insertBefore(host, table);
-    host.appendChild(toolbar);
-    if (table.parentElement.classList.contains("table-container") || table.parentElement.classList.contains("vulnerability-table-wrap")) {
-        table.parentElement.parentElement.insertBefore(footer, table.parentElement.nextSibling);
+    const tableWrapper = table.parentElement;
+    const hasWrapper = tableWrapper.classList.contains("table-container") || tableWrapper.classList.contains("vulnerability-table-wrap");
+    // Keep controls outside the horizontally scrollable table wrapper.
+    if (hasWrapper) {
+        tableWrapper.parentElement.insertBefore(host, tableWrapper);
+        tableWrapper.parentElement.insertBefore(footer, tableWrapper.nextSibling);
     } else {
-        table.parentElement.insertBefore(footer, table.nextSibling);
+        tableWrapper.insertBefore(host, table);
+        tableWrapper.insertBefore(footer, table.nextSibling);
     }
+    host.appendChild(toolbar);
 
     function headings() {
         return Array.from(table.querySelectorAll("thead tr:first-child th")).map((th, index) => {
@@ -84,6 +87,10 @@
         const allRows = [table.querySelector("thead tr"), ...Array.from(table.querySelectorAll("tbody tr"))].filter(Boolean);
         cols.forEach(col => {
             allRows.forEach(row => {
+                if (row.children.length === 1 && Number(row.children[0].getAttribute("colspan") || 1) > 1) {
+                    row.style.display = "";
+                    return;
+                }
                 const cell = row.children[col.index];
                 if (!cell) return;
                 cell.style.display = isVisible(col) ? "" : "none";
