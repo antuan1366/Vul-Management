@@ -12,7 +12,7 @@
         records=data.items||[];
         const total=data.total??records.length;
         $("vulnerability-count").textContent=total+" "+(total===1?"Vulnerability":"Vulnerabilities");
-        $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'</div></td></tr>').join("")||'<tr><td colspan="9">No vulnerabilities yet. Accept a finding in Scan Result or select Add New.</td></tr>';
+        $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'<button class="danger-button small-button" data-action="delete" data-id="'+x.id+'">Delete</button>'+'</div></td></tr>').join("")||'<tr><td colspan="9">No vulnerabilities yet. Accept a finding in Scan Result or select Add New.</td></tr>';
     }
     function resetForm(){
         activeId=null;
@@ -75,6 +75,16 @@
             if(!window.confirm("Create a Jira issue for "+record.cve_id+"?"))return;
             const result=await req("/api/threat-intelligence/intelligence/"+id+"/jira",{method:"POST"});
             message("Jira issue created: "+result.issue_key);
+            await loadRecords();
+        }
+        if(action==="delete"){
+            if(!record)return;
+            const warning = record.jira_issue_key
+                ? "This vulnerability has Jira issue "+record.jira_issue_key+". Deleting it here will not delete that Jira issue. Continue?"
+                : "Delete "+record.cve_id+" from the Vulnerability Register? This cannot be undone.";
+            if(!window.confirm(warning))return;
+            await req("/api/threat-intelligence/intelligence/"+id,{method:"DELETE"});
+            message(record.cve_id+" deleted from the Vulnerability Register.");
             await loadRecords();
         }
     }
