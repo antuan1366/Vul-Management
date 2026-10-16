@@ -17,6 +17,12 @@
         @keyframes nvd-live-pulse{from{transform:translateX(0)}to{transform:translateX(230%)}}
         .review-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
         .review-toolbar input,.review-toolbar select{max-width:300px}
+        .review-status-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 16px;border-bottom:1px solid #e1e3e7;padding-bottom:10px}
+        .review-status-tab{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid transparent;border-radius:7px;background:transparent;color:#555b65;font:inherit;font-weight:600;cursor:pointer}
+        .review-status-tab:hover{background:#f1f2f4}
+        .review-status-tab.active{background:#222;color:#fff;border-color:#222}
+        .review-status-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:rgba(120,125,135,.14);font-size:12px;font-weight:600}
+        .review-status-tab.active .review-status-tab-count{background:rgba(255,255,255,.2);color:#fff}
         .review-actions{display:flex;gap:6px;flex-wrap:wrap}
         .review-actions button{white-space:nowrap}
         .review-message{font-size:12px;opacity:.78}
@@ -51,11 +57,16 @@
         <div class="section-header"><div><h2>Discovered CVEs</h2><p class="section-description">NVD data is retrieved in the background. You can review findings while enrichment continues.</p></div><div id="result-count" class="item-count">0 Results</div></div>
         <div class="review-toolbar">
             <input id="result-search" type="search" placeholder="Search CVE, channel, or message">
-            <select id="result-status"><option value="all">All statuses</option><option value="new">New</option><option value="under_review">Under Review</option><option value="approved">Accepted</option><option value="rejected">Rejected</option></select>
             <button id="bulk-accept-button" class="primary-button" type="button">Accept Selected</button>
             <button id="bulk-delete-button" class="danger-button" type="button">Delete Selected</button>
         </div>
         <p id="bulk-message" class="review-message" role="status"></p>
+        <div class="review-status-tabs" role="tablist" aria-label="Filter scan results by status">
+            <button type="button" class="review-status-tab active" role="tab" aria-selected="true" data-status-tab="new">New <span class="review-status-tab-count" data-status-count="new">0</span></button>
+            <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="under_review">Under Review <span class="review-status-tab-count" data-status-count="under_review">0</span></button>
+            <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="approved">Accept <span class="review-status-tab-count" data-status-count="approved">0</span></button>
+            <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="rejected">Reject <span class="review-status-tab-count" data-status-count="rejected">0</span></button>
+        </div>
         <div class="table-container"><table>
             <thead><tr><th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th>#</th><th>Scan Date</th><th>CVE</th><th>Severity</th><th>Score</th><th>Affected</th><th>Affected Version</th><th>Remediation</th><th>Status</th><th>NVD</th><th>Actions</th></tr></thead>
             <tbody id="results-table-body"><tr><td colspan="12">Loading results…</td></tr></tbody>
@@ -73,7 +84,6 @@
             <div class="full"><label for="result-product">Affected Product</label><textarea id="result-product" rows="2"></textarea></div>
             <div class="full"><label for="result-versions">Affected Version</label><textarea id="result-versions" rows="2"></textarea></div>
             <div class="full"><label for="result-remediation">Remediation</label><textarea id="result-remediation" rows="2"></textarea></div>
-            <div class="full"><label for="result-mitigation">Mitigation</label><textarea id="result-mitigation" rows="2"></textarea></div>
             <div class="full"><label for="result-description">NVD Description</label><textarea id="result-description" rows="3"></textarea></div>
             <div class="full"><label for="result-references">NVD References</label><textarea id="result-references" rows="3"></textarea></div>
             <div class="full"><p id="result-nvd-message" class="review-message"></p><p id="result-modal-error" class="review-message error"></p></div>
