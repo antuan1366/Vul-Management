@@ -88,7 +88,7 @@
                 (x.review_status !== "approved" ? '<button class="primary-button small-button" data-action="accept" data-id="'+x.id+'">Accept</button>' : '')+
                 '</div>';
             return '<tr>'+
-                '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")' aria-label="Select '+esc(x.cve_id)+'"></td>'+
+                '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
