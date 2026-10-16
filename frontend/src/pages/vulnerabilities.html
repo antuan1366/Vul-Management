@@ -46,33 +46,16 @@
         .vulnerability-actions button{white-space:nowrap}
         .vulnerability-jira-link{color:#315b9a;text-decoration:none;font-weight:600}
         .vulnerability-jira-link:hover{text-decoration:underline}
-        .vulnerability-modal-dialog{width:min(900px,100%);max-height:calc(100vh - 48px);padding:24px;background:#fff;color:#222;border:1px solid #e4e6e9;border-radius:12px;box-shadow:0 24px 70px rgba(20,25,35,.22);color-scheme:light}
-        .vulnerability-modal-dialog h2{margin:0 0 6px;color:#20242a;font-size:22px}
-        .vulnerability-modal-dialog .section-description{color:#6a707a;line-height:1.45}
-        .vulnerability-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid #eceef0}
-        .vulnerability-modal-header .modal-close-button{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #e0e2e6;border-radius:7px;background:#fff;color:#4c515a;font-size:22px}
-        .vulnerability-modal-header .modal-close-button:hover{background:#f5f6f8}
-        .vulnerability-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        .vulnerability-form-grid .form-field{min-width:0;gap:7px}
-        .vulnerability-form-grid .form-field label{color:#414650;font-size:14px;font-weight:600}
-        .vulnerability-form-grid input,.vulnerability-form-grid textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #d5d8dd;border-radius:7px;background:#fff;color:#20242a;font:inherit;font-size:14px;padding:10px 11px;box-shadow:none}
-        .vulnerability-form-grid input{height:40px}
-        .vulnerability-form-grid textarea{resize:vertical;line-height:1.5}
-        .vulnerability-form-grid input:focus,.vulnerability-form-grid textarea:focus{outline:none;border-color:#737b87;box-shadow:0 0 0 3px rgba(60,70,85,.09)}
-        .vulnerability-form-grid input:disabled{background:#f4f5f7;color:#707681}
-        .vulnerability-form-grid .full{grid-column:1/-1}
-        .vulnerability-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid #eceef0}
-        #save-vulnerability-button{min-height:40px}
+        /* Keep the Vulnerability Register editor aligned with the Equipment editor. */
+        .vulnerability-modal-dialog{width:min(900px,100%)}
+        .vulnerability-modal-dialog .form-grid{margin-top:0}
+        .vulnerability-modal-dialog .form-field{min-width:0}
+        .vulnerability-modal-dialog .form-full-width{grid-column:1/-1}
+        .vulnerability-modal-dialog .form-actions{justify-content:flex-end;margin-top:24px}
         #vulnerability-form-message{margin:0;color:#b42318;font-size:12px;white-space:pre-wrap}
-        @media(max-width:760px){
-            .vulnerability-heading h1{font-size:24px}
-            .vulnerability-card-header,.vulnerability-toolbar{padding:16px}
-            .vulnerability-card-header{align-items:flex-start;flex-direction:column}
-            .vulnerability-toolbar{align-items:stretch;flex-direction:column}
-            .vulnerability-search-wrap{max-width:none}
-            .vulnerability-form-grid{grid-template-columns:1fr}
-            .vulnerability-form-grid .full{grid-column:auto}
-            .vulnerability-modal-dialog{padding:18px}
+        @media(max-width:700px){
+            .vulnerability-modal-dialog{width:100%;padding:16px}
+            .vulnerability-modal-dialog .form-full-width{grid-column:auto}
         }
     </style>
 </head>
@@ -85,7 +68,7 @@
             <p>Review accepted CVEs, maintain remediation details, and create Jira issues for follow-up.</p>
         </div>
         <div class="vulnerability-header-actions">
-            <button id="add-vulnerability-button" class="primary-button" type="button">+ Add vulnerability</button>
+            <button id="add-vulnerability-button" class="primary-button" type="button">Add Vulnerability</button>
         </div>
     </section>
 
@@ -118,7 +101,7 @@
 
 <div id="vulnerability-modal" class="modal-overlay" aria-hidden="true">
     <div class="modal-dialog equipment-modal-dialog vulnerability-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vulnerability-modal-title">
-        <div class="vulnerability-modal-header">
+        <div class="modal-header">
             <div>
                 <h2 id="vulnerability-modal-title">Add Vulnerability</h2>
                 <p id="vulnerability-modal-description" class="section-description">Enter the CVE details and available remediation information.</p>
@@ -126,11 +109,11 @@
             <button id="close-vulnerability-modal" class="modal-close-button" type="button" aria-label="Close dialog">×</button>
         </div>
         <form id="vulnerability-form">
-            <div class="vulnerability-form-grid">
+            <div class="form-grid">
                 <div class="form-field"><label for="vul-cve-id">CVE ID *</label><input id="vul-cve-id" required pattern="CVE-[0-9]{4}-[0-9]{4,}" placeholder="CVE-2025-12345"></div>
                 <div class="form-field"><label for="vul-severity">Severity</label><input id="vul-severity" placeholder="Critical / High / Medium / Low"></div>
                 <div class="form-field"><label for="vul-cvss">CVSS score</label><input id="vul-cvss" type="number" min="0" max="10" step="0.1" placeholder="0.0 – 10.0"></div>
-                <div class="form-field full"><label for="vul-product">Affected product</label><textarea id="vul-product" rows="2" placeholder="Product name and vendor"></textarea></div>
+                <div class="form-field form-full-width"><label for="vul-product">Affected product</label><textarea id="vul-product" rows="2" placeholder="Product name and vendor"></textarea></div>
                 <div class="form-field full"><label for="vul-versions">Affected version</label><textarea id="vul-versions" rows="2" placeholder="Known affected versions"></textarea></div>
                 <div class="form-field full"><label for="vul-remediation">Remediation</label><textarea id="vul-remediation" rows="2" placeholder="Recommended fix or upgrade"></textarea></div>
                 <div class="form-field full"><label for="vul-mitigation">Mitigation</label><textarea id="vul-mitigation" rows="2" placeholder="Temporary risk-reduction steps"></textarea></div>
@@ -138,7 +121,7 @@
                 <div class="form-field full"><label for="vul-references">References</label><textarea id="vul-references" rows="2" placeholder="Advisory URLs or references"></textarea></div>
                 <div class="form-field full"><p id="vulnerability-form-message" role="status" aria-live="polite"></p></div>
             </div>
-            <div class="vulnerability-form-actions">
+            <div class="form-actions">
                 <button class="secondary-button" type="button" id="cancel-vulnerability-modal">Cancel</button>
                 <button id="save-vulnerability-button" class="primary-button" type="submit">Save vulnerability</button>
             </div>
