@@ -1,101 +1,34 @@
 # DECISIONS
 
-## Decision 001 - Core First
+## 001 — Core functionality first
+The platform must operate without AI. Do not add Mem0, Gemini, hosted LLMs or local LLMs unless the user explicitly requests them.
 
-AI functionality is postponed.
+## 002 — Modular backend
+Separate API routes, business services, SQLAlchemy models, Pydantic schemas and core configuration. Business logic should not be embedded in route handlers.
 
-Reason:
-The primary goal is a reliable vulnerability management platform before
-adding AI capabilities.
+## 003 — SQLite single-file database
+SQLite is the current database, at `backend/data/vul_management.db`. SQLAlchemy is the data-access layer and Alembic manages schema changes. The database is local runtime state and must not be committed or casually deleted. Keep future database portability possible by isolating persistence concerns.
 
-## Decision 002 - Modular Backend
+## 004 — Separate asset categories
+Asset categories are Equipment, Operating Systems, Applications and Libraries. Use shared patterns where appropriate while preserving category-specific fields and identification behavior.
 
-Backend code is separated into:
-- API
-- Services
-- Models
-- Schemas
-- Core
+## 005 — Candidate before approval
+External CVE findings and Telegram-derived candidates must remain reviewable evidence. Do not silently promote raw external findings into approved inventory without the intended administrator workflow.
 
-Reason:
-This improves troubleshooting and future development.
+## 006 — Keep external provider code isolated
+NVD, OSV, CISA and Telegram integration logic belongs in dedicated services/modules, not duplicated across frontend pages or API route handlers.
 
-## Decision 003 - SQLite Single-File Database
+## 007 — Shared frontend patterns
+The sidebar, common CSS components and table preferences should be shared. The current table control label is **Table Setting**. Do not reintroduce a gear-only control or create page-specific duplicates without explicit design approval.
 
-SQLite is the current application database.
+## 008 — AI project memory
+The `.ai/` directory preserves context, architecture, state, decisions, UI rules, compatibility notes and tasks. Git history records code history; project docs must describe the current implementation and known gaps.
 
-Reason:
-It provides a real SQL database while keeping the complete database in one
-portable file.
+## 009 — Git release discipline
+Develop on `develop` or feature branches. Do not merge to `main` without explicit user approval. Avoid destructive Git operations and preserve local runtime data.
 
-Default:
-backend/data/vul_management.db
+## 010 — UI design system
+Use a fixed dark charcoal collapsible sidebar and a light workspace with white cards, neutral borders, compact operational tables, consistent primary/secondary/danger actions and modal-based forms where appropriate. The complete design contract is `.ai/UI_STYLE_GUIDE.md`.
 
-SQLAlchemy is the data-access layer and Alembic manages schema changes.
-
-The database engine remains replaceable for a future PostgreSQL deployment.
-
-## Decision 004 - Separate Asset Types
-
-Assets are divided into:
-1. Equipment
-2. Operating System
-3. Applications
-4. Libraries
-
-Reason:
-Different asset types require different attributes and vulnerability mapping
-logic.
-
-## Decision 005 - Candidate Before Approval
-
-External vulnerability discovery must create a Vulnerability Candidate first.
-
-Only an administrator review can promote a candidate into the approved
-Vulnerability inventory.
-
-Reason:
-External intelligence is evidence, not automatically trusted inventory.
-
-## Decision 006 - CISA KEV Enriches Approved Inventory
-
-CISA KEV should enrich approved vulnerability records rather than bypassing
-the review workflow.
-
-## Decision 007 - Git Release Discipline
-
-GitHub should contain reviewed development milestones.
-
-The user reviews the application before major commits and performs merges.
-
-## Decision 008 - Project Memory
-
-.ai files preserve project context for future AI sessions.
-
-Git history remains responsible for code history.
-
-.ai is responsible for:
-- project context
-- architecture
-- strategy
-- current state
-- decisions
-- rules
-- next tasks
-- compatibility notes
-
-## Decision 009 - Major Release Gate
-
-Version 2.0.0 is a release candidate until local API/UI verification is
-complete and the user explicitly approves promotion to main.
-
-
-## Decision 010 - Online Asset Identification
-
-Asset administrators should enter only the information they already know. Vul-Management performs online identification for each asset category.
-
-Equipment, Operating Systems and Applications use NVD CPE resolution. Libraries use PURL because package ecosystems are better represented by package identifiers than by forcing CPE matching.
-
-Automatic matches remain pending administrator verification. Reasons and candidate matches are stored so an administrator can understand and correct failed or ambiguous identification.
-
-NVD CPE and OSV endpoints are configured as Feeds and can be connectivity-tested from Administration > Feeds.
+## 011 — Human review of threat intelligence
+Public Telegram messages and external feed records are untrusted inputs. Extract CVE data, retain source context, enrich where possible, and preserve the review/approval boundary. Jira integration is a desired capability, not an implemented feature unless verified.
