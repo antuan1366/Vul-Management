@@ -1,6 +1,8 @@
 (() => {
     const $ = (id) => document.getElementById(id);
     let rows = [];
+    let matchingRows = [];
+    let activeStatus = "new";
     let active = null;
     const selected = new Set();
     let refreshTimer = null;
@@ -103,11 +105,23 @@
         $("select-all-results").checked = selectable.length > 0 && selectable.every(x=>selected.has(x.id));
     }
     async function loadResults() {
-        const query = new URLSearchParams({status:$("result-status").value,q:$("result-search").value.trim(),limit:"500"});
+        const query = new URLSearchParams({status:"all",q:$("result-search").value.trim(),limit:"500"});
         const data = await req("/api/threat-intelligence/scan-results?"+query.toString());
-        rows = sortNvdFirst(data.items || []);
+        matchingRows = sortNvdFirst(data.items || []);
+        for (const status of ["new","under_review","approved","rejected"]) {
+            const count = matchingRows.filter(item => item.review_status === status).length;
+            const badge = document.querySelector('[data-status-count="'+status+'"]');
+            if (badge) badge.textContent = String(count);
+        }
+        rows = matchingRows.filter(item => item.review_status === activeStatus);
         const visibleIds = new Set(rows.map(x=>x.id));
         for (const id of selected) if (!visibleIds.has(id)) selected.delete(id);
+        document.querySelectorAll("[data-status-tab]").forEach(tab => {
+            const activeTab = tab.dataset.statusTab === activeStatus;
+            tab.classList.toggle("active", activeTab);
+            tab.setAttribute("aria-selected", String(activeTab));
+            tab.tabIndex = activeTab ? 0 : -1;
+        });
         render();
     }
     function showMessage(message, isError=false) {
@@ -126,7 +140,6 @@
         $("result-product").value = x.affected_product || "";
         $("result-versions").value = x.affected_versions || "";
         $("result-remediation").value = x.remediation || "";
-        $("result-mitigation").value = x.mitigation || "";
         $("result-description").value = x.nvd_description || "";
         $("result-references").value = x.references_text || "";
         $("result-nvd-message").textContent = x.nvd_status === "not_found"
@@ -147,7 +160,6 @@
             affected_product:$("result-product").value.trim()||null,
             affected_versions:$("result-versions").value.trim()||null,
             remediation:$("result-remediation").value.trim()||null,
-            mitigation:$("result-mitigation").value.trim()||null,
             description:$("result-description").value.trim()||null,
             references_text:$("result-references").value.trim()||null
         };
@@ -226,7 +238,26 @@
         if(action==="accept") return accept(id);
     }
     function init() {
-        $("result-status").addEventListener("change",()=>loadResults().catch(e=>showMessage(e.message,true)));
+        document.querySelectorAll("[data-status-tab]").forEach(tab => {
+            tab.addEventListener("click", () => {
+                if (activeStatus === tab.dataset.statusTab) return;
+                activeStatus = tab.dataset.statusTab;
+                selected.clear();
+                loadResults().catch(e=>showMessage(e.message,true));
+            });
+            tab.addEventListener("keydown", event => {
+                if (!["ArrowLeft","ArrowRight","Home","End"].includes(event.key)) return;
+                event.preventDefault();
+                const tabs = Array.from(document.querySelectorAll("[data-status-tab]"));
+                let index = tabs.indexOf(tab);
+                if (event.key === "ArrowLeft") index = (index - 1 + tabs.length) % tabs.length;
+                if (event.key === "ArrowRight") index = (index + 1) % tabs.length;
+                if (event.key === "Home") index = 0;
+                if (event.key === "End") index = tabs.length - 1;
+                tabs[index].focus();
+                tabs[index].click();
+            });
+        });
         $("result-search").addEventListener("input",()=>loadResults().catch(e=>showMessage(e.message,true)));
         $("results-table-body").addEventListener("click",e=>{const b=e.target.closest("button[data-action]");if(b)handleRowAction(b.dataset.action,Number(b.dataset.id)).catch(err=>showMessage(err.message,true));});
         $("results-table-body").addEventListener("change",e=>{
