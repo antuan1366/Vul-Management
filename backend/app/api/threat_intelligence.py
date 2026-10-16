@@ -435,6 +435,27 @@ def update_intelligence(record_id: int, data: IntelligenceUpdate, db: Session = 
     return serialize_intelligence(item)
 
 
+@router.delete("/intelligence/{record_id}", status_code=204)
+def delete_intelligence(record_id: int, db: Session = Depends(get_db)):
+    item = db.get(ThreatIntelligence, record_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Intelligence record not found.")
+
+    cve_id = item.cve_id
+    jira_issue_key = item.jira_issue_key
+    db.delete(item)
+    db.commit()
+    record_event(
+        "WARNING",
+        "audit",
+        "Vulnerability Register",
+        "vulnerability_deleted",
+        f"{cve_id} was deleted from the Vulnerability Register.",
+        cve_id=cve_id,
+        details={"jira_issue_key": jira_issue_key},
+    )
+
+
 @router.post("/intelligence/{record_id}/jira")
 def create_jira_ticket(record_id: int, db: Session = Depends(get_db)):
     item = db.get(ThreatIntelligence, record_id)
