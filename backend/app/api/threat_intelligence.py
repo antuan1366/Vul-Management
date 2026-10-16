@@ -214,7 +214,7 @@ def list_scan_results(
     run_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    query = select(TelegramScanResult).order_by(TelegramScanResult.date.desc()).limit(limit)
+    query = select(TelegramScanResult).order_by(TelegramScanResult.date.desc(), TelegramScanResult.id.desc()).limit(limit)
     if run_id is not None:
         query = query.where(TelegramScanResult.scan_run_id == run_id)
     if status != "all":
@@ -382,7 +382,7 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
 
 @router.get("/intelligence")
 def list_intelligence(q: str | None = None, limit: int = Query(default=200, ge=1, le=500), db: Session = Depends(get_db)):
-    query = select(ThreatIntelligence).order_by(ThreatIntelligence.date.desc()).limit(limit)
+    query = select(ThreatIntelligence).order_by(ThreatIntelligence.date.desc(), ThreatIntelligence.id.desc()).limit(limit)
     if q:
         needle = f"%{q.strip()}%"
         query = query.where(
