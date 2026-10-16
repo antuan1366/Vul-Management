@@ -44,7 +44,7 @@
 
     const toolbar = document.createElement("div");
     toolbar.className = "table-preferences-toolbar";
-    toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">⚙ Table Settings</button><span class="table-preferences-saving" id="table-preferences-save-status" role="status"></span>';
+    toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">⚙ Table Settings</button>';
 
     const footer = document.createElement("div");
     footer.className = "table-preferences-footer" + (tableKey === "vulnerabilities" ? " vulnerability-table-preferences-footer" : "");
@@ -144,16 +144,15 @@
     }
 
     async function saveSettings() {
-        setStatus("Saving settings…");
+        
         try {
             await apiRequest("/api/table-preferences/" + encodeURIComponent(tableKey), {
                 method: "PUT",
                 body: JSON.stringify({ settings })
             });
-            setStatus("Settings saved");
-            window.setTimeout(() => setStatus(""), 2200);
+            
         } catch (error) {
-            setStatus("Could not save settings: " + (error.message || String(error)));
+            console.error("Could not save table settings:", error);
         }
     }
 
@@ -236,7 +235,7 @@
             const data = await apiRequest("/api/table-preferences/" + encodeURIComponent(tableKey));
             settings = { ...structuredClone(defaults), ...(data.settings || {}), columns: { ...(data.settings?.columns || {}) }, widths: { ...(data.settings?.widths || {}) } };
         } catch (error) {
-            setStatus("Using default table settings");
+            console.error("Could not load table settings:", error);
         }
         applySettings();
     }
