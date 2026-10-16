@@ -243,8 +243,19 @@ def delete_scan_result(result_id: int, db: Session = Depends(get_db)):
     item = db.get(TelegramScanResult, result_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
+
+    # Keep accepted findings while their Vulnerabilities Register record exists.
+    # If that register record was deleted, the accepted scan result can also be removed.
     if item.review_status == "approved":
-        raise HTTPException(status_code=409, detail="Approved results cannot be deleted from Scan Results.")
+        linked_vulnerability = db.scalar(
+            select(ThreatIntelligence).where(ThreatIntelligence.cve_id == item.cve_id)
+        )
+        if linked_vulnerability is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Delete this CVE from Vulnerabilities before deleting its accepted Scan Result."
+            )
+
     deleted_cve = item.cve_id
     run_id = item.scan_run_id
     db.delete(item)
