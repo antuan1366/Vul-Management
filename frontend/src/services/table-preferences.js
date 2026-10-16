@@ -45,7 +45,7 @@
 
     const toolbar = document.createElement("div");
     toolbar.className = "table-preferences-toolbar" + (tableKey === "vulnerabilities" ? " vulnerability-table-preferences-toolbar" : "");
-    toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">⚙ Table Settings</button>';
+    toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">Table Setting</button>';
 
     const footer = document.createElement("div");
     footer.className = "table-preferences-footer" + (tableKey === "vulnerabilities" ? " vulnerability-table-preferences-footer" : "");
@@ -55,7 +55,7 @@
     modal.className = "table-preferences-modal";
     modal.id = "table-preferences-modal";
     modal.setAttribute("aria-hidden", "true");
-    modal.innerHTML = '<section class="table-preferences-dialog" role="dialog" aria-modal="true" aria-labelledby="table-preferences-title"><h2 id="table-preferences-title">Table Settings</h2><p>Choose which columns are visible. Drag the right edge of a table heading to resize its column. Settings are saved for the whole application.</p><div id="table-preferences-columns"></div><div class="table-preferences-actions"><button type="button" class="secondary-button" id="cancel-table-preferences">Cancel</button><button type="button" class="primary-button" id="save-table-preferences">Save Settings</button></div></section>';
+    modal.innerHTML = '<section class="table-preferences-dialog" role="dialog" aria-modal="true" aria-labelledby="table-preferences-title"><h2 id="table-preferences-title">Table Setting</h2><p>Choose which columns are visible. Drag the right edge of a table heading to resize its column. Settings are saved for the whole application.</p><div id="table-preferences-columns"></div><div class="table-preferences-actions"><button type="button" class="secondary-button" id="cancel-table-preferences">Cancel</button><button type="button" class="primary-button" id="save-table-preferences">Save Settings</button></div></section>';
     document.body.append(toolbar, footer, modal);
 
     const host = document.createElement("div");
