@@ -19,10 +19,11 @@
     const css = document.createElement("style");
     css.textContent = `
         .table-preferences-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+        .table-preferences-toolbar.vulnerability-table-preferences-toolbar{margin:0 28px 12px 24px}
         .table-preferences-button{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid #d5d8dd;border-radius:6px;background:#fff;color:#333;font:inherit;cursor:pointer}
         .table-preferences-button:hover{background:#f5f6f8}
         .table-preferences-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0 2px;color:#555;font-size:13px}
-        .table-preferences-footer.vulnerability-table-preferences-footer{margin:0 24px 14px}
+        .table-preferences-footer.vulnerability-table-preferences-footer{margin:0 28px 14px 24px}
         .table-preferences-paging{display:flex;align-items:center;gap:8px}
         .table-preferences-paging button{padding:6px 10px;border:1px solid #d5d8dd;border-radius:5px;background:#fff;color:#333;cursor:pointer}
         .table-preferences-paging button:disabled{opacity:.45;cursor:not-allowed}
@@ -38,12 +39,12 @@
         .table-preferences-resize-handle{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;user-select:none;touch-action:none}
         .table-preferences-resize-handle:hover,.table-preferences-resize-handle.dragging{background:rgba(70,90,120,.22)}
         .table-preferences-saving{font-size:12px;color:#666}
-        @media(max-width:600px){.table-preferences-footer{align-items:flex-start;flex-direction:column}.table-preferences-footer.vulnerability-table-preferences-footer{margin:0 12px 14px}.table-preferences-dialog{padding:18px}}
+        @media(max-width:600px){.table-preferences-footer{align-items:flex-start;flex-direction:column}.table-preferences-toolbar.vulnerability-table-preferences-toolbar{margin:0 16px 12px 12px}.table-preferences-footer.vulnerability-table-preferences-footer{margin:0 16px 14px 12px}.table-preferences-dialog{padding:18px}}
     `;
     document.head.appendChild(css);
 
     const toolbar = document.createElement("div");
-    toolbar.className = "table-preferences-toolbar";
+    toolbar.className = "table-preferences-toolbar" + (tableKey === "vulnerabilities" ? " vulnerability-table-preferences-toolbar" : "");
     toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">⚙ Table Settings</button>';
 
     const footer = document.createElement("div");
