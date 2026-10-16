@@ -38,3 +38,8 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+
+# Telegram user session files contain account access
+*.session
+*.session-journal

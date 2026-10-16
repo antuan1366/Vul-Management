@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs & Events - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .events-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+        .events-toolbar input,.events-toolbar select{max-width:260px}
+        .events-table td{vertical-align:top}
+        .event-message{min-width:220px;max-width:480px;white-space:normal;overflow-wrap:anywhere}
+        .event-details{white-space:pre-wrap;overflow-wrap:anywhere;max-width:900px;max-height:420px;overflow:auto;font-family:Consolas,monospace;font-size:12px}
+        .event-row{cursor:pointer}
+        .event-row:hover{background:#f1f5f9}
+        .event-detail-row td{background:#f8fafc}
+        .event-pill{display:inline-block;border-radius:4px;padding:3px 7px;font-size:11px;font-weight:700;background:#e5e7eb;color:#222}
+        .event-pill.ERROR,.event-pill.CRITICAL{background:#fee2e2;color:#991b1b}
+        .event-pill.WARNING{background:#fef3c7;color:#92400e}
+        .event-pill.INFO{background:#dbeafe;color:#1e40af}
+        .event-pill.DEBUG{background:#e5e7eb;color:#374151}
+        .event-muted{color:#6b7280;font-size:12px}
+        .events-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+        .events-summary span{padding:8px 12px;background:#f3f4f6;border-radius:6px;font-size:13px}
+        @media(max-width:700px){.events-toolbar>*{width:100%;max-width:none!important}}
+    </style>
+</head>
+<body>
+<main class="page-container">
+    <section class="page-header">
+        <div><h1>Logs & Events</h1><p>Search application diagnostics, scan history, integration failures, and audit events.</p></div>
+        <div class="table-actions"><button id="events-export" class="secondary-button" type="button">Export CSV</button></div>
+    </section>
+    <section class="content-card">
+        <div class="section-header"><div><h2>Application Events</h2><p class="section-description">Select an event row to inspect full diagnostic details and traceback.</p></div><div id="events-count" class="item-count">0 Events</div></div>
+        <div class="events-summary"><span id="events-error-count">Errors: —</span><span id="events-warning-count">Warnings: —</span><span id="events-latest">Latest event: —</span></div>
+        <div class="events-toolbar">
+            <input id="events-search" type="search" placeholder="Search message, CVE, error...">
+            <select id="events-level"><option value="all">All levels</option><option>CRITICAL</option><option>ERROR</option><option>WARNING</option><option>INFO</option><option>DEBUG</option></select>
+            <select id="events-category"><option value="all">All categories</option><option value="nvd">NVD</option><option value="telegram">Telegram</option><option value="api">API</option><option value="database">Database</option><option value="audit">Audit</option><option value="application">Application</option></select>
+            <input id="events-cve" type="search" placeholder="CVE ID">
+            <input id="events-run" type="number" min="1" placeholder="Scan run ID">
+            <select id="events-limit"><option value="100">100 events</option><option value="200" selected>200 events</option><option value="500">500 events</option><option value="1000">1000 events</option></select>
+        </div>
+        <p id="events-message" class="event-muted" role="status"></p>
+        <div class="table-container"><table class="events-table">
+            <thead><tr><th>Time</th><th>Level</th><th>Category</th><th>Component / Event</th><th>Message</th><th>CVE</th><th>Run</th><th>Duration</th></tr></thead>
+            <tbody id="events-body"><tr><td colspan="8">Loading events…</td></tr></tbody>
+        </table></div>
+    </section>
+</main>
+<script src="../services/api.js"></script>
+<script src="../services/events.js"></script>
+<script src="../services/sidebar.js"></script>
+</body>
+</html>

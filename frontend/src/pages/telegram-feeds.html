@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram Feeds - Vul-Management</title>
+<link rel="stylesheet" href="../styles/main.css">
+<style>
+.telegram-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.telegram-toolbar input{max-width:300px}
+.telegram-actions{display:flex;gap:6px;flex-wrap:wrap}
+.telegram-muted{opacity:.75;font-size:12px}
+.telegram-error{color:#ef6b73;white-space:pre-wrap;margin-top:10px}
+</style>
+</head>
+<body>
+<main class="page-container">
+<section class="page-header">
+<div><h1>Telegram Feeds</h1><p>Manage public Telegram channels used to discover CVEs. Configure your Telegram account under Telegram Settings.</p></div>
+
+</section>
+<section class="content-card">
+<div class="section-header"><div><h2>Configured Channels</h2><p class="section-description">Only public channel usernames are supported. Existing scan results are retained when a channel is deleted.</p></div><div id="telegram-feed-count" class="item-count">0 Channels</div></div>
+<form id="telegram-feed-form" class="telegram-toolbar">
+<input id="telegram-feed-name" required maxlength="150" placeholder="Display name">
+<input id="telegram-feed-channel" required maxlength="150" placeholder="@public_channel">
+<button class="primary-button" type="submit">Add Channel</button>
+</form>
+<div id="telegram-feed-error" class="telegram-error" role="alert"></div>
+<div class="table-container"><table>
+<thead><tr><th>#</th><th>Name</th><th>Public Channel</th><th>Enabled</th><th>Last Message ID</th><th>Actions</th></tr></thead>
+<tbody id="telegram-feeds-body"></tbody>
+</table></div>
+<p class="telegram-muted">Telegram API credentials and the local Telethon session are managed separately in Administration → Telegram Settings. Never commit credentials or session files.</p>
+</section>
+</main>
+<script src="../services/api.js"></script>
+<script src="../services/telegram-feeds.js"></script>
+<script src="../services/sidebar.js"></script>
+</body>
+</html>

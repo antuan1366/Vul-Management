@@ -1,123 +1,49 @@
 # SESSION
 
-## Current Session
+## Current working context
+The user has synchronized local `develop` with GitHub `origin/develop` using `git fetch origin` and `git reset --hard origin/develop`. The resulting head was `a5c69d6 Replace table settings gear with Table Setting label`. The user confirmed the web UI now shows the expected change.
 
-The project is being prepared for the 2.0.0 major release candidate.
+The local command output still showed `backend/data/` as untracked. Treat it as local runtime data and preserve it. Do not add it to Git.
 
-The user requested a file-based database and then clarified the Vulnerabilities workflow: scanning must have an in-page status/control window, scans must be schedulable by day/time, the old standalone Sync Status and NVD Days Back controls must be removed, and each finding must carry an actionable administrator review state.
+## Current UI change
+The shared table preferences button now displays the exact label **Table Setting** rather than a gear icon or “Table Settings”. The dialog title is also “Table Setting”. Source: `frontend/src/services/table-preferences.js`.
 
-Git inspection confirmed that the application already uses SQLite, so the work remains formalized around the SQLite single-file architecture.
+The shared UI style and recreation requirements are documented in `.ai/UI_STYLE_GUIDE.md`.
 
-## Current Branch
+## Current source layout
+- Backend entry: `backend/app/main.py`
+- Backend package: `backend/app/`
+- Frontend pages: `frontend/src/pages/`
+- Frontend shared services: `frontend/src/services/`
+- Shared sidebar: `frontend/src/services/sidebar.js`
+- Shared stylesheet: `frontend/src/styles/main.css`
+- Runtime SQLite database: `backend/data/vul_management.db`
 
-feature/v2-sqlite-foundation
+## UI pages visible in repository
+Dashboard, Equipment, Operating Systems, Applications, Libraries, Asset Fields, Vulnerability Scan, Scan Result, Vulnerability Register, Vulnerability Feeds, Telegram Feeds, Telegram Settings, Logs & Events.
 
-Based on:
+## Important navigation note
+Current sidebar source labels the register page **Vulnerability Register**. The requested user-facing wording is **Vulnerabilities**. This is a known documentation/code discrepancy to resolve in a future explicit UI change; do not claim it is already fixed.
 
-feature/approved-findings-sync-status
+## Telegram workflow target
+- Configure public Telegram feeds.
+- Authenticate/configure the Telegram account using the existing settings workflow where required.
+- Scan configured channels for CVEs.
+- Retain the original message/context and system intake time.
+- Review findings before acceptance.
+- Enrich accepted findings from NVD where available.
+- Promote accepted records into the vulnerability register.
+- Jira issue creation is a planned integration unless the source confirms otherwise.
 
-No changes have been merged to main.
+## Working rules
+- Inspect source before changing behavior.
+- Provide complete replacement files when the user requests code edits.
+- Keep backend API, service, model and schema concerns separated.
+- Do not delete `backend/data/` or reset the database as a fix.
+- Do not push or merge to `main` without explicit approval.
+- Update `.ai/` after significant implementation changes and record what was actually tested.
 
-## Current Database
-
-SQLite
-
-Default file:
-
-backend/data/vul_management.db
-
-The database file is excluded from Git.
-
-SQLAlchemy remains the data-access layer and Alembic remains the schema versioning mechanism.
-
-## Current Application Version
-
-2.0.0 release candidate
-
-Supported database schema:
-1-5
-
-## Current Vulnerability UX
-
-The Vulnerabilities page is now the single control point for discovery and review.
-
-Discovery status shows:
-- Last Scan
-- Next Scan
-- Scan Status
-- Pending Review count
-
-Controls:
-- Daily scan enable/disable
-- Daily scan time
-- Save Schedule
-- Scan Now
-- CISA KEV update
-
-Findings are shown in one table with:
-- CVE
-- Asset
-- Severity
-- CVSS
-- Applicability
-- Status
-- CISA KEV
-- Admin actions
-
-Finding states:
-- Pending Review
-- Approved
-- Rejected
-
-A newly discovered candidate starts as Pending Review. Approval creates/updates the approved vulnerability and its asset mapping. Rejection remains visible as Rejected until a future discovery updates the candidate.
-
-The standalone Sync Status page has been removed. NVD Days Back is no longer exposed in the Vulnerabilities UI.
-
-## Scan Scheduling
-
-A persistent scan_schedules table stores the daily schedule and last/next scan metadata.
-
-The FastAPI lifespan starts a lightweight scheduler loop. It checks the persisted schedule and starts an NVD discovery job when the configured daily time is reached.
-
-The scheduler is intentionally disabled by default.
-
-## Git Workflow
-
-1. Develop on feature branches.
-2. Test locally.
-3. Review API/UI.
-4. Update .ai documentation.
-5. User approves.
-6. Create/prepare Pull Request.
-7. User reviews Pull Request.
-8. User performs the merge.
-9. Tag the release when appropriate.
-
-Do not merge Pull Requests automatically.
-
-## Important
-
-The 2.0.0 label is a release-candidate target, not permission to merge.
-
-The next action after this documentation update is local testing.
-
-## AI Scope
-
-AI/Mem0/Gemini remains postponed.
-
-The core application must operate without AI.
-
-
-## Latest Vulnerability Scan UX Update
-
-- The Vulnerabilities page now has a single **Scan** button in the upper-right.
-- The Scan menu contains:
-  - One-time Scan
-  - Scheduled Scan
-- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
-- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
-- The standalone Scan Results navigation item was removed.
-- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
-- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
-- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
-- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.
+## Immediate next session
+1. Read `.ai/START_HERE.md` and `.ai/UI_STYLE_GUIDE.md`.
+2. Inspect the live frontend code and confirm navigation labels.
+3. Continue verification of the Telegram CVE discovery/review workflow.

@@ -3,47 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulnerabilities - Vul-Management</title>
+    <title>Vulnerability Register - Vul-Management</title>
     <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .vulnerability-page{max-width:1600px;font-family:Arial,sans-serif;font-size:14px}
+        .vulnerability-page button,.vulnerability-page input,.vulnerability-page textarea{font-family:inherit}
+        .vulnerability-heading{align-items:flex-start}
+        .vulnerability-eyebrow{margin:0 0 8px!important;color:#737780!important;font-size:12px!important;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+        .vulnerability-heading h1{font-size:28px;font-weight:600;line-height:1.25;letter-spacing:normal;color:#20242a}
+        .vulnerability-heading p:not(.vulnerability-eyebrow){max-width:680px;line-height:1.5;font-size:14px}
+        .vulnerability-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .vulnerability-header-actions button{min-height:40px}
+        .vulnerability-card{padding:0;overflow:hidden}
+        .vulnerability-card-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 24px;border-bottom:1px solid #e8e9ec}
+        .vulnerability-card-header h2{margin:0 0 5px;font-size:20px;color:#20242a}
+        .vulnerability-card-header .section-description{line-height:1.5;font-size:14px}
+        .vulnerability-toolbar{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:16px 24px;background:#fff}
+        .vulnerability-toolbar-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:0 0 auto}
+        #delete-selected-vulnerabilities{white-space:nowrap}
+        #vulnerabilities-table input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#315b9a}
+        #vulnerabilities-table th:first-child,#vulnerabilities-table td:first-child{width:42px;text-align:center}
+        .vulnerability-search-wrap{position:relative;flex:1;max-width:450px}
+        .vulnerability-search-wrap:before{content:"⌕";position:absolute;left:12px;top:7px;color:#777d86;font-size:22px;pointer-events:none}
+        #vulnerability-search{height:40px;padding:9px 12px 9px 38px;border-color:#dfe1e5;border-radius:7px;background:#fff;color:#20242a}
+        #vulnerability-search:focus{border-color:#747b86;box-shadow:0 0 0 3px rgba(60,70,85,.08)}
+        .vulnerability-table-wrap{overflow:auto;border:0;border-bottom:1px solid #e8e9ec;border-radius:0;margin:0 24px 18px;width:calc(100% - 52px);box-sizing:border-box}
+        #vulnerabilities-table{min-width:1150px;width:100%}
+        #vulnerabilities-table th{padding:12px 14px;background:#f8f8f8;color:#333;font-family:inherit;font-size:14px;font-weight:600;line-height:1.4;letter-spacing:normal;text-align:left;text-transform:none;border-bottom:1px solid #ddd;white-space:nowrap}
+        #vulnerabilities-table td{padding:14px;border-bottom:1px solid #eff0f2;color:#414650;font-size:14px;vertical-align:middle}
+        #vulnerabilities-table tbody tr:hover{background:#fafbfc}
+        #vulnerabilities-table tbody tr:last-child td{border-bottom:0}
+        #vulnerabilities-table td:first-child{color:#8a9099;font-variant-numeric:tabular-nums}
+        #vulnerabilities-table td:nth-child(2) strong{color:#20242a;font-size:14px;font-weight:700}
+        .vulnerability-text-cell{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#555b65}
+        .vulnerability-severity{display:inline-flex;align-items:center;padding:4px 8px;border-radius:5px;background:#f0f1f3;color:#555b65;font-size:12px;font-weight:600}
+        .vulnerability-severity[data-severity="critical"]{background:#fde9e8;color:#a52622}
+        .vulnerability-severity[data-severity="high"]{background:#fff0e0;color:#a34b08}
+        .vulnerability-severity[data-severity="medium"]{background:#fff7d8;color:#846400}
+        .vulnerability-severity[data-severity="low"]{background:#e8f5ec;color:#287443}
+        .vulnerability-table-empty{padding:52px 20px!important;text-align:center!important;color:#777d86!important;white-space:normal!important}
+        .vulnerability-table-empty strong{display:block;margin-bottom:7px;color:#343941;font-size:14px}
+        .vulnerability-message{margin:0 24px 14px;padding:0;color:#626873;font-size:12px}
+        .vulnerability-message:empty{display:none}
+        .vulnerability-message.error{color:#b42318}
+        .vulnerability-actions{display:flex;gap:6px;align-items:center}
+        .vulnerability-actions button{white-space:nowrap}
+        .vulnerability-jira-link{color:#315b9a;text-decoration:none;font-weight:600}
+        .vulnerability-jira-link:hover{text-decoration:underline}
+        /* Keep the Vulnerability Register editor aligned with the Equipment editor. */
+        .vulnerability-modal-dialog{width:min(900px,100%)}
+        .vulnerability-modal-dialog .form-grid{margin-top:0}
+        .vulnerability-modal-dialog .form-field{min-width:0}
+        .vulnerability-modal-dialog .form-full-width{grid-column:1/-1}
+        .vulnerability-modal-dialog .form-actions{justify-content:flex-end;margin-top:24px}
+        #vulnerability-form-message{margin:0;color:#b42318;font-size:12px;white-space:pre-wrap}
+        @media(max-width:700px){
+            .vulnerability-table-wrap{margin:0 12px 14px;width:calc(100% - 28px)}
+            .vulnerability-card-header{padding:18px 16px}
+            .vulnerability-toolbar{padding:14px 16px}
+            .vulnerability-message{margin-left:12px;margin-right:12px;padding:0}
+            .vulnerability-modal-dialog{width:100%;padding:16px}
+            .vulnerability-modal-dialog .form-full-width{grid-column:auto}
+        }
+    </style>
 </head>
 <body>
-<main class="page-container">
-    <section class="page-header">
+<main class="page-container vulnerability-page">
+    <section class="page-header vulnerability-heading">
         <div>
-            <h1>Vulnerabilities</h1>
-            <p>Approved and reviewable vulnerability findings associated with assets.</p>
+            <p class="vulnerability-eyebrow">Security intelligence / inventory</p>
+            <h1>Vulnerability Register</h1>
+            <p>Review accepted CVEs, maintain remediation details, and create Jira issues for follow-up.</p>
+        </div>
+        <div class="vulnerability-header-actions">
+            <button id="add-vulnerability-button" class="primary-button" type="button">Add Vulnerability</button>
         </div>
     </section>
 
-    <section class="content-card">
-        <div class="section-header">
+    <section class="content-card vulnerability-card">
+        <div class="vulnerability-card-header">
             <div>
-                <h2>Vulnerabilities</h2>
-                <p class="section-description">Review discovered vulnerabilities and take action on pending findings.</p>
+                <h2>Vulnerability Register</h2>
+                <p class="section-description">Records accepted from Scan Result or entered manually.</p>
             </div>
-            <div id="finding-count" class="item-count">0 Findings</div>
+            <div id="vulnerability-count" class="item-count">Loading…</div>
         </div>
-        <div class="table-container">
-            <table>
+        <div class="vulnerability-toolbar">
+            <div class="vulnerability-search-wrap">
+                <input id="vulnerability-search" type="search" aria-label="Search vulnerabilities" placeholder="Search CVE ID or affected product">
+            </div>
+            <div class="vulnerability-toolbar-actions">
+                <button id="delete-selected-vulnerabilities" class="danger-button" type="button" disabled>Delete Selected</button>
+            </div>
+        </div>
+        <div class="vulnerability-table-wrap">
+            <table id="vulnerabilities-table">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>CVE</th>
-                        <th>Asset</th>
-                        <th>Severity</th>
-                        <th>CVSS</th>
-                        <th>Applicability</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
+                    <tr><th><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th>#</th><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Affected Product</th><th>Affected Version</th><th>Mitigation</th><th>DATE</th><th>Jira</th><th>Actions</th></tr>
                 </thead>
-                <tbody id="findings-table-body"></tbody>
+                <tbody id="vulnerabilities-table-body">
+                    <tr><td class="vulnerability-table-empty" colspan="11">Loading vulnerability records…</td></tr>
+                </tbody>
             </table>
         </div>
+        <p id="vulnerability-message" class="vulnerability-message" role="status" aria-live="polite"></p>
     </section>
 </main>
+
+<div id="vulnerability-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog equipment-modal-dialog vulnerability-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vulnerability-modal-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="vulnerability-modal-title">Add Vulnerability</h2>
+                <p id="vulnerability-modal-description" class="section-description">Enter the CVE details and available remediation information.</p>
+            </div>
+            <button id="close-vulnerability-modal" class="modal-close-button" type="button" aria-label="Close dialog">×</button>
+        </div>
+        <form id="vulnerability-form">
+            <div class="form-grid">
+                <div class="form-field"><label for="vul-cve-id">CVE ID *</label><input id="vul-cve-id" required pattern="CVE-[0-9]{4}-[0-9]{4,}" placeholder="CVE-2025-12345"></div>
+                <div class="form-field"><label for="vul-severity">Severity</label><input id="vul-severity" placeholder="Critical / High / Medium / Low"></div>
+                <div class="form-field"><label for="vul-cvss">CVSS score</label><input id="vul-cvss" type="number" min="0" max="10" step="0.1" placeholder="0.0 – 10.0"></div>
+                <div class="form-field form-full-width"><label for="vul-product">Affected product</label><textarea id="vul-product" rows="2" placeholder="Product name and vendor"></textarea></div>
+                <div class="form-field full"><label for="vul-versions">Affected version</label><textarea id="vul-versions" rows="2" placeholder="Known affected versions"></textarea></div>
+                <div class="form-field full"><label for="vul-remediation">Remediation</label><textarea id="vul-remediation" rows="2" placeholder="Recommended fix or upgrade"></textarea></div>
+                <div class="form-field full"><label for="vul-mitigation">Mitigation</label><textarea id="vul-mitigation" rows="2" placeholder="Temporary risk-reduction steps"></textarea></div>
+                <div class="form-field full"><label for="vul-description">Description</label><textarea id="vul-description" rows="3" placeholder="Short vulnerability summary"></textarea></div>
+                <div class="form-field full"><label for="vul-references">References</label><textarea id="vul-references" rows="2" placeholder="Advisory URLs or references"></textarea></div>
+                <div class="form-field full"><p id="vulnerability-form-message" role="status" aria-live="polite"></p></div>
+            </div>
+            <div class="form-actions">
+                <button class="secondary-button" type="button" id="cancel-vulnerability-modal">Cancel</button>
+                <button id="save-vulnerability-button" class="primary-button" type="submit">Save vulnerability</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script src="../services/api.js"></script>
-<script src="../services/vulnerabilities.js"></script>
+<script src="../services/threat-intelligence.js"></script>
 <script src="../services/sidebar.js"></script>
+<script src="../services/table-preferences.js" data-table-key="vulnerabilities"></script>
 </body>
 </html>

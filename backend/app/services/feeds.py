@@ -14,7 +14,7 @@ DEFAULT_FEEDS = [
         "feed_type": "nvd_cpe",
         "url": "https://services.nvd.nist.gov/rest/json/cpes/2.0",
         "method": "GET",
-        "description": "NVD Official CPE Dictionary API.",
+        "description": "NVD Official CPE Dictionary API used by Online CPE Check for Equipment, Operating Systems, and Applications.",
     },
     {
         "name": "NVD CVE API",
@@ -35,7 +35,7 @@ DEFAULT_FEEDS = [
         "feed_type": "osv",
         "url": "https://api.osv.dev/v1/query",
         "method": "POST",
-        "description": "OSV package vulnerability query API.",
+        "description": "OSV package query API used by Online PURL Check for Libraries.",
     },
 ]
 
@@ -159,7 +159,7 @@ def delete_feed(db: Session, feed: Feed) -> None:
 
 def _request_kwargs(feed: Feed) -> dict:
     headers = {
-        "User-Agent": "Vul-Management/1.1",
+        "User-Agent": "Vul-Management/2.0.1",
         "Accept": "application/json",
     }
 

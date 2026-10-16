@@ -1,0 +1,141 @@
+(() => {
+    const $ = (id) => document.getElementById(id);
+    let activeId = null;
+    let records = [];
+    const selected = new Set();
+    function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function dt(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?"—":d.toLocaleString();}
+    async function req(url,options){return apiRequest(url,options);}
+    function message(text,error=false){$("vulnerability-message").textContent=text||"";$("vulnerability-message").classList.toggle("error",Boolean(error));}
+    async function loadRecords(){
+        const q=$("vulnerability-search").value.trim();
+        const data=await req("/api/threat-intelligence/intelligence?q="+encodeURIComponent(q)+"&limit=500");
+        records=(data.items||[]).sort((a,b)=>
+            new Date(b.date||b.created_at||0)-new Date(a.date||a.created_at||0) ||
+            Number(b.id||0)-Number(a.id||0)
+        );
+        const total=data.total??records.length;
+        $("vulnerability-count").textContent=total+" "+(total===1?"Vulnerability":"Vulnerabilities");
+        $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td><input class="vulnerability-row-select" type="checkbox" data-id="'+x.id+'" aria-label="Select '+esc(x.cve_id)+'" '+(selected.has(x.id)?"checked":"")+'></td><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.mitigation||"No mitigation recorded")+'">'+esc(x.mitigation||"Not recorded")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'</div></td></tr>').join("")||'<tr><td class="vulnerability-table-empty" colspan="11">No vulnerabilities yet. Accept a finding in Scan Result or select Add Vulnerability.</td></tr>';
+        const visibleIds = records.map(x=>x.id);
+        const selectAll = $("select-all-vulnerabilities");
+        selectAll.checked = visibleIds.length > 0 && visibleIds.every(id=>selected.has(id));
+        selectAll.indeterminate = visibleIds.some(id=>selected.has(id)) && !selectAll.checked;
+        $("delete-selected-vulnerabilities").disabled = selected.size === 0;
+        $("delete-selected-vulnerabilities").textContent = selected.size ? "Delete Selected ("+selected.size+")" : "Delete Selected";
+    }
+    function resetForm(){
+        activeId=null;
+        $("vulnerability-form").reset();
+        $("vul-cve-id").disabled=false;
+        $("vulnerability-modal-title").textContent="Add Vulnerability";
+        $("vulnerability-modal-description").textContent="Enter the CVE details and available remediation information.";
+        $("save-vulnerability-button").textContent="Save Vulnerability";
+        $("vulnerability-form-message").textContent="";
+    }
+    function openModal(record=null){
+        resetForm();
+        if(record){
+            activeId=record.id;
+            $("vulnerability-modal-title").textContent="Edit Vulnerability";
+            $("vulnerability-modal-description").textContent="Update vulnerability details for "+record.cve_id+".";
+            $("save-vulnerability-button").textContent="Save Changes";
+            $("vul-cve-id").value=record.cve_id;
+            $("vul-cve-id").disabled=true;
+            $("vul-severity").value=record.severity||"";
+            $("vul-cvss").value=record.cvss_score??"";
+            $("vul-product").value=record.affected_product||"";
+            $("vul-versions").value=record.affected_versions||"";
+            $("vul-remediation").value=record.remediation||"";
+            $("vul-mitigation").value=record.mitigation||"";
+            $("vul-description").value=record.description||"";
+            $("vul-references").value=record.references_text||"";
+        }
+        $("vulnerability-modal").classList.add("is-open");
+        $("vulnerability-modal").setAttribute("aria-hidden","false");
+    }
+    function closeModal(){$("vulnerability-modal").classList.remove("is-open");$("vulnerability-modal").setAttribute("aria-hidden","true");activeId=null;}
+    function formPayload(){
+        return {cve_id:$("vul-cve-id").value.trim().toUpperCase(),severity:$("vul-severity").value.trim()||null,cvss_score:$("vul-cvss").value===""?null:Number($("vul-cvss").value),affected_product:$("vul-product").value.trim()||null,affected_versions:$("vul-versions").value.trim()||null,remediation:$("vul-remediation").value.trim()||null,mitigation:$("vul-mitigation").value.trim()||null,description:$("vul-description").value.trim()||null,references_text:$("vul-references").value.trim()||null};
+    }
+    async function saveRecord(event){
+        event.preventDefault();
+        const button=$("save-vulnerability-button");
+        button.disabled=true;
+        $("vulnerability-form-message").textContent="Saving…";
+        const payload=formPayload();
+        try{
+            if(activeId){
+                delete payload.cve_id;
+                await req("/api/threat-intelligence/intelligence/"+activeId,{method:"PUT",body:JSON.stringify(payload)});
+                message("Vulnerability updated.");
+            }else{
+                await req("/api/threat-intelligence/intelligence",{method:"POST",body:JSON.stringify(payload)});
+                message("Vulnerability added.");
+            }
+            closeModal();
+            await loadRecords();
+        }catch(error){$("vulnerability-form-message").textContent=error.message||String(error);}
+        finally{button.disabled=false;}
+    }
+    async function handleAction(action,id){
+        const record=records.find(x=>x.id===id);
+        if(action==="edit")return openModal(record);
+        if(action==="jira"){
+            if(!window.confirm("Create a Jira issue for "+record.cve_id+"?"))return;
+            const result=await req("/api/threat-intelligence/intelligence/"+id+"/jira",{method:"POST"});
+            message("Jira issue created: "+result.issue_key);
+            await loadRecords();
+        }
+
+    }
+    async function deleteSelected(){
+        const ids=Array.from(selected);
+        if(!ids.length){message("Select at least one vulnerability first.",true);return;}
+        const selectedRecords=records.filter(record=>ids.includes(record.id));
+        const jiraRecords=selectedRecords.filter(record=>record.jira_issue_key);
+        let warning="Delete "+ids.length+" selected vulnerability record(s) from the Vulnerability Register? This cannot be undone.";
+        if(jiraRecords.length)warning+=" "+jiraRecords.length+" selected record(s) have Jira issues; deleting them here will not delete those Jira issues.";
+        if(!window.confirm(warning))return;
+        let deleted=0,failed=0;
+        for(const id of ids){
+            try{
+                await req("/api/threat-intelligence/intelligence/"+id,{method:"DELETE"});
+                selected.delete(id);
+                deleted++;
+            }catch(error){failed++;}
+        }
+        await loadRecords();
+        message("Deleted: "+deleted+". Failed: "+failed+".",failed>0);
+    }
+    function init(){
+        $("add-vulnerability-button").addEventListener("click",()=>openModal());
+        $("vulnerability-search").addEventListener("input",()=>loadRecords().catch(e=>message(e.message,true)));
+        $("delete-selected-vulnerabilities").addEventListener("click",()=>deleteSelected().catch(e=>message(e.message,true)));
+        $("select-all-vulnerabilities").addEventListener("change",event=>{
+            for(const record of records){if(event.target.checked)selected.add(record.id);else selected.delete(record.id);}
+            document.querySelectorAll(".vulnerability-row-select").forEach(input=>{input.checked=event.target.checked;});
+            $("delete-selected-vulnerabilities").disabled=selected.size===0;
+            $("delete-selected-vulnerabilities").textContent=selected.size?"Delete Selected ("+selected.size+")":"Delete Selected";
+        });
+        $("vulnerabilities-table-body").addEventListener("change",event=>{
+            const checkbox=event.target.closest(".vulnerability-row-select");
+            if(!checkbox)return;
+            const id=Number(checkbox.dataset.id);
+            if(checkbox.checked)selected.add(id);else selected.delete(id);
+            const visibleIds=records.map(record=>record.id);
+            const selectAll=$("select-all-vulnerabilities");
+            selectAll.checked=visibleIds.length>0&&visibleIds.every(value=>selected.has(value));
+            selectAll.indeterminate=visibleIds.some(value=>selected.has(value))&&!selectAll.checked;
+            $("delete-selected-vulnerabilities").disabled=selected.size===0;
+            $("delete-selected-vulnerabilities").textContent=selected.size?"Delete Selected ("+selected.size+")":"Delete Selected";
+        });
+        $("vulnerabilities-table-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)handleAction(b.dataset.action,Number(b.dataset.id)).catch(err=>message(err.message,true));});
+        $("vulnerability-form").addEventListener("submit",saveRecord);
+        $("close-vulnerability-modal").addEventListener("click",closeModal);
+        $("cancel-vulnerability-modal").addEventListener("click",closeModal);
+        $("vulnerability-modal").addEventListener("click",e=>{if(e.target===$("vulnerability-modal"))closeModal();});
+        loadRecords().catch(e=>message(e.message,true));
+    }
+    document.addEventListener("DOMContentLoaded",init,{once:true});
+})();

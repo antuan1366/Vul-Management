@@ -1,81 +1,50 @@
 # Application / Database Compatibility
 
-## Current Release Candidate
+## Current application identity
+The shared frontend sidebar currently displays `v3.0.0`. This is a UI version label; verify the backend version and migration state directly before making compatibility claims.
 
-Application Version: 2.0.0
-Minimum DB Schema: 1
-Maximum DB Schema: 5
+## Database
+- Engine: SQLite
+- Default file: `backend/data/vul_management.db`
+- Access layer: SQLAlchemy
+- Schema versioning: Alembic
+- The physical database file is local runtime state and is excluded from Git.
 
-## Database Engine
+## Compatibility Window
+Before a release or migration change, inspect:
+- the actual Alembic revisions in `backend/alembic/versions/`,
+- the current database revision using Alembic,
+- the schema range enforced at application startup,
+- the API/model changes required by the frontend.
 
-Current engine: SQLite
+Record the verified minimum and maximum supported schema revisions here. Do not copy schema numbers from old documentation without checking source.
 
-Default file:
+## Migration policy
+- Add a new Alembic revision for schema changes.
+- Do not edit released migrations in place.
+- Never delete/recreate the user's database as a routine way to fix a schema or application issue.
+- Do not run destructive migrations against production data.
+- Back up the database before any approved migration with potential data loss.
+- The local DB must never be committed.
 
-backend/data/vul_management.db
+## Compatibility Window rule
+A new application version should declare:
+- application version/commit,
+- minimum supported schema,
+- maximum supported schema,
+- required migration(s),
+- whether migration is backward-compatible,
+- any data transformation or data-loss risk,
+- rollback/backup procedure.
 
-The physical database file is local state and is not committed to Git.
+Do not mark a release ready until the application/database compatibility has been checked and documented.
 
-## Revisions
-
-### 0001
-Baseline application schema.
-
-### 0002
-Adds:
-- feeds
-- security_identifiers
-- vulnerabilities
-- asset_vulnerabilities
-
-### 0003
-Adds:
-- last_sync_at
-- last_sync_status
-- last_sync_message
-
-### 0004
-Adds:
-- vulnerability_candidates
-- sync_jobs
-- candidate review workflow
-- synchronization job tracking
-
-Migration 0004 intentionally resets the current development/test data while
-upgrading the development database. Default fields and feeds are re-seeded
-by application startup.
-
-This destructive reset is a development-only decision and must not be
-reused for production migrations.
-
-### 0005
-Adds:
-- scan_schedules
-- persistent daily vulnerability scan configuration
-- last/next scan metadata
-
-The scheduler is disabled by default.
-
-## Compatibility Policy
-
-The application validates the supported database schema range at startup.
-
-Future schema changes require a new Alembic revision.
-
-Released migrations must not be edited after release.
-
-Major-version upgrades may intentionally change the supported schema window.
-
-## Operational Commands
-
-From backend:
-
+## Operational checks
+From the backend working directory:
+```powershell
 alembic current
 alembic history
 alembic upgrade head
+```
 
-For a clean development database, remove the local SQLite file and allow
-the application bootstrap/migrations to recreate it.
-
-For production, use an explicit backup and migration procedure. Never delete
-the production database to solve a schema problem.
+Run migration commands only after verifying the active virtual environment, database path and backup status. The command `alembic upgrade head` may change the schema; do not run it blindly against important data.

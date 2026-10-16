@@ -238,6 +238,34 @@ function initializeFeedsPage() {
         function () { openFeedModal(); }
     );
 
+    document.getElementById("test-identification-feeds-button")?.addEventListener(
+        "click",
+        async function () {
+            const button = this;
+            const identificationFeeds = feeds.filter(function (feed) {
+                return feed.feed_type === "nvd_cpe" || feed.feed_type === "osv";
+            });
+            if (!identificationFeeds.length) {
+                alert("No NVD CPE or OSV feed is configured.");
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Testing...";
+            try {
+                for (const feed of identificationFeeds) {
+                    await apiRequest("/api/feeds/" + feed.id + "/test", { method: "POST" });
+                }
+                await loadFeeds();
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = "Test Identification Feeds";
+            }
+        }
+    );
+
     document.getElementById("close-feed-modal")?.addEventListener(
         "click",
         closeFeedModal

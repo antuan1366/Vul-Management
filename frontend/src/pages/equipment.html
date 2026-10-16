@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+    <main class="page-container">
+        <section class="page-header">
+            <div><h1>Equipment</h1><p>Manage infrastructure equipment.</p></div>
+            <div class="table-actions">
+                <button class="secondary-button" type="button" data-manage-asset-fields="equipment" title="Configure Equipment fields">⚙ Manage Fields</button>
+                <button id="add-asset-button" class="primary-button" type="button">Add Equipment</button>
+            </div>
+        </section>
+        <section class="content-card">
+            <div class="section-header">
+                <div><h2>Equipment</h2><p class="section-description">Network and infrastructure equipment.</p></div>
+                <div id="equipment-count" class="item-count">0 Assets</div>
+            </div>
+            <div class="table-container"><table>
+                <thead><tr id="assets-table-head">
+                    <th>#</th><th>Name</th><th>Type</th><th>Vendor</th><th>Model</th><th>Version</th><th>IP Address</th><th>Criticality</th><th>Environment</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="assets-table-body"></tbody>
+            </table></div>
+        </section>
+        <div id="equipment-form-container" class="modal-overlay" aria-hidden="true">
+            <div class="modal-dialog equipment-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="equipment-form-title">
+                <div class="modal-header">
+                    <div><h2 id="equipment-form-title">Add Equipment</h2><p class="section-description">Enter equipment information.</p></div>
+                    <button type="button" id="close-equipment-modal" class="modal-close-button" aria-label="Close">&times;</button>
+                </div>
+                <form id="equipment-form">
+                    <div id="equipment-dynamic-fields" class="form-grid"></div>
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">Save Equipment</button>
+                        <button type="button" id="cancel-equipment-button" class="secondary-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <script src="../services/api.js"></script>
+    <script src="../services/assets.js"></script>
+    <script src="../services/asset-fields-modal.js"></script>
+    <script src="../services/sidebar.js"></script>
+</body>
+</html>

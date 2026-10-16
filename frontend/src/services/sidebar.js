@@ -31,15 +31,15 @@
 
                 <div class="sidebar-section">
                     <button type="button" class="sidebar-section-toggle sidebar-parent ${[
-                        "assets.html","operating-systems.html","applications.html","libraries.html"
+                        "equipment.html","operating-systems.html","applications.html","libraries.html"
                     ].includes(currentPage) ? "active" : ""}" data-sidebar-target="assets-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">◈</span><span class="sidebar-label">Assets</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
                     <div id="assets-menu" class="sidebar-submenu ${[
-                        "assets.html","operating-systems.html","applications.html","libraries.html"
+                        "equipment.html","operating-systems.html","applications.html","libraries.html"
                     ].includes(currentPage) ? "open" : ""}">
-                        <a href="assets.html" class="sidebar-subitem ${currentPage === "assets.html" ? "active" : ""}">Equipment</a>
+                        <a href="equipment.html" class="sidebar-subitem ${currentPage === "equipment.html" ? "active" : ""}">Equipment</a>
                         <a href="operating-systems.html" class="sidebar-subitem ${currentPage === "operating-systems.html" ? "active" : ""}">Operating Systems</a>
                         <a href="applications.html" class="sidebar-subitem ${currentPage === "applications.html" ? "active" : ""}">Applications</a>
                         <a href="libraries.html" class="sidebar-subitem ${currentPage === "libraries.html" ? "active" : ""}">Libraries</a>
@@ -47,25 +47,14 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerabilities.html","scan.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="vulnerabilities-menu">
-                        <span class="sidebar-section-title"><span class="sidebar-icon">!</span><span class="sidebar-label">Vulnerabilities</span></span>
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
+                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Threat Intelligence</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="vulnerabilities-menu" class="sidebar-submenu ${["vulnerabilities.html","scan.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="scan.html" class="sidebar-subitem ${currentPage === "scan.html" ? "active" : ""}">Scan</a>
-                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
-                        <a href="#" class="sidebar-subitem disabled" title="Coming soon">Remediation</a>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent" data-sidebar-target="intelligence-menu">
-                        <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Intelligence</span></span>
-                        <span class="sidebar-chevron">›</span>
-                    </button>
-                    <div id="intelligence-menu" class="sidebar-submenu">
-                        <a href="#" class="sidebar-subitem disabled" title="Coming soon">NVD</a>
-                        <a href="#" class="sidebar-subitem disabled" title="Use Scan to update vulnerability data">CISA KEV</a>
+                    <div id="intelligence-menu" class="sidebar-submenu ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Vulnerability Scan</a>
+                        <a href="scan-result.html" class="sidebar-subitem ${currentPage === "scan-result.html" ? "active" : ""}">Scan Result</a>
+                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerability Register</a>
                     </div>
                 </div>
 
@@ -83,18 +72,20 @@
                 <div class="sidebar-divider"></div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent" data-sidebar-target="administration-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">⚙</span><span class="sidebar-label">Administration</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="administration-menu" class="sidebar-submenu ${["asset-fields.html","feeds.html"].includes(currentPage) ? "open" : ""}">
-                        <a href="asset-fields.html" class="sidebar-subitem ${currentPage === "asset-fields.html" ? "active" : ""}">Asset Fields</a>
-                        <a href="feeds.html" class="sidebar-subitem ${currentPage === "feeds.html" ? "active" : ""}">Feeds</a>
+                    <div id="administration-menu" class="sidebar-submenu ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="vulnerability-feeds.html" class="sidebar-subitem ${currentPage === "vulnerability-feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
+                        <a href="telegram-feeds.html" class="sidebar-subitem ${currentPage === "telegram-feeds.html" ? "active" : ""}">Telegram Feeds</a>
+                        <a href="telegram-settings.html" class="sidebar-subitem ${currentPage === "telegram-settings.html" ? "active" : ""}">Telegram Settings</a>
+                        <a href="logs-events.html" class="sidebar-subitem ${currentPage === "logs-events.html" ? "active" : ""}">Logs &amp; Events</a>
                     </div>
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v2.0.0</span></div>
+            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.0.0</span></div>
         `;
 
         document.body.prepend(sidebar);

@@ -1,108 +1,56 @@
 # TODO
 
-## Current Release Candidate
-Version: 2.0.0
+This list separates verification and known gaps from intended future work. Update checkboxes only after testing the actual implementation.
 
-### Release Gate
-- [ ] Start backend successfully
-- [ ] Confirm SQLite DB file is created
-- [ ] Confirm schema version 5
-- [ ] Confirm clean development data after migration
-- [ ] Verify all asset CRUD pages
-- [ ] Verify CPE/PURL extraction
-- [ ] Verify NVD discovery
-- [ ] Verify OSV discovery for libraries
-- [ ] Verify Candidate -> Pending Review workflow
-- [ ] Verify finding status badges
-- [ ] Verify Approve workflow
-- [ ] Verify Reject workflow
-- [ ] Verify daily scan scheduling
-- [ ] Verify Last Scan / Next Scan / Scan Status
-- [ ] Verify Scan Now
-- [ ] Verify CISA KEV enrichment
-- [ ] Verify standalone Sync Status page is removed
-- [ ] Verify NVD Days Back is removed from the UI
-- [ ] Verify remediation status API
-- [ ] Update documentation after final fixes
-- [ ] User approval
-- [ ] Prepare PR to main
-- [ ] User performs merge
-- [ ] Tag v2.0.0
+## Immediate UI and workflow verification
+- [ ] Change the Threat Intelligence child label from “Vulnerability Register” to the intended “Vulnerabilities” and verify active navigation (if still desired).
+- [ ] Verify every page loads through the FastAPI-hosted frontend.
+- [ ] Verify sidebar collapse/expand and selected parent/child state on every route.
+- [ ] Verify Table Setting on every integrated table: dialog opens/closes, columns toggle, widths resize, preferences persist, pagination works.
+- [ ] Verify responsive layout for page headers, forms, dialogs and wide tables.
 
-### Vulnerability Intelligence
-- [x] NVD CPE feed
-- [x] NVD CVE feed
-- [x] CISA KEV feed
-- [x] Feed administration
-- [x] Security identifiers
-- [x] NVD CPE-to-CVE correlation
-- [x] NVD applicability/version-range foundation
-- [x] Incremental NVD synchronization
-- [x] OSV PURL synchronization
-- [x] Asset-level vulnerability synchronization
-- [ ] Automatic CPE resolver confidence workflow
-- [ ] Manual applicability override UI
+## Telegram to CVE workflow
+- [ ] Verify Telegram feeds can be created, edited, enabled/disabled and deleted as intended.
+- [ ] Verify Telegram account/session setup and verification behavior with a test account.
+- [ ] Verify scanning of configured public channels.
+- [ ] Verify scan mode/schedule and from-date behavior against the actual implementation.
+- [ ] Verify CVE extraction and deduplication.
+- [ ] Verify scan-result DATE represents system intake time if this remains the approved requirement.
+- [ ] Verify original Telegram message/channel context is retained.
+- [ ] Verify table summaries are concise and full message content is accessible on hover or in details.
+- [ ] Verify administrator accept/reject actions.
+- [ ] Verify NVD enrichment for severity, affected product/version and remediation/mitigation when NVD provides data.
+- [ ] Verify accepted/approved records are promoted to the intended Vulnerabilities/Threat Intelligence inventory.
+- [ ] Verify failures, rate limits, duplicate messages and unavailable NVD data are handled clearly.
+- [ ] Jira issue creation integration (not complete until implemented and tested).
 
-### Vulnerability Management
-- [x] Vulnerability model
-- [x] Asset/Vulnerability mapping
-- [x] Remediation status API
-- [x] Vulnerability inventory UI
-- [x] Candidate review states
-- [ ] Full vulnerability detail page
-- [ ] Remediation UI
-- [ ] Remediation SLA/dates
-- [ ] Analyst workflow
+## Asset management
+- [ ] Verify CRUD for Equipment.
+- [ ] Verify CRUD for Operating Systems.
+- [ ] Verify CRUD for Applications.
+- [ ] Verify CRUD for Libraries.
+- [ ] Verify asset-specific custom fields and required/visible behavior.
+- [ ] Verify CPE/PURL identification and vulnerability mapping where implemented.
 
-### Scanning
-- [x] Daily NVD discovery schedule
-- [x] Manual NVD discovery
-- [x] Scan status on Vulnerabilities page
-- [ ] Nessus import
-- [ ] Finding normalization
-- [ ] Asset matching
-- [ ] Vulnerability matching
-- [ ] Scan history
-- [ ] Scan result UI
+## Vulnerability management
+- [ ] Verify vulnerability feed administration and connectivity testing.
+- [ ] Verify vulnerability scan status, errors and progress.
+- [ ] Verify candidate review states and approved inventory.
+- [ ] Verify remediation workflow and statuses.
+- [ ] Verify CVE data/source links and table usability.
 
-### Risk
-- [ ] Risk calculation
-- [ ] Asset criticality weighting
-- [ ] CVSS weighting
-- [ ] KEV weighting
-- [ ] Exposure weighting
-- [ ] Environment weighting
-- [ ] Explainable risk score
+## Future work
+- [ ] Dashboard metrics and useful reporting.
+- [ ] Risk prioritization with explainable factors.
+- [ ] Nessus import and finding normalization.
+- [ ] Remediation ownership, due dates/SLA and exception workflow.
+- [ ] Authentication, authorization/RBAC, audit logging and production security review.
+- [ ] Optional AI assistance only after explicit approval and stable core workflows.
 
-### Reporting
-- [ ] Dashboard metrics
-- [ ] Vulnerability reports
-- [ ] Remediation reports
-- [ ] CSV/JSON export
-- [ ] Trend reporting
-
-### Security
-- [ ] Authentication
-- [ ] Authorization
-- [ ] RBAC
-- [ ] Audit logging
-- [ ] API protection
-- [ ] Production security review
-
-### Future
-- [ ] Optional AI/Mem0
-
-
-## Latest Vulnerability Scan UX Update
-
-- The Vulnerabilities page now has a single **Scan** button in the upper-right.
-- The Scan menu contains:
-  - One-time Scan
-  - Scheduled Scan
-- Scheduled Scan configuration is revealed from the same menu instead of being permanently displayed.
-- Vulnerability findings remain on the Vulnerabilities page and are tied to the asset inventory.
-- The standalone Scan Results navigation item was removed.
-- A scan first evaluates the current asset inventory and refreshes CPE identifiers before NVD discovery.
-- If the asset inventory is empty, the scan completes with a `no_assets` state and a clear message that the scan started but no assets are defined.
-- If assets exist but none has a resolved CPE, the scan completes with a `no_scannable_assets` state.
-- The scan status API exposes the last job result so the Vulnerabilities page can show the scan outcome directly.
+## Release gate
+- [ ] Run backend startup and migration checks.
+- [ ] Run relevant automated tests.
+- [ ] Perform UI/API smoke tests for affected workflows.
+- [ ] Review Git diff and ensure no runtime DB/secrets are included.
+- [ ] Update `.ai/STATE.md`, `.ai/SESSION.md`, `.ai/COMPATIBILITY.md` and this TODO as appropriate.
+- [ ] User approves any promotion/merge to `main`.

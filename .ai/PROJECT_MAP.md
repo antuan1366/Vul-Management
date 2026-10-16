@@ -1,83 +1,72 @@
 # PROJECT MAP
 
-## Root
-
-E:\Vul-Management
+## Repository
+`E:\Vul-Management`
 
 ## Backend
+- App entry: `backend/app/main.py`
+- API routes: `backend/app/api/`
+- Core/configuration: `backend/app/core/`
+- SQLAlchemy models: `backend/app/models/`
+- Pydantic schemas: `backend/app/schemas/`
+- Business logic/integrations: `backend/app/services/`
+- Database setup: `backend/app/database.py`
+- Migrations: `backend/alembic/versions/`
 
-backend/
-
-### Configuration
-backend/app/core/
-
-### API
-backend/app/api/
-
-### Models
-backend/app/models/
-
-### Schemas
-backend/app/schemas/
-
-### Services
-backend/app/services/
-
-### Database
-backend/app/database.py
-
-### Migrations
-backend/alembic/versions/
-
-### Application Entry Point
-backend/app/main.py
+Inspect the live repository tree before assuming exact module filenames.
 
 ## Frontend
+- Shared layout: `frontend/src/layouts/main.html`
+- Pages: `frontend/src/pages/`
+- Shared services: `frontend/src/services/`
+- Global styles: `frontend/src/styles/main.css`
+- Sidebar: `frontend/src/services/sidebar.js`
+- Table preferences: `frontend/src/services/table-preferences.js`
 
-frontend/
+## Known frontend pages
+- `dashboard.html`
+- `equipment.html`
+- `operating-systems.html`
+- `applications.html`
+- `libraries.html`
+- `asset-fields.html`
+- `vulnerability-scan.html`
+- `scan-result.html`
+- `vulnerabilities.html`
+- `vulnerability-feeds.html`
+- `telegram-feeds.html`
+- `telegram-settings.html`
+- `logs-events.html`
 
-### Pages
-frontend/src/pages/
+The route/page name and displayed navigation label may differ. Inspect `sidebar.js` before changing either.
 
-### Services
-frontend/src/services/
+## Project documentation
+- `.ai/START_HERE.md`: onboarding and reading order.
+- `.ai/PROJECT.md`: project scope and intended workflows.
+- `.ai/STATE.md`: current known state and discrepancies.
+- `.ai/SESSION.md`: latest work and immediate continuation.
+- `.ai/ARCHITECTURE.md`: system boundaries.
+- `.ai/UI_STYLE_GUIDE.md`: visual and interaction contract for humans/AI.
+- `.ai/DECISIONS.md`: durable decisions.
+- `.ai/STRATEGY.md`: development sequence.
+- `.ai/TODO.md`: current backlog and verification.
+- `.ai/RULES.md`: constraints for AI contributors.
+- `.ai/COMPATIBILITY.md`: app/database compatibility policy.
 
-### Styles
-frontend/src/styles/
+## Runtime database
+`backend/data/vul_management.db`
 
-### Layouts
-frontend/src/layouts/
+This is local runtime data. Never include it in Git or delete it as a routine troubleshooting step.
 
-## Runtime Database
+## Local development
+Expected backend working directory: `E:\Vul-Management\backend`
 
-backend/data/vul_management.db
+Expected command:
+`python -m uvicorn app.main:app --reload`
 
-This file is ignored by Git.
+Use the project's virtual environment Python if PowerShell activation is blocked. Verify the actual environment/dependencies before troubleshooting import errors.
 
-## Project Memory
-
-.ai/
-
-## Important Runtime
-
-Start backend from:
-
-backend/
-
-Command:
-
-python -m uvicorn app.main:app --reload
-
-If PowerShell execution policy blocks activation, use the virtual environment
-Python executable directly.
-
-## Main Verification URLs
-
-Dashboard:
-http://127.0.0.1:8000/
-
-API info:
-http://127.0.0.1:8000/api/info
-
-Swagger:
-http://127.0.0.1:8000/docs
+## Useful local URLs
+- App: `http://127.0.0.1:8000/`
+- API info: `http://127.0.0.1:8000/api/info`
+- Swagger: `http://127.0.0.1:8000/docs`

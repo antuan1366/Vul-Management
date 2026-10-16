@@ -1,140 +1,53 @@
 # STRATEGY
 
-## Development Strategy
+## Guiding principles
+Build Vul-Management incrementally, keeping the product operational and the implementation understandable by another developer or AI.
 
-Build Vul-Management incrementally.
+For each meaningful change:
+1. Inspect the existing code and current API/database contracts.
+2. Define the intended behavior and affected pages.
+3. Implement the smallest coherent change.
+4. Run relevant backend/API/UI checks.
+5. Review the diff and protect runtime data/secrets.
+6. Update `.ai/` documentation.
+7. Commit on `develop` or an appropriate feature branch.
+8. The user reviews and performs the final merge to `main`.
 
-Every major component follows:
+## Current focus
+1. Stabilize the current v3.0.0-labeled frontend and shared navigation/table controls.
+2. Verify the public Telegram-channel to CVE review workflow end to end.
+3. Verify NVD enrichment and promotion of accepted records.
+4. Keep project docs and actual code synchronized.
+5. Add Jira integration only as a separately scoped feature after the source workflow is stable.
 
-1. Design
-2. Implementation
-3. Local testing
-4. API testing
-5. UI review
-6. Documentation update
-7. Git commit
-8. User approval before merge
+## Product development phases
 
-## Current Release Candidate
+### Foundation — implemented architecture
+- FastAPI backend.
+- SQLAlchemy data access.
+- Alembic migrations.
+- SQLite single-file database.
+- Modular HTML/CSS/JavaScript frontend.
 
-2.0.0
+### Asset management
+- Equipment, Operating Systems, Applications, Libraries.
+- Shared asset-field configuration.
+- Identifier and vulnerability matching capabilities where implemented.
 
-## Phase 1 - Foundation
+### Threat intelligence
+- Feed administration.
+- Telegram feed/settings pages.
+- CVE discovery/review surfaces.
+- NVD enrichment capability to be verified end to end.
+- Accepted/approved inventory.
+- Keep raw source data separate from approved vulnerability records.
 
-Status: COMPLETED
+### Vulnerability operations — future/verify
+- Remediation UI and ownership.
+- Risk calculation and prioritization.
+- Nessus import and finding normalization.
+- Reporting and exports.
+- Authentication/RBAC/audit controls.
 
-Implemented:
-- FastAPI
-- SQLAlchemy
-- Alembic
-- SQLite
-- Modular backend/frontend structure
-- Health endpoint
-- Database compatibility validation
-
-## Phase 2 - Asset Management
-
-Status: COMPLETED
-
-Implemented:
-- Equipment
-- Operating Systems
-- Applications
-- Libraries
-- Generic Asset Fields
-- Dynamic managed-asset forms
-
-## Phase 3 - Vulnerability Intelligence
-
-Status: IMPLEMENTED FOUNDATION
-
-Implemented:
-- Feed administration
-- NVD CPE
-- NVD CVE discovery
-- CPE applicability foundation
-- OSV PURL discovery
-- Security identifiers
-- Five-day default NVD discovery window
-
-## Phase 4 - Candidate and Review Workflow
-
-Status: IMPLEMENTED FOUNDATION
-
-Implemented:
-- Vulnerability Candidate model
-- Pending Review UI
-- Approve
-- Reject
-- Approved Vulnerability inventory
-- Asset/Vulnerability mapping
-- CISA KEV enrichment for approved records
-- Sync Status
-
-## Phase 5 - Risk Management
-
-Status: NEXT MAJOR FUNCTIONAL AREA
-
-Implement:
-- Risk calculation
-- Asset criticality weighting
-- CVSS weighting
-- KEV weighting
-- Exposure weighting
-- Environment weighting
-- Explainable risk score
-
-## Phase 6 - Nessus Integration
-
-Implement:
-- Nessus file import
-- Finding normalization
-- Asset matching
-- Vulnerability matching
-- Finding status
-- Remediation tracking
-
-## Phase 7 - Remediation
-
-Implement:
-- Full remediation UI
-- SLA/dates
-- Ownership
-- Exceptions
-- Evidence
-- Closure workflow
-
-## Phase 8 - Dashboard and Reporting
-
-Implement:
-- Asset statistics
-- Vulnerability statistics
-- Critical/High findings
-- Remediation status
-- Trends
-- Reports
-- Export
-
-## Phase 9 - Security
-
-Implement:
-- Authentication
-- Authorization
-- RBAC
-- Audit logging
-- Secure configuration
-- API protection
-- Security review
-
-## Phase 10 - AI
-
-AI remains optional and postponed until the core platform is stable.
-
-Possible future capabilities:
-- Vulnerability analysis
-- Natural-language queries
-- Remediation assistance
-- Asset intelligence
-- Reporting assistance
-
-The platform must remain fully functional without AI.
+### AI
+AI-assisted analysis remains optional and out of scope unless explicitly requested. The core application must work without AI.
