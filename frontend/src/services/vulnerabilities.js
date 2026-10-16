@@ -24,16 +24,11 @@
         const text = String(value || "").trim();
         return text ? text.replace(/\s+/g, " ").slice(0, 90) : fallback;
     }
-    function nvdRank(item) {
-        if (["success","partial"].includes(item.nvd_status)) return 0;
-        if (["queued","waiting",""].includes(item.nvd_status || "")) return 1;
-        if (item.nvd_status === "error") return 2;
-        if (item.nvd_status === "not_found") return 3;
-        if (item.nvd_status === "skipped") return 4;
-        return 1;
-    }
-    function sortNvdFirst(items) {
-        return items.sort((a,b) => nvdRank(a)-nvdRank(b) || new Date(b.date || 0)-new Date(a.date || 0));
+    function sortNewestFirst(items) {
+        return items.sort((a,b) =>
+            new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0) ||
+            Number(b.id || 0) - Number(a.id || 0)
+        );
     }
     function duration(seconds) {
         const value=Math.max(0,Math.ceil(Number(seconds||0)));
@@ -69,23 +64,21 @@
     }
     function statusOptions(status) {
         return [
-            ["new","New"],["under_review","Under Review"],["approved","Accepted"],["rejected","Rejected"]
+            ["new","New"],["under_review","Under Review"],["approved","Accept"],["rejected","Reject"]
         ].map(([value,label]) => '<option value="'+value+'" '+(status===value?"selected":"")+'>'+label+'</option>').join("");
     }
     function render() {
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="12">No scan results found. Start a scan from Vulnerabilities → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="10">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
         body.innerHTML = rows.map((x,i) => {
-            const closed = ["approved","rejected"].includes(x.review_status);
-            const nvd = nvdLabel(x);
             const actions = '<div class="review-actions">'+
                 '<button class="secondary-button small-button" data-action="details" data-id="'+x.id+'">Details</button>'+
-                (x.review_status !== "approved" ? '<button class="primary-button small-button" data-action="accept" data-id="'+x.id+'">Accept</button>' : '')+
+                '<select class="review-status-select" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
                 '</div>';
             return '<tr>'+
                 '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
@@ -97,8 +90,6 @@
                 '<td class="result-cell" title="'+esc(x.affected_product || "Data not found in NVD")+'">'+esc(shortValue(x.affected_product,"Data not found in NVD"))+'</td>'+
                 '<td class="result-cell" title="'+esc(x.affected_versions || "Data not found in NVD")+'">'+esc(shortValue(x.affected_versions,"Data not found in NVD"))+'</td>'+
                 '<td class="result-cell" title="'+esc(x.remediation || "NVD does not provide a dedicated remediation field for every CVE.")+'">'+esc(shortValue(x.remediation,"Not available"))+'</td>'+
-                '<td><select class="review-status-select" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select></td>'+
-                '<td><span title="'+esc(x.nvd_error || x.nvd_missing_fields || "")+'">'+esc(nvd)+'</span></td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
         $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
@@ -106,7 +97,7 @@
     async function loadResults() {
         const query = new URLSearchParams({status:"all",q:$("result-search").value.trim(),limit:"500"});
         const data = await req("/api/threat-intelligence/scan-results?"+query.toString());
-        matchingRows = sortNvdFirst(data.items || []);
+        matchingRows = sortNewestFirst(data.items || []);
         for (const status of ["new","under_review","approved","rejected"]) {
             const count = matchingRows.filter(item => item.review_status === status).length;
             const badge = document.querySelector('[data-status-count="'+status+'"]');
