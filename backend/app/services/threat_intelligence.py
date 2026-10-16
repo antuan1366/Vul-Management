@@ -514,7 +514,6 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     item.nvd_missing_fields = json.dumps(missing, ensure_ascii=False)
     item.nvd_status = "partial" if missing else "success"
     item.nvd_error = None
-    item.review_status = "under_review" if item.review_status == "new" else item.review_status
     item.updated_at = datetime.utcnow()
     db.commit()
 
