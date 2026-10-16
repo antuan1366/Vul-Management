@@ -54,7 +54,7 @@
                     <div id="intelligence-menu" class="sidebar-submenu ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
                         <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Vulnerability Scan</a>
                         <a href="scan-result.html" class="sidebar-subitem ${currentPage === "scan-result.html" ? "active" : ""}">Scan Result</a>
-                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
+                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerability Register</a>
                     </div>
                 </div>
 
