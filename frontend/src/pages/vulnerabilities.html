@@ -19,6 +19,10 @@
         .vulnerability-card-header h2{margin:0 0 5px;font-size:20px;color:#20242a}
         .vulnerability-card-header .section-description{line-height:1.5;font-size:14px}
         .vulnerability-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;background:#fff}
+        .vulnerability-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:1}
+        #delete-selected-vulnerabilities{white-space:nowrap}
+        #vulnerabilities-table input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#315b9a}
+        #vulnerabilities-table th:first-child,#vulnerabilities-table td:first-child{width:42px;text-align:center}
         .vulnerability-search-wrap{position:relative;flex:1;max-width:460px}
         .vulnerability-search-wrap:before{content:"⌕";position:absolute;left:12px;top:7px;color:#777d86;font-size:22px;pointer-events:none}
         #vulnerability-search{height:40px;padding:9px 12px 9px 38px;border-color:#dfe1e5;border-radius:7px;background:#fff;color:#20242a}
@@ -88,14 +92,17 @@
             <div class="vulnerability-search-wrap">
                 <input id="vulnerability-search" type="search" aria-label="Search vulnerabilities" placeholder="Search CVE ID or affected product">
             </div>
+            <div class="vulnerability-toolbar-actions">
+                <button id="delete-selected-vulnerabilities" class="danger-button" type="button" disabled>Delete Selected</button>
+            </div>
         </div>
         <div class="vulnerability-table-wrap">
             <table id="vulnerabilities-table">
                 <thead>
-                    <tr><th>#</th><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Affected Product</th><th>Affected Version</th><th>Mitigation</th><th>DATE</th><th>Jira</th><th>Actions</th></tr>
+                    <tr><th><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th>#</th><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Affected Product</th><th>Affected Version</th><th>Mitigation</th><th>DATE</th><th>Jira</th><th>Actions</th></tr>
                 </thead>
                 <tbody id="vulnerabilities-table-body">
-                    <tr><td class="vulnerability-table-empty" colspan="10">Loading vulnerability records…</td></tr>
+                    <tr><td class="vulnerability-table-empty" colspan="11">Loading vulnerability records…</td></tr>
                 </tbody>
             </table>
         </div>
