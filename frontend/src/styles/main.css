@@ -1174,3 +1174,199 @@ textarea {
 .identifier-candidate{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid #ddd;border-radius:7px;cursor:pointer;font-weight:400}
 .identifier-candidate span{display:flex;flex-direction:column;gap:4px}
 .identifier-candidate small{color:#666}
+
+
+/* =========================================
+   APP-WIDE RESPONSIVE LAYOUT AND DATA TABLES
+   Keep wide data inside its own scroll area instead of expanding the page.
+   ========================================= */
+html {
+    max-width: 100%;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    max-width: 100%;
+    overflow-x: clip;
+    font-size: clamp(12px, 0.25vw + 11px, 14px);
+}
+
+.page-container,
+#app-content,
+.content-card,
+.dashboard-card,
+.section-header,
+.page-header,
+.vulnerability-page {
+    min-width: 0;
+}
+
+.page-container {
+    width: auto;
+    max-width: min(1600px, calc(100% - 250px));
+}
+
+body.sidebar-collapsed .page-container {
+    max-width: min(1600px, calc(100% - 64px));
+}
+
+.content-card {
+    max-width: 100%;
+}
+
+.table-container,
+.vulnerability-table-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-gutter: stable;
+}
+
+.table-container table,
+.vulnerability-table-wrap table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    table-layout: auto;
+}
+
+.table-container th,
+.vulnerability-table-wrap th {
+    white-space: nowrap;
+}
+
+.table-container td,
+.vulnerability-table-wrap td {
+    max-width: 340px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
+.table-container td > input:not([type="checkbox"]),
+.table-container td > select,
+.vulnerability-table-wrap td > input:not([type="checkbox"]),
+.vulnerability-table-wrap td > select {
+    min-width: 105px;
+    max-width: 100%;
+}
+
+.table-actions,
+.review-actions,
+.vulnerability-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.modal-overlay {
+    padding: clamp(8px, 2vw, 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.modal-dialog,
+.equipment-modal-dialog {
+    width: min(900px, 100%);
+    max-width: 100%;
+    max-height: calc(100dvh - 2 * clamp(8px, 2vw, 24px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.form-grid,
+.review-detail-grid {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-field,
+.form-full-width,
+.review-detail-grid > div {
+    min-width: 0;
+}
+
+input,
+select,
+textarea {
+    min-width: 0;
+    max-width: 100%;
+}
+
+textarea {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+    .page-container {
+        max-width: calc(100% - 64px);
+    }
+
+    body:not(.sidebar-collapsed) .page-container {
+        max-width: calc(100% - 64px);
+    }
+
+    .table-container td,
+    .vulnerability-table-wrap td {
+        max-width: 260px;
+    }
+}
+
+@media (max-width: 700px) {
+    .page-container,
+    body.sidebar-collapsed .page-container,
+    body:not(.sidebar-collapsed) .page-container {
+        width: auto;
+        max-width: calc(100% - 64px);
+        padding: 16px 12px;
+    }
+
+    .content-card {
+        padding: 14px;
+    }
+
+    .form-grid,
+    .review-detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .form-full-width,
+    .review-detail-grid .full {
+        grid-column: auto;
+    }
+
+    .table-container th,
+    .table-container td,
+    .vulnerability-table-wrap th,
+    .vulnerability-table-wrap td {
+        padding: 8px;
+    }
+
+    .table-container td,
+    .vulnerability-table-wrap td {
+        max-width: 210px;
+    }
+
+    .modal-dialog,
+    .equipment-modal-dialog {
+        width: 100%;
+        max-height: calc(100dvh - 16px);
+        padding: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
