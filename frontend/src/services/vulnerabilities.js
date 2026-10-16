@@ -88,7 +88,7 @@
                 (x.review_status !== "approved" ? '<button class="primary-button small-button" data-action="accept" data-id="'+x.id+'">Accept</button>' : '')+
                 '</div>';
             return '<tr>'+
-                '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' '+(x.review_status==="approved"?"disabled":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
+                '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")' aria-label="Select '+esc(x.cve_id)+'"></td>'+
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
@@ -101,8 +101,7 @@
                 '<td><span title="'+esc(x.nvd_error || x.nvd_missing_fields || "")+'">'+esc(nvd)+'</span></td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
-        const selectable = rows.filter(x=>x.review_status!=="approved");
-        $("select-all-results").checked = selectable.length > 0 && selectable.every(x=>selected.has(x.id));
+        $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
     }
     async function loadResults() {
         const query = new URLSearchParams({status:"all",q:$("result-search").value.trim(),limit:"500"});
@@ -228,10 +227,10 @@
     async function bulkDelete() {
         const ids=selectedIds();
         if (!ids.length) return showMessage("Select at least one result first.",true);
-        if (!window.confirm("Delete "+ids.length+" selected result(s)? Accepted results cannot be deleted here.")) return;
+        if (!window.confirm("Delete "+ids.length+" selected scan result(s)? An accepted result can be deleted only after its Vulnerabilities Register record has been removed.")) return;
         let ok=0, failed=0;
         for(const id of ids){try{await req("/api/threat-intelligence/scan-results/"+id,{method:"DELETE"});selected.delete(id);ok++;}catch(e){failed++;}}
-        await loadResults();showMessage("Deleted: "+ok+". Failed or protected: "+failed+".",failed>0);
+        await loadResults();showMessage("Deleted: "+ok+". Failed: "+failed+". If an accepted result failed, delete its matching CVE from Vulnerabilities first.",failed>0);
     }
     async function handleRowAction(action,id) {
         if(action==="details") return openDetails(id);
@@ -266,7 +265,7 @@
             const status=e.target.closest('select[data-action="status"]');
             if(status)changeStatus(Number(status.dataset.id),status.value);
         });
-        $("select-all-results").addEventListener("change",e=>{for(const x of rows){if(x.review_status==="approved")continue;if(e.target.checked)selected.add(x.id);else selected.delete(x.id);}render();});
+        $("select-all-results").addEventListener("change",e=>{for(const x of rows){if(e.target.checked)selected.add(x.id);else selected.delete(x.id);}render();});
         $("bulk-accept-button").addEventListener("click",()=>bulkAccept().catch(e=>showMessage(e.message,true)));
         $("bulk-delete-button").addEventListener("click",()=>bulkDelete().catch(e=>showMessage(e.message,true)));
         $("close-result-modal").addEventListener("click",closeModal);
