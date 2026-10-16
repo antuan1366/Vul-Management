@@ -22,6 +22,7 @@
         .table-preferences-button{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid #d5d8dd;border-radius:6px;background:#fff;color:#333;font:inherit;cursor:pointer}
         .table-preferences-button:hover{background:#f5f6f8}
         .table-preferences-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0 2px;color:#555;font-size:13px}
+        .table-preferences-footer.vulnerability-table-preferences-footer{margin:0 24px 14px}
         .table-preferences-paging{display:flex;align-items:center;gap:8px}
         .table-preferences-paging button{padding:6px 10px;border:1px solid #d5d8dd;border-radius:5px;background:#fff;color:#333;cursor:pointer}
         .table-preferences-paging button:disabled{opacity:.45;cursor:not-allowed}
@@ -37,7 +38,7 @@
         .table-preferences-resize-handle{position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;user-select:none;touch-action:none}
         .table-preferences-resize-handle:hover,.table-preferences-resize-handle.dragging{background:rgba(70,90,120,.22)}
         .table-preferences-saving{font-size:12px;color:#666}
-        @media(max-width:600px){.table-preferences-footer{align-items:flex-start;flex-direction:column}.table-preferences-dialog{padding:18px}}
+        @media(max-width:600px){.table-preferences-footer{align-items:flex-start;flex-direction:column}.table-preferences-footer.vulnerability-table-preferences-footer{margin:0 12px 14px}.table-preferences-dialog{padding:18px}}
     `;
     document.head.appendChild(css);
 
@@ -46,7 +47,7 @@
     toolbar.innerHTML = '<button type="button" class="table-preferences-button" id="open-table-preferences" aria-haspopup="dialog">⚙ Table Settings</button><span class="table-preferences-saving" id="table-preferences-save-status" role="status"></span>';
 
     const footer = document.createElement("div");
-    footer.className = "table-preferences-footer";
+    footer.className = "table-preferences-footer" + (tableKey === "vulnerabilities" ? " vulnerability-table-preferences-footer" : "");
     footer.innerHTML = '<span id="table-preferences-range">Showing 0 records</span><div class="table-preferences-paging"><label for="table-preferences-page-size" style="display:inline;padding:0;border:0">Rows per page</label><select id="table-preferences-page-size"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select><button type="button" id="table-preferences-prev">Previous</button><span id="table-preferences-page">1 / 1</span><button type="button" id="table-preferences-next">Next</button></div>';
 
     const modal = document.createElement("div");
