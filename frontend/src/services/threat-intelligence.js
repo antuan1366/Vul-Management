@@ -2,6 +2,7 @@
     const $ = (id) => document.getElementById(id);
     let activeId = null;
     let records = [];
+    const selected = new Set();
     function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
     function dt(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?"—":d.toLocaleString();}
     async function req(url,options){return apiRequest(url,options);}
@@ -15,7 +16,13 @@
         );
         const total=data.total??records.length;
         $("vulnerability-count").textContent=total+" "+(total===1?"Vulnerability":"Vulnerabilities");
-        $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.mitigation||"No mitigation recorded")+'">'+esc(x.mitigation||"Not recorded")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'<button class="danger-button small-button" data-action="delete" data-id="'+x.id+'">Delete</button>'+'</div></td></tr>').join("")||'<tr><td class="vulnerability-table-empty" colspan="10">No vulnerabilities yet. Accept a finding in Scan Result or select Add Vulnerability.</td></tr>';
+        $("vulnerabilities-table-body").innerHTML=records.map((x,i)=>'<tr><td><input class="vulnerability-row-select" type="checkbox" data-id="'+x.id+'" aria-label="Select '+esc(x.cve_id)+'" '+(selected.has(x.id)?"checked":"")+'></td><td>'+(i+1)+'</td><td><strong>'+esc(x.cve_id)+'</strong></td><td>'+esc(x.severity||"Data not found in NVD")+'</td><td>'+esc(x.cvss_score??"—")+'</td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_product||"Data not found in NVD")+'">'+esc(x.affected_product||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.affected_versions||"Data not found in NVD")+'">'+esc(x.affected_versions||"Data not found in NVD")+'</span></td><td><span class="vulnerability-text-cell" title="'+esc(x.mitigation||"No mitigation recorded")+'">'+esc(x.mitigation||"Not recorded")+'</span></td><td>'+esc(dt(x.date))+'</td><td>'+(x.jira_issue_url?'<a href="'+esc(x.jira_issue_url)+'" target="_blank" rel="noopener">'+esc(x.jira_issue_key||"Open Jira")+'</a>':esc(x.jira_status||"Not sent"))+'</td><td><div class="vul-actions"><button class="secondary-button small-button" data-action="edit" data-id="'+x.id+'">Edit</button>'+(x.jira_issue_key?"":'<button class="primary-button small-button" data-action="jira" data-id="'+x.id+'">Create Jira</button>')+'</div></td></tr>').join("")||'<tr><td class="vulnerability-table-empty" colspan="11">No vulnerabilities yet. Accept a finding in Scan Result or select Add Vulnerability.</td></tr>';
+        const visibleIds = records.map(x=>x.id);
+        const selectAll = $("select-all-vulnerabilities");
+        selectAll.checked = visibleIds.length > 0 && visibleIds.every(id=>selected.has(id));
+        selectAll.indeterminate = visibleIds.some(id=>selected.has(id)) && !selectAll.checked;
+        $("delete-selected-vulnerabilities").disabled = selected.size === 0;
+        $("delete-selected-vulnerabilities").textContent = selected.size ? "Delete Selected ("+selected.size+")" : "Delete Selected";
     }
     function resetForm(){
         activeId=null;
@@ -80,20 +87,49 @@
             message("Jira issue created: "+result.issue_key);
             await loadRecords();
         }
-        if(action==="delete"){
-            if(!record)return;
-            const warning = record.jira_issue_key
-                ? "This vulnerability has Jira issue "+record.jira_issue_key+". Deleting it here will not delete that Jira issue. Continue?"
-                : "Delete "+record.cve_id+" from the Vulnerability Register? This cannot be undone.";
-            if(!window.confirm(warning))return;
-            await req("/api/threat-intelligence/intelligence/"+id,{method:"DELETE"});
-            message(record.cve_id+" deleted from the Vulnerability Register.");
-            await loadRecords();
+
+    }
+    async function deleteSelected(){
+        const ids=Array.from(selected);
+        if(!ids.length){message("Select at least one vulnerability first.",true);return;}
+        const selectedRecords=records.filter(record=>ids.includes(record.id));
+        const jiraRecords=selectedRecords.filter(record=>record.jira_issue_key);
+        let warning="Delete "+ids.length+" selected vulnerability record(s) from the Vulnerability Register? This cannot be undone.";
+        if(jiraRecords.length)warning+=" "+jiraRecords.length+" selected record(s) have Jira issues; deleting them here will not delete those Jira issues.";
+        if(!window.confirm(warning))return;
+        let deleted=0,failed=0;
+        for(const id of ids){
+            try{
+                await req("/api/threat-intelligence/intelligence/"+id,{method:"DELETE"});
+                selected.delete(id);
+                deleted++;
+            }catch(error){failed++;}
         }
+        await loadRecords();
+        message("Deleted: "+deleted+". Failed: "+failed+".",failed>0);
     }
     function init(){
         $("add-vulnerability-button").addEventListener("click",()=>openModal());
         $("vulnerability-search").addEventListener("input",()=>loadRecords().catch(e=>message(e.message,true)));
+        $("delete-selected-vulnerabilities").addEventListener("click",()=>deleteSelected().catch(e=>message(e.message,true)));
+        $("select-all-vulnerabilities").addEventListener("change",event=>{
+            for(const record of records){if(event.target.checked)selected.add(record.id);else selected.delete(record.id);}
+            document.querySelectorAll(".vulnerability-row-select").forEach(input=>{input.checked=event.target.checked;});
+            $("delete-selected-vulnerabilities").disabled=selected.size===0;
+            $("delete-selected-vulnerabilities").textContent=selected.size?"Delete Selected ("+selected.size+")":"Delete Selected";
+        });
+        $("vulnerabilities-table-body").addEventListener("change",event=>{
+            const checkbox=event.target.closest(".vulnerability-row-select");
+            if(!checkbox)return;
+            const id=Number(checkbox.dataset.id);
+            if(checkbox.checked)selected.add(id);else selected.delete(id);
+            const visibleIds=records.map(record=>record.id);
+            const selectAll=$("select-all-vulnerabilities");
+            selectAll.checked=visibleIds.length>0&&visibleIds.every(value=>selected.has(value));
+            selectAll.indeterminate=visibleIds.some(value=>selected.has(value))&&!selectAll.checked;
+            $("delete-selected-vulnerabilities").disabled=selected.size===0;
+            $("delete-selected-vulnerabilities").textContent=selected.size?"Delete Selected ("+selected.size+")":"Delete Selected";
+        });
         $("vulnerabilities-table-body").addEventListener("click",e=>{const b=e.target.closest("[data-action]");if(b)handleAction(b.dataset.action,Number(b.dataset.id)).catch(err=>message(err.message,true));});
         $("vulnerability-form").addEventListener("submit",saveRecord);
         $("close-vulnerability-modal").addEventListener("click",closeModal);
