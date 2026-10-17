@@ -112,6 +112,8 @@ def imports(limit:int=100,db:Session=Depends(get_db)):
 def run_analysis(rid:int,db:Session=Depends(get_db)):
     x=db.get(NessusImport,rid)
     if not x:raise HTTPException(404,"Nessus import not found.")
+    if x.status=="analysed":
+        raise HTTPException(409,"This report has already been analysed.")
     try:return analyse(db,x)
     except ValueError as e:x.status="analysis_failed";x.error_message=str(e);db.commit();raise HTTPException(400,str(e)) from e
 @router.get("/results")
