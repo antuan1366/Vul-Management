@@ -135,7 +135,7 @@ def update_result(fid:int,data:FindingUpdate,db:Session=Depends(get_db)):
     db.commit();db.refresh(x);return fdict(x)
 @router.post("/results/{fid}/review")
 def review(fid:int,data:Review,db:Session=Depends(get_db)):
-    if data.status not in {"under_review","rejected"}:raise HTTPException(400,"Status must be under_review or rejected.")
+    if data.status not in {"new","under_review","rejected"}:raise HTTPException(400,"Invalid review status.")
     x=db.get(NessusFinding,fid)
     if not x:raise HTTPException(404,"Nessus finding not found.")
     if x.review_status=="approved":raise HTTPException(409,"Accepted finding cannot change status.")
@@ -157,7 +157,7 @@ def approve(fid:int,db:Session=Depends(get_db)):
         else:
             for k,v in {"severity":x.severity,"cvss_score":x.cvss_score,"affected_product":x.plugin_name,"remediation":x.solution,"description":x.description or x.synopsis,"references_text":x.references_text}.items():
                 if getattr(record,k) in (None,"") and v not in (None,""):setattr(record,k,v)
-            if "Source report:" not in (record.source_message or ""):record.source_message=((record.source_message or "")+"\n\n"+evidence)[:30000]
+            if evidence not in (record.source_message or ""):record.source_message=((record.source_message or "")+"\n\n"+evidence)[:30000]
             record.updated_at=now
     x.review_status="approved";x.reviewed_at=now;db.commit();return {"status":"approved","finding_id":x.id,"cve_ids":cves,"register_count":len(cves)}
 @router.get("/host-mappings")
