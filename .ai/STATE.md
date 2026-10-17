@@ -3,43 +3,27 @@
 ## Snapshot
 - Project: Vul-Management
 - Active branch: `develop`
-- Current version text shown in shared sidebar: `v3.0.0`
-- Last known GitHub change before this documentation update: `a5c69d6 Replace table settings gear with Table Setting label`
-- This document describes the known code/UI state, not a guarantee that all workflows have been runtime-tested.
+- Target version: `3.1.0`
+- Backend and sidebar version declarations: `3.1.0`
+- Target Alembic revision: `0008`
+- Source changes are not a claim of runtime verification.
 
-## Confirmed from current source
-- FastAPI-hosted frontend using plain HTML/CSS/JavaScript.
-- Dark collapsible sidebar and light content workspace.
-- Sidebar groups: Dashboard, Assets, Threat Intelligence, Reporting, Administration.
-- Asset pages: Equipment, Operating Systems, Applications, Libraries.
-- Asset field configuration page.
-- Vulnerability Scan, Scan Result, Vulnerability Register pages.
-- Vulnerability feed management.
-- Telegram Feeds and Telegram Settings pages, including account verification flow in the UI.
-- Logs & Events page.
-- Shared Table Setting control in `frontend/src/services/table-preferences.js`; it supports column visibility, column resizing, page size and pagination for integrated tables.
-- SQLite database path: `backend/data/vul_management.db`.
-- SQLAlchemy and Alembic are the persistence/migration layers.
+## Existing platform
+- FastAPI, SQLAlchemy, Alembic, SQLite, and plain HTML/CSS/JavaScript.
+- Existing Telegram scan/review workflow and shared Vulnerability Register.
+- Runtime database: `backend/data/vul_management.db`; preserve it and never commit it.
 
-## UI detail
-See `.ai/UI_STYLE_GUIDE.md` for layout dimensions, colors, typography, component patterns, table behavior, responsive rules and AI reconstruction steps.
+## Nessus 3.1.0
+- Upload `.nessus` / `.xml` files up to 25 MB and explicitly analyse after upload.
+- Uses defusedxml; report metadata and plugin findings are stored in dedicated tables.
+- Nessus Scan Result has New, Under Review, Accept and Reject tabs and table settings.
+- Accepted findings with valid CVEs create/link records in the same `threat_intelligence` table used by Telegram.
+- Findings without CVEs remain in Nessus Scan Result and cannot enter the CVE register.
+- Administration → Nessus Host Mapping maps hostname/FQDN/IP/MAC/UUID values to a canonical hostname for future analyses.
+- Original host identifiers and plugin evidence remain available.
 
-## Navigation discrepancy to resolve
-Current `frontend/src/services/sidebar.js` uses the nested label **Vulnerability Register**. The project owner's intended label is **Vulnerabilities**. If working on navigation, update the label intentionally and verify active-state behavior; do not rename the HTML route/file without a reason.
-
-## Threat Intelligence intended workflow
-Configured public Telegram channels are scanned for CVE references. Scan results retain source context and should be reviewed by an administrator. Accepted items are enriched using NVD information before promotion to the approved intelligence/register inventory. Verify every workflow step against actual routes/services before claiming it works. Jira issue creation remains a target integration unless proven implemented.
-
-## Runtime data safety
-`backend/data/` is local runtime data. Do not delete it, include it in commits, or replace the database as a troubleshooting shortcut.
-
-## Local verification status
-The user confirmed that the current web UI reflected the Table Setting label after aligning local `develop` with `origin/develop`. This confirms that specific label change was visible; it does not establish that every page/workflow has been regression-tested.
-
-## Next priorities
-1. Inspect and reconcile the Vulnerabilities sidebar label.
-2. Verify Telegram scan, CVE extraction, result intake timestamp and source-message retention.
-3. Verify accept/reject review and NVD enrichment end to end.
-4. Verify approved findings appear in the intended inventory.
-5. Verify error, empty and progress states.
-6. Update this file after testing, not from assumptions.
+## Compatibility and verification
+- Migration 0008 is additive and creates Nessus import, finding and host mapping tables.
+- Install `python-multipart` and `defusedxml` before startup.
+- Runtime migration/API/browser tests and validation against a real Nessus export remain outstanding.
+- Do not merge to `main` without explicit approval.
