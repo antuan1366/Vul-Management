@@ -64,6 +64,10 @@ def should_exclude(relative_path: Path) -> bool:
             ".db",
             ".sqlite",
             ".sqlite3",
+            ".db-wal",
+            ".db-shm",
+            ".sqlite-wal",
+            ".sqlite-shm",
             ".log",
             ".session",
             ".session-journal",
@@ -71,8 +75,12 @@ def should_exclude(relative_path: Path) -> bool:
             ".pyo",
             ".tmp",
             ".temp",
+            ".bak",
+            ".backup",
         )
     ):
+        return True
+    if name.endswith(("-wal", "-shm")):
         return True
     return False
 
