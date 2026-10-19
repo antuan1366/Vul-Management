@@ -188,7 +188,7 @@ def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
         "nvd_processed": result_processed,
         "nvd_remaining": remaining,
         # Conservative estimate assumes at least six seconds per remaining public NVD request.
-        "nvd_estimated_seconds": remaining * 6 if item.status == "nvd_scanning" else 0,
+        "nvd_estimated_seconds": remaining * 8 if item.status == "nvd_scanning" else 0,
     }
 
 
@@ -353,8 +353,8 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
         cvss_score=item.cvss_score,
         affected_product=item.affected_product,
         affected_versions=item.affected_versions,
-        remediation=item.remediation,
-        mitigation=item.mitigation,
+        # Remediation and mitigation are deliberately left for the administrator
+        # to define in the Vulnerability Register after accepting the finding.
         description=item.nvd_description or item.message_text,
         references_text=item.references_text,
         nvd_url=f"https://nvd.nist.gov/vuln/detail/{item.cve_id}",
