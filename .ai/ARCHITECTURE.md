@@ -78,9 +78,11 @@ Target domain workflow:
 2. Scan process collects source messages and extracts CVE identifiers.
 3. A scan-result record preserves source context and system intake time.
 4. Administrator reviews the candidate (accept/reject).
-5. Accepted CVEs are enriched from NVD where data is available.
-6. Approved findings are made available in the intended vulnerability register/intelligence inventory.
-7. Future integrations include remediation workflow and Jira issue creation.
+5. NVD is queried first. If description, severity, affected product or affected version remain missing, the enabled official CVE Program feed is queried, followed by GitHub Security Advisories as needed.
+6. Only missing fields are filled from supplemental sources; existing NVD values are not overwritten. Source record URLs and references are labelled in Scan Result.
+7. Feed enablement controls whether a source is queried. The CVE Program feed uses the year/sequence bucket path in the official CVE JSON repository. GitHub advisory lookups are paced conservatively when unauthenticated.
+8. Remediation and Mitigation are administrator-managed in Vulnerabilities; automated CVE providers are not expected to populate them.
+9. Approved findings are made available in the intended vulnerability register/intelligence inventory.
 
 Keep acquisition, parsing, enrichment, review and approval as distinct responsibilities. A raw external message is untrusted input. Do not promote an unreviewed candidate automatically. Verify actual models, endpoints and services before extending the workflow.
 
