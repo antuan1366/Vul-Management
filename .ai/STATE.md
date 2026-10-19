@@ -10,7 +10,7 @@
 - Multi-source CVE lookup code is committed on `develop`: NVD first, then the official CVE Program record and GitHub Security Advisories when description/severity/product/version fields remain missing.
 - Two new built-in feed types are seeded at application startup: `cve_program` and `github_advisory`. Feed enablement is respected.
 - Supplemental provider references are labelled in Scan Result details. Remediation and Mitigation remain administrator-managed in Vulnerabilities and are not part of automated source completeness.
-- GitHub unauthenticated advisory lookups are deliberately paced at 65 seconds per request; configuring a GitHub token in the feed enables a higher quota. NVD requests retain the conservative 8-second limiter.
+- Rate pacing was modestly increased on `develop`: NVD is 7 seconds without a key and 2.5 seconds with an API key; GitHub Advisories are 62 seconds unauthenticated and 1.25 seconds authenticated. These are local per-process limiters, not shared limits across multiple app instances or other clients sharing the same IP/account.
 - The Scan Result details modal has a `Refresh Sources` action that calls the multi-source enrichment endpoint for an existing non-rejected result.
 - Previously partial and not-found CVEs are eligible for a later scan retry; only a complete `success` row is cached. Placeholder values such as `n/a` and `Version range not specified` no longer block source fallback.
 - Disabling the NVD CVE feed disables NVD lookup rather than silently calling its hard-coded public endpoint.
