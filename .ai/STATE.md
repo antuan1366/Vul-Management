@@ -7,6 +7,10 @@
 - Declared schema range: 1–8
 - Latest known migration: 0008
 - Backend and sidebar version declarations were updated to 3.2.0.
+- Multi-source CVE lookup code is committed on `develop`: NVD first, then the official CVE Program record and GitHub Security Advisories when description/severity/product/version fields remain missing.
+- Two new built-in feed types are seeded at application startup: `cve_program` and `github_advisory`. Feed enablement is respected.
+- Supplemental provider references are labelled in Scan Result details. Remediation and Mitigation remain administrator-managed in Vulnerabilities and are not part of automated source completeness.
+- GitHub unauthenticated advisory lookups are deliberately paced at 65 seconds per request; configuring a GitHub token in the feed enables a higher quota. NVD requests retain the conservative 8-second limiter.
 
 ## User-reported verification
 Local app startup succeeded. The user reports page-level smoke tests passed for:
@@ -27,11 +31,14 @@ This confirms basic navigation/page rendering only. The following remain unverif
 - Runtime database default: `backend/data/vul_management.db`.
 
 ## Next steps
-1. Complete end-to-end feature checks using non-production test data.
-2. Validate Alembic migration and schema compatibility against a backed-up test DB.
-3. Create a deployment package that excludes local database, secrets, virtual environment, and cache files.
-4. Install and test the package on a separate clean Windows machine.
-5. Create a version tag/release only after final release verification and approval.
+1. Test feed seeding on restart and use each Feed `Test` action for NVD, CVE Program and GitHub Security Advisories.
+2. Run an end-to-end Telegram scan containing `CVE-2018-10388`; verify the CVE Program description and labelled references appear even if severity/product/version remain unavailable.
+3. Verify NVD-not-found and transient HTTP failures do not prevent the two supplemental feeds from being queried.
+4. Verify disabled feeds are not called, and verify incomplete/no-result CVEs can be retried on a later scan.
+5. Validate Alembic migration and schema compatibility against a backed-up test DB (this feature adds no database columns).
+6. Create a deployment package that excludes local database, secrets, virtual environment, and cache files.
+7. Install and test the package on a separate clean Windows machine.
+8. Create a version tag/release only after final release verification and approval.
 
 ## Safety
 Do not delete or replace local runtime data. Do not claim tests passed unless the user or an automated test actually confirmed them.
