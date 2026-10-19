@@ -2,28 +2,36 @@
 
 ## Snapshot
 - Project: Vul-Management
-- Active branch: `develop`
-- Target version: `3.1.0`
-- Backend and sidebar version declarations: `3.1.0`
-- Target Alembic revision: `0008`
-- Source changes are not a claim of runtime verification.
+- Version declaration: 3.2.0
+- Active development branch: `develop`
+- Declared schema range: 1–8
+- Latest known migration: 0008
+- Backend and sidebar version declarations were updated to 3.2.0.
+
+## User-reported verification
+Local app startup succeeded. The user reports page-level smoke tests passed for:
+- Asset Management
+- Nessus Manual Scan
+- Nessus Scan Results
+- Threat Intelligence
+- Administration
+- Logs & Events
+
+This confirms basic navigation/page rendering only. The following remain unverified unless separately tested: database migration on a clean database, Nessus upload and parsing, finding review transitions, register deduplication, host mapping, Telegram scan/enrichment, Jira issue creation, and deployment on a clean machine.
 
 ## Existing platform
-- FastAPI, SQLAlchemy, Alembic, SQLite, and plain HTML/CSS/JavaScript.
-- Existing Telegram scan/review workflow and shared Vulnerability Register.
-- Runtime database: `backend/data/vul_management.db`; preserve it and never commit it.
+- FastAPI, SQLAlchemy, Alembic, SQLite, plain HTML/CSS/JavaScript.
+- Asset inventory for Equipment, Operating Systems, Applications, and Libraries.
+- Telegram-based threat-intelligence workflow and shared vulnerability register.
+- Nessus import/finding tables and host-mapping workflow in source.
+- Runtime database default: `backend/data/vul_management.db`.
 
-## Nessus 3.1.0
-- Upload `.nessus` / `.xml` files up to 25 MB and explicitly analyse after upload.
-- Uses defusedxml; report metadata and plugin findings are stored in dedicated tables.
-- Nessus Scan Result has New, Under Review, Accept and Reject tabs and table settings.
-- Accepted findings with valid CVEs create/link records in the same `threat_intelligence` table used by Telegram.
-- Findings without CVEs remain in Nessus Scan Result and cannot enter the CVE register.
-- Administration → Nessus Host Mapping maps hostname/FQDN/IP/MAC/UUID values to a canonical hostname for future analyses.
-- Original host identifiers and plugin evidence remain available.
+## Next steps
+1. Complete end-to-end feature checks using non-production test data.
+2. Validate Alembic migration and schema compatibility against a backed-up test DB.
+3. Create a deployment package that excludes local database, secrets, virtual environment, and cache files.
+4. Install and test the package on a separate clean Windows machine.
+5. Create a version tag/release only after final release verification and approval.
 
-## Compatibility and verification
-- Migration 0008 is additive and creates Nessus import, finding and host mapping tables.
-- Install `python-multipart` and `defusedxml` before startup.
-- Runtime migration/API/browser tests and validation against a real Nessus export remain outstanding.
-- Do not merge to `main` without explicit approval.
+## Safety
+Do not delete or replace local runtime data. Do not claim tests passed unless the user or an automated test actually confirmed them.
