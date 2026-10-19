@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
-FEED_TYPES = {"nvd_cpe", "nvd_cve", "cisa_kev", "osv", "custom"}
+FEED_TYPES = {"nvd_cpe", "nvd_cve", "cve_program", "github_advisory", "cisa_kev", "osv", "custom"}
 AUTH_TYPES = {"none", "api_key", "bearer"}
 METHODS = {"GET", "POST"}
 
