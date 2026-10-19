@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import re
+import threading
 from datetime import datetime, time
 from pathlib import Path
 from urllib.parse import quote
@@ -18,6 +19,22 @@ from app.models.feed import Feed
 from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, TelegramScanRun, TelegramScanSchedule, ThreatIntelligence
 
 CVE_PATTERN = re.compile(r"\bCVE-\d{4}-\d{4,}\b", re.IGNORECASE)
+
+# NVD's unauthenticated API limit is 5 requests per 30 seconds. Keep a
+# process-wide limiter so scan workers and manual enrichment share the same pace.
+_NVD_REQUEST_LOCK = threading.Lock()
+_NVD_NEXT_REQUEST_AT = 0.0
+_NVD_MIN_REQUEST_INTERVAL_SECONDS = 8.0
+
+
+def _wait_for_nvd_request_slot() -> None:
+    global _NVD_NEXT_REQUEST_AT
+    with _NVD_REQUEST_LOCK:
+        now = monotonic_time.monotonic()
+        if _NVD_NEXT_REQUEST_AT > now:
+            import time as time_module
+            time_module.sleep(_NVD_NEXT_REQUEST_AT - now)
+        _NVD_NEXT_REQUEST_AT = monotonic_time.monotonic() + _NVD_MIN_REQUEST_INTERVAL_SECONDS
 
 
 def serialize_feed(item: TelegramFeed) -> dict:
@@ -240,7 +257,7 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
         rows = db.scalars(
             select(TelegramScanResult)
             .where(TelegramScanResult.scan_run_id == run_id)
-            .order_by(TelegramScanResult.date.asc(), TelegramScanResult.id.asc())
+            .order_by(TelegramScanResult.cve_id.asc(), TelegramScanResult.id.asc())
         ).all()
         by_cve: dict[str, list[TelegramScanResult]] = {}
         for item in rows:
@@ -262,12 +279,10 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
         db.commit()
         db.close()
 
-        # CVEs repeated across messages/channels are looked up only once per scan run.
-        for index, cve_id in enumerate(work_cves):
+        # Work in the same CVE order as the Scan Result table. The shared HTTP
+        # limiter controls request spacing, including retries and manual lookups.
+        for cve_id in sorted(work_cves):
             await asyncio.to_thread(_enrich_cve_for_scan_run, run_id, cve_id)
-            # About five public NVD requests per 30 seconds, with extra backoff on 429/503.
-            if index < len(work_cves) - 1:
-                await asyncio.sleep(6)
 
         db = SessionLocal()
         run = db.get(TelegramScanRun, run_id)
@@ -420,15 +435,17 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     request_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         response = None
-        for attempt in range(5):
+        max_attempts = 8
+        for attempt in range(max_attempts):
             attempt_started = monotonic_time.perf_counter()
+            _wait_for_nvd_request_slot()
             try:
                 response = client.get(request_url, params={"cveId": item.cve_id})
                 request_ms = int((monotonic_time.perf_counter() - attempt_started) * 1000)
                 record_event(
                     "WARNING" if response.status_code in {429, 503} else "INFO",
                     "nvd", "NVD HTTP client", "http_response",
-                    f"NVD returned HTTP {response.status_code} for {item.cve_id} (attempt {attempt + 1}/5).",
+                    f"NVD returned HTTP {response.status_code} for {item.cve_id} (attempt {attempt + 1}/{max_attempts}).",
                     cve_id=item.cve_id, duration_ms=request_ms,
                     details={"http_status": response.status_code, "attempt": attempt + 1,
                              "timeout_seconds": timeout, "endpoint": request_url,
@@ -437,22 +454,27 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
             except httpx.HTTPError as error:
                 request_ms = int((monotonic_time.perf_counter() - attempt_started) * 1000)
                 record_event(
-                    "ERROR", "nvd", "NVD HTTP client", "http_request_exception",
+                    "WARNING" if attempt < max_attempts - 1 else "ERROR",
+                    "nvd", "NVD HTTP client", "http_request_exception",
                     f"NVD request exception for {item.cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
                     cve_id=item.cve_id, duration_ms=request_ms,
                     details={**exception_details(error), "attempt": attempt + 1,
                              "timeout_seconds": timeout, "endpoint": request_url},
                 )
-                raise
+                if attempt >= max_attempts - 1:
+                    raise
+                import time as time_module
+                time_module.sleep(min(300, 10 * (2 ** attempt)))
+                continue
             if response.status_code not in {429, 503}:
                 break
-            if attempt == 4:
+            if attempt >= max_attempts - 1:
                 response.raise_for_status()
             retry_after = response.headers.get("Retry-After")
             try:
-                wait_seconds = max(6, min(60, int(retry_after))) if retry_after else min(60, 15 * (2 ** attempt))
+                wait_seconds = max(30, min(900, int(retry_after))) if retry_after else min(900, 60 * (2 ** attempt))
             except ValueError:
-                wait_seconds = min(60, 15 * (2 ** attempt))
+                wait_seconds = min(900, 60 * (2 ** attempt))
             response.close()
             import time as time_module
             time_module.sleep(wait_seconds)
@@ -503,15 +525,14 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     if not versions:
         missing.append("Affected Version")
     # NVD's CVE record does not expose dedicated remediation/mitigation fields.
-    missing.extend(["Remediation", "Mitigation"])
     item.severity = severity
     item.cvss_score = score
     item.affected_product = "\n".join(products) if products else None
     item.affected_versions = "\n".join(versions) if versions else None
     item.nvd_description = english
     item.references_text = "\n".join(references) if references else None
-    item.remediation = None
-    item.mitigation = None
+    # Remediation and mitigation are administrator-managed in Vulnerabilities;
+    # NVD lookup must not treat them as required NVD fields.
     item.nvd_missing_fields = json.dumps(missing, ensure_ascii=False)
     item.nvd_status = "partial" if missing else "success"
     item.nvd_error = None
