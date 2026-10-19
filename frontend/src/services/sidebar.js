@@ -88,7 +88,7 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.1.0</span></div>
+            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.2.0</span></div>
         `;
 
         document.body.prepend(sidebar);
