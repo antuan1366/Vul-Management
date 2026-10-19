@@ -214,7 +214,7 @@ def list_scan_results(
     run_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    query = select(TelegramScanResult).order_by(TelegramScanResult.date.desc(), TelegramScanResult.id.desc()).limit(limit)
+    query = select(TelegramScanResult).order_by(TelegramScanResult.cve_id.asc(), TelegramScanResult.id.asc()).limit(limit)
     if run_id is not None:
         query = query.where(TelegramScanResult.scan_run_id == run_id)
     if status != "all":
@@ -322,8 +322,6 @@ def update_scan_result(result_id: int, data: IntelligenceUpdate, db: Session = D
         "cvss_score": "cvss_score",
         "affected_product": "affected_product",
         "affected_versions": "affected_versions",
-        "remediation": "remediation",
-        "mitigation": "mitigation",
         "description": "nvd_description",
         "references_text": "references_text",
     }
