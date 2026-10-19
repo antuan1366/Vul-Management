@@ -427,14 +427,19 @@ def _walk_cpe_matches(node):
 
 
 def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
-    # NVD's public API can be queried without a key. Use a configured key if one exists,
-    # but do not require an Administration feed just to perform a public CVE lookup.
+    # NVD is managed through Administration > Vulnerability Feeds. Respect the
+    # feed's enabled flag so administrators can deliberately disable this source.
     feed = db.scalar(select(Feed).where(Feed.feed_type == "nvd_cve", Feed.enabled.is_(True)).order_by(Feed.id))
+    if feed is None:
+        item.nvd_status = "skipped"
+        item.nvd_error = None
+        db.commit()
+        return
     headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.2.0"}
-    if feed and feed.api_key:
+    if feed.api_key:
         headers["apiKey"] = feed.api_key
-    timeout = feed.timeout_seconds if feed else 20
-    request_url = feed.url if feed else "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    timeout = feed.timeout_seconds
+    request_url = feed.url
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         response = None
         max_attempts = 8
@@ -878,13 +883,12 @@ def enrich_scan_result_from_sources(db, item: TelegramScanResult) -> None:
 
     if _missing_core_fields(item):
         feeds = db.scalars(
-            select(Feed)
-            .where(
+            select(Feed).where(
                 Feed.enabled.is_(True),
                 Feed.feed_type.in_(["cve_program", "github_advisory"]),
             )
-            .order_by(Feed.id.asc())
         ).all()
+        feeds.sort(key=lambda feed: (feed.feed_type != "cve_program", feed.id))
         for feed in feeds:
             if not _missing_core_fields(item):
                 break
