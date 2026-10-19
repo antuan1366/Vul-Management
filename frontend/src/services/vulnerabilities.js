@@ -50,10 +50,10 @@
         const remaining=Number(run.nvd_remaining??Math.max(0,total-done));
         const channelsTotal=Number(run.channels_total||0),channelsDone=Number(run.channels_processed||0);
         const pct=nvdRunning?(total?Math.min(100,Math.round(done/total*100)):0):(active?(channelsTotal?Math.min(100,Math.round(channelsDone/channelsTotal*100)):0):100);
-        $("nvd-live-title").textContent=nvdRunning?"NVD enrichment is running":(active?"Telegram scan is running":"Latest scan: "+human(run.status));
+        $("nvd-live-title").textContent=nvdRunning?"CVE data enrichment is running":(active?"Telegram scan is running":"Latest scan: "+human(run.status));
         $("nvd-live-value").textContent=nvdRunning?(done+" / "+total+" CVEs"):(active?"In progress":human(run.status));
         let detail=nvdRunning
-            ?("NVD checked "+done+" of "+total+" unique CVEs · "+remaining+" remaining · Estimated time: "+duration(run.nvd_estimated_seconds))
+            ?("CVE data checked "+done+" of "+total+" unique CVEs · "+remaining+" remaining · Estimated time: "+duration(run.nvd_estimated_seconds))
             :(active?("Channels processed "+channelsDone+" of "+channelsTotal+" · Messages: "+(run.messages_processed||0)+" · CVE occurrences: "+(run.cve_occurrences||0)):"Last scan "+(run.finished_at?dt(run.finished_at):dt(run.started_at))+" · CVE occurrences: "+(run.cve_occurrences||0));
         if(run.error_message)detail+=" · "+run.error_message;
         $("nvd-live-detail").textContent=detail;
@@ -85,10 +85,10 @@
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
-                '<td>'+esc(x.severity || "Data not found in NVD")+'</td>'+
+                '<td>'+esc(x.severity || "Not available from enabled sources")+'</td>'+
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_product || "Data not found in NVD")+'">'+esc(shortValue(x.affected_product,"Data not found in NVD"))+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_versions || "Data not found in NVD")+'">'+esc(shortValue(x.affected_versions,"Data not found in NVD"))+'</td>'+
+                '<td class="result-cell" title="'+esc(x.affected_product || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</td>'+
+                '<td class="result-cell" title="'+esc(x.affected_versions || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_versions,"Not available from enabled sources"))+'</td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
         $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
@@ -130,8 +130,15 @@
         $("result-versions").value = x.affected_versions || "";
         $("result-description").value = x.nvd_description || "";
         $("result-references").value = x.references_text || "";
-        $("result-nvd-message").textContent = x.nvd_missing_fields && JSON.parse(x.nvd_missing_fields || "[]").length
-            ? "Missing core fields across enabled sources: "+x.nvd_missing_fields+" · See References / Sources for provider details."
+        let missingFields = [];
+        try {
+            const parsed = JSON.parse(x.nvd_missing_fields || "[]");
+            if (Array.isArray(parsed)) missingFields = parsed;
+        } catch (_) {
+            // Older or malformed stored values should not prevent the detail dialog from opening.
+        }
+        $("result-nvd-message").textContent = missingFields.length
+            ? "Missing fields across enabled sources: "+missingFields.join(", ")+" · See References / Sources for provider details."
             : "Lookup status: "+nvdLabel(x)+" · See References / Sources for provider details.";
         $("result-modal-error").textContent = x.nvd_error || "";
         $("accept-result-button").hidden = x.review_status === "approved";
