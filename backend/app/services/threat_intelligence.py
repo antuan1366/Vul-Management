@@ -264,7 +264,9 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             by_cve.setdefault(item.cve_id, []).append(item)
 
         work_cves = []
-        terminal_success = {"success", "partial", "not_found"}
+        # Retry not-found CVEs on later scans because sources may publish or correct
+        # records after an earlier lookup. Successful/partial results remain cached.
+        terminal_success = {"success", "partial"}
         for cve_id, items in by_cve.items():
             existing = next((item for item in items if item.nvd_status in terminal_success), None)
             if existing is not None:
@@ -524,6 +526,8 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
         missing.append("Affected Product")
     if not versions:
         missing.append("Affected Version")
+    if not english:
+        missing.append("Description")
     # NVD's CVE record does not expose dedicated remediation/mitigation fields.
     item.severity = severity
     item.cvss_score = score
@@ -812,6 +816,8 @@ def _missing_core_fields(item: TelegramScanResult) -> list[str]:
         missing.append("Affected Product")
     if not item.affected_versions:
         missing.append("Affected Version")
+    if not item.nvd_description:
+        missing.append("Description")
     return missing
 
 
@@ -857,7 +863,13 @@ def enrich_scan_result_from_sources(db, item: TelegramScanResult) -> None:
         if item.nvd_status in {"success", "partial"}:
             sources_used.append("NVD")
     except LookupError as error:
-        errors.append(f"NVD: {str(error)[:200]}")
+        # A missing NVD record is not a transport failure; supplemental sources
+        # should still be queried and a final miss should remain "not_found".
+        record_event(
+            "WARNING", "enrichment", "NVD", "record_not_found",
+            f"NVD returned no record for {item.cve_id}: {str(error)[:200]}",
+            cve_id=item.cve_id,
+        )
     except (httpx.HTTPError, ValueError) as error:
         item.nvd_status = "error"
         item.nvd_error = f"NVD request failed: {error.__class__.__name__}: {str(error)[:250]}"
@@ -946,17 +958,17 @@ def send_jira_ticket(item: ThreatIntelligence) -> dict:
     summary = f"{item.cve_id} - {item.affected_product or 'Vulnerability review'}"
     description = "\n".join([
         f"CVE: {item.cve_id}",
-        f"Severity: {item.severity or 'Data not found in NVD'}",
-        f"CVSS: {item.cvss_score if item.cvss_score is not None else 'Data not found in NVD'}",
-        f"Affected Product: {item.affected_product or 'Data not found in NVD'}",
-        f"Affected Version: {item.affected_versions or 'Data not found in NVD'}",
-        f"Remediation: {item.remediation or 'Data not found in NVD'}",
-        f"Mitigation: {item.mitigation or 'Data not found in NVD'}",
+        f"Severity: {item.severity or 'Not available from enabled sources'}",
+        f"CVSS: {item.cvss_score if item.cvss_score is not None else 'Not available from enabled sources'}",
+        f"Affected Product: {item.affected_product or 'Not available from enabled sources'}",
+        f"Affected Version: {item.affected_versions or 'Not available from enabled sources'}",
+        f"Remediation: {item.remediation or 'Not available from enabled sources'}",
+        f"Mitigation: {item.mitigation or 'Not available from enabled sources'}",
         f"Description: {item.description or 'Not available'}",
         f"Source channel: {item.source_channel or 'Not available'}",
         f"Original message:\n{item.source_message or 'Not available'}",
         f"NVD: {item.nvd_url or f'https://nvd.nist.gov/vuln/detail/{item.cve_id}'}",
-        f"References:\n{item.references_text or 'None listed in NVD'}",
+        f"References:\n{item.references_text or 'No references returned by enabled sources'}",
     ])
     payload = {
         "fields": {
