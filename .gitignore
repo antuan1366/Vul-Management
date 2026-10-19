@@ -8,11 +8,13 @@ __pycache__/
 venv/
 env/
 
-# Environment files
+# Environment files and local backups
 .env
 .env.*
 
-# Local database
+# Local runtime data (databases, sessions, scan artifacts)
+/data/
+/backend/data/
 *.db
 *.sqlite
 *.sqlite3
@@ -32,13 +34,12 @@ Thumbs.db
 node_modules/
 
 # Build
-dist/
-build/
+/dist/
+/build/
 
 # Temporary files
 *.tmp
 *.temp
-
 
 # Telegram user session files contain account access
 *.session

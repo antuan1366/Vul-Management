@@ -1,19 +1,50 @@
 from pathlib import Path
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
 class Settings(BaseSettings):
-    app_name:str="Vul-Management"
-    app_version:str="3.2.0"
-    debug:bool=True
-    database_url:str="sqlite:///./data/vul_management.db"
-    db_schema_min:int=1
-    db_schema_max:int=8
-    telegram_api_id:str|None=None
-    telegram_api_hash:str|None=None
-    telegram_session:str="./data/telegram"
-    jira_base_url:str|None=None
-    jira_email:str|None=None
-    jira_api_token:str|None=None
-    jira_project_key:str|None=None
-    jira_issue_type:str="Task"
-    model_config=SettingsConfigDict(env_file=Path(__file__).resolve().parents[2]/".env",env_file_encoding="utf-8",extra="ignore")
-settings=Settings()
+    app_name: str = "Vul-Management"
+    app_version: str = "3.2.0"
+    debug: bool = True
+
+    # DATA_DIR is resolved from the process working directory when relative.
+    # DATABASE_URL can still explicitly override the default SQLite location.
+    data_dir: Path = Path("./data")
+    database_url: str | None = None
+
+    db_schema_min: int = 1
+    db_schema_max: int = 8
+
+    telegram_api_id: str | None = None
+    telegram_api_hash: str | None = None
+    telegram_session: str | None = None
+
+    jira_base_url: str | None = None
+    jira_email: str | None = None
+    jira_api_token: str | None = None
+    jira_project_key: str | None = None
+    jira_issue_type: str = "Task"
+
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[2] / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @model_validator(mode="after")
+    def set_default_storage_paths(self):
+        resolved_data_dir = self.data_dir.expanduser().resolve()
+        self.data_dir = resolved_data_dir
+
+        if not self.database_url:
+            database_path = (resolved_data_dir / "vul_management.db").as_posix()
+            self.database_url = f"sqlite:///{database_path}"
+
+        if not self.telegram_session:
+            self.telegram_session = str(resolved_data_dir / "telegram")
+
+        return self
+
+
+settings = Settings()

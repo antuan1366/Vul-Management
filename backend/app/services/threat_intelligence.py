@@ -215,7 +215,8 @@ async def collect_telegram_scan(run_id: int) -> None:
             pass
         if result_count:
             # NVD enrichment is a separate background phase; the scan response and UI remain usable.
-            asyncio.create_task(enrich_scan_run_from_nvd(completed_run_id))
+            # Run NVD enrichment in the same managed task so it cannot become an untracked fire-and-forget task.
+            await enrich_scan_run_from_nvd(completed_run_id)
     except Exception as error:
         run.status = "failed"
         run.error_message = f"{error.__class__.__name__}: {str(error)[:500]}"

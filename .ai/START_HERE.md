@@ -1,28 +1,14 @@
 # START HERE
 
 ## Project
-Vul-Management
+Vul-Management — version 3.2.0
 
-## Repository and branch
 - Repository: `antuan1366/Vul-Management`
-- Active development branch: `develop`
-- Do not merge to `main` unless the user explicitly approves it.
-- User prefers direct, practical steps and complete replacement files when code edits are requested.
+- Development branch: `develop`
+- Documentation update branch: `docs/v3.2.0-tested`
+- Stack: FastAPI, SQLAlchemy, Alembic, SQLite, plain HTML/CSS/JavaScript.
 
-## Purpose
-A modular vulnerability-management platform for asset inventory, vulnerability discovery and review, threat intelligence, remediation tracking and future reporting/integrations.
-
-## Current UI version label
-The shared sidebar currently displays **v3.0.0**. Treat the running source and actual API behavior as authoritative; do not infer that every planned feature is implemented just from a version label.
-
-## Current application shape
-- Backend: Python, FastAPI, SQLAlchemy, Pydantic, Alembic, SQLite.
-- Frontend: plain HTML, CSS and JavaScript served by FastAPI.
-- Database: `backend/data/vul_management.db`; local runtime data, intentionally not tracked by Git.
-- Main frontend folders: `frontend/src/pages/`, `frontend/src/services/`, `frontend/src/layouts/`, `frontend/src/styles/`.
-- The sidebar and shared table preferences are reusable services, not page-specific copies.
-
-## Read order for any AI
+## Read order
 1. `PROJECT.md`
 2. `STATE.md`
 3. `SESSION.md`
@@ -34,33 +20,33 @@ The shared sidebar currently displays **v3.0.0**. Treat the running source and a
 9. `TODO.md`
 10. `RULES.md`
 11. `COMPATIBILITY.md`
+12. `V3.2.0_RELEASE.md`
 
-Then inspect the actual source files relevant to the requested change. If documentation and code disagree, report the discrepancy and verify behavior instead of assuming either one is correct.
+Inspect actual source files relevant to the task. If documentation and code disagree, report the mismatch and verify behavior.
 
-## Current implemented areas to verify in source
-- Asset pages: Equipment, Operating Systems, Applications, Libraries.
-- Dynamic asset field configuration.
-- Threat Intelligence navigation with Vulnerability Scan, Scan Result and Vulnerability Register routes in current source.
-- Telegram feed administration and Telegram account settings/verification UI.
-- Scan results with CVE review actions and NVD enrichment UI.
-- Vulnerability register/management pages and vulnerability feed configuration.
-- Shared dark collapsible sidebar and light content workspace.
-- Table Setting dialog, column visibility/width preferences and pagination on integrated tables.
+## Current feature areas
+- Asset Management: Equipment, Operating Systems, Applications, Libraries.
+- Administrator-managed asset fields.
+- Threat Intelligence and scan results.
+- Telegram feed administration and CVE discovery/review.
+- Nessus manual scan, findings review, and host mapping.
+- Administration and Logs & Events.
+- Jira integration must be verified end-to-end before being presented as production-ready.
 
-## Important product workflow
-Public Telegram channels are intended to be scanned for CVEs. Scan results should retain the original message context, be reviewed by an administrator, and be enriched from NVD before approved items are promoted into the vulnerability intelligence/register workflow. Verify the backend implementation before changing this flow. Jira issue creation is a planned product capability, not to be assumed implemented.
+## User-reported local smoke test
+The user reports the app starts and six page groups open successfully. This is not proof that all business workflows or integrations have been tested. See `V3.2.0_RELEASE.md`.
 
 ## Database safety
-- SQLite is the current database.
-- Never delete, reset, recreate or replace `backend/data/` to solve a code or migration issue without explicit user approval and a verified backup.
-- Use SQLAlchemy for application data access and Alembic for schema changes.
-- Never commit runtime database files, credentials, tokens or private keys.
+- Default SQLite path: `backend/data/vul_management.db`.
+- Never delete, reset, recreate, or overwrite `backend/data/` to solve a code issue without explicit approval and a verified backup.
+- Never commit databases, credentials, tokens, Telegram session files, or private keys.
+- Use Alembic for schema changes and verify the database path before migrations.
 
 ## Git workflow
-- Work on `develop` or a feature branch.
-- Inspect `git status` before destructive Git operations.
-- Do not use `git clean`, force-push, reset local history or merge into `main` unless the user explicitly requests that exact action.
-- After local verification, update these project notes and clearly report what was and was not tested.
+- Work on `develop` or a focused feature branch.
+- Inspect `git status` before risky operations.
+- Do not force-push, reset local history, use `git clean`, or merge into `main` without explicit approval for that action.
+- Keep releases retrievable using immutable version tags/releases after verification and release approval.
 
 ## Current priority
-Keep the existing working application stable, make UI changes consistent with `UI_STYLE_GUIDE.md`, verify Telegram-to-CVE review flow against actual code, and keep the project documentation aligned with the implementation.
+Finish end-to-end workflow testing, then create a clean customer deployment package and test it on a separate machine. Keep claims about verification precise.
