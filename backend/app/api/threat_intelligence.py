@@ -33,7 +33,6 @@ from app.schemas.threat_intelligence import (
 )
 from app.services.threat_intelligence import (
     collect_telegram_scan,
-    enrich_scan_result_from_nvd,
     enrich_scan_result_from_sources,
     serialize_feed,
     serialize_intelligence,
