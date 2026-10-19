@@ -47,14 +47,16 @@
                 </div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["nessus-manual-scan.html","nessus-scan-result.html","vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="intelligence-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">◉</span><span class="sidebar-label">Threat Intelligence</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="intelligence-menu" class="sidebar-submenu ${["vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
+                    <div id="intelligence-menu" class="sidebar-submenu ${["nessus-manual-scan.html","nessus-scan-result.html","vulnerability-scan.html","scan-result.html","vulnerabilities.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="nessus-manual-scan.html" class="sidebar-subitem ${currentPage === "nessus-manual-scan.html" ? "active" : ""}">Nessus Manual Scan</a>
+                        <a href="nessus-scan-result.html" class="sidebar-subitem ${currentPage === "nessus-scan-result.html" ? "active" : ""}">Nessus Scan Result</a>
                         <a href="vulnerability-scan.html" class="sidebar-subitem ${currentPage === "vulnerability-scan.html" ? "active" : ""}">Vulnerability Scan</a>
                         <a href="scan-result.html" class="sidebar-subitem ${currentPage === "scan-result.html" ? "active" : ""}">Scan Result</a>
-                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerability Register</a>
+                        <a href="vulnerabilities.html" class="sidebar-subitem ${currentPage === "vulnerabilities.html" ? "active" : ""}">Vulnerabilities</a>
                     </div>
                 </div>
 
@@ -72,20 +74,21 @@
                 <div class="sidebar-divider"></div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">⚙</span><span class="sidebar-label">Administration</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="administration-menu" class="sidebar-submenu ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
+                    <div id="administration-menu" class="sidebar-submenu ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
                         <a href="vulnerability-feeds.html" class="sidebar-subitem ${currentPage === "vulnerability-feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
                         <a href="telegram-feeds.html" class="sidebar-subitem ${currentPage === "telegram-feeds.html" ? "active" : ""}">Telegram Feeds</a>
                         <a href="telegram-settings.html" class="sidebar-subitem ${currentPage === "telegram-settings.html" ? "active" : ""}">Telegram Settings</a>
+                        <a href="nessus-host-mapping.html" class="sidebar-subitem ${currentPage === "nessus-host-mapping.html" ? "active" : ""}">Nessus Host Mapping</a>
                         <a href="logs-events.html" class="sidebar-subitem ${currentPage === "logs-events.html" ? "active" : ""}">Logs &amp; Events</a>
                     </div>
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.0.0</span></div>
+            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.1.0</span></div>
         `;
 
         document.body.prepend(sidebar);

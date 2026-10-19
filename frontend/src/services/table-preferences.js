@@ -5,7 +5,9 @@
 
     const table = tableKey === "scan-results"
         ? document.querySelector("#results-table-body")?.closest("table")
-        : document.querySelector("#vulnerabilities-table");
+        : tableKey === "nessus-results"
+            ? document.querySelector("#nessus-results-table")
+            : document.querySelector("#vulnerabilities-table");
     if (!table) return;
 
     const $ = (id) => document.getElementById(id);
