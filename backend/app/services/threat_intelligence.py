@@ -571,8 +571,8 @@ def _wait_for_github_request_slot(authenticated: bool) -> None:
     """Respect GitHub's public API quota when the feed has no token."""
     global _GHSA_NEXT_REQUEST_AT
     # Leave margin below GitHub's 60 unauthenticated requests/hour primary limit.
-    # Authenticated calls stay comfortably below 5,000 requests/hour.
-    minimum_interval = 1.25 if authenticated else 62.0
+    # A serial 1-second authenticated pace is about 3,600/hour, below the 5,000 limit.
+    minimum_interval = 1.0 if authenticated else 62.0
     with _GHSA_REQUEST_LOCK:
         now = monotonic_time.monotonic()
         if _GHSA_NEXT_REQUEST_AT > now:
