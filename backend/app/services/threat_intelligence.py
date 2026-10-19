@@ -855,7 +855,7 @@ def _append_source_references(item: TelegramScanResult, source: dict) -> None:
 
 
 def _merge_supplemental_record(item: TelegramScanResult, source: dict) -> None:
-    if not item.severity and source.get("severity"):
+    if not _has_meaningful_value(item.severity) and source.get("severity"):
         item.severity = source["severity"]
     if item.cvss_score is None and source.get("cvss_score") is not None:
         try:
@@ -895,6 +895,11 @@ def enrich_scan_result_from_sources(db, item: TelegramScanResult) -> None:
         item.nvd_error = f"NVD request failed: {error.__class__.__name__}: {str(error)[:250]}"
         errors.append(item.nvd_error)
         db.commit()
+
+    # Normalize legacy placeholder strings before merging supplemental source values.
+    for field in ("severity", "affected_product", "affected_versions", "nvd_description"):
+        if not _has_meaningful_value(getattr(item, field)):
+            setattr(item, field, None)
 
     if _missing_core_fields(item):
         feeds = db.scalars(
