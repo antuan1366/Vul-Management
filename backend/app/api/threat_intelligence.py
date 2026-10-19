@@ -34,6 +34,7 @@ from app.schemas.threat_intelligence import (
 from app.services.threat_intelligence import (
     collect_telegram_scan,
     enrich_scan_result_from_nvd,
+    enrich_scan_result_from_sources,
     serialize_feed,
     serialize_intelligence,
     serialize_scan_result,
@@ -295,7 +296,7 @@ def enrich_scan_result(result_id: int, db: Session = Depends(get_db)):
     if item.review_status == "rejected":
         raise HTTPException(status_code=409, detail="Rejected results cannot be enriched.")
     try:
-        enrich_scan_result_from_nvd(db, item)
+        enrich_scan_result_from_sources(db, item)
     except LookupError as error:
         raise HTTPException(status_code=404, detail=str(error))
     except (httpx.HTTPError, ValueError) as error:
