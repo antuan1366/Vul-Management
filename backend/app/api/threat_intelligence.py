@@ -185,9 +185,16 @@ def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
     github_feed = db.scalar(
         select(Feed).where(Feed.feed_type == "github_advisory", Feed.enabled.is_(True)).order_by(Feed.id)
     )
-    # NVD is paced at 8 seconds. Unauthenticated GitHub requests are deliberately
-    # spaced 65 seconds apart to stay below the documented public API quota.
-    estimated_seconds_per_cve = 65 if github_feed and not github_feed.api_key else 8
+    nvd_feed = db.scalar(
+        select(Feed).where(Feed.feed_type == "nvd_cve", Feed.enabled.is_(True)).order_by(Feed.id)
+    )
+    # Conservative estimate: anonymous GitHub can add about 62 seconds per CVE
+    # only when the NVD/CVE Program records leave core fields missing.
+    estimated_seconds_per_cve = (
+        62 if github_feed and not github_feed.api_key
+        else 2.5 if nvd_feed and nvd_feed.api_key
+        else 7
+    )
     return {
         **serialize_scan_run(item),
         "nvd_total": result_total,
