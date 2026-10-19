@@ -24,10 +24,10 @@
         const text = String(value || "").trim();
         return text ? text.replace(/\s+/g, " ").slice(0, 90) : fallback;
     }
-    function sortNewestFirst(items) {
+    function sortCveAscending(items) {
         return items.sort((a,b) =>
-            new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0) ||
-            Number(b.id || 0) - Number(a.id || 0)
+            String(a.cve_id || "").localeCompare(String(b.cve_id || ""), undefined, {numeric:true, sensitivity:"base"}) ||
+            Number(a.id || 0) - Number(b.id || 0)
         );
     }
     function duration(seconds) {
@@ -71,7 +71,7 @@
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="10">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="9">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
@@ -89,7 +89,6 @@
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
                 '<td class="result-cell" title="'+esc(x.affected_product || "Data not found in NVD")+'">'+esc(shortValue(x.affected_product,"Data not found in NVD"))+'</td>'+
                 '<td class="result-cell" title="'+esc(x.affected_versions || "Data not found in NVD")+'">'+esc(shortValue(x.affected_versions,"Data not found in NVD"))+'</td>'+
-                '<td class="result-cell" title="'+esc(x.remediation || "NVD does not provide a dedicated remediation field for every CVE.")+'">'+esc(shortValue(x.remediation,"Not available"))+'</td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
         $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
@@ -97,7 +96,7 @@
     async function loadResults() {
         const query = new URLSearchParams({status:"all",q:$("result-search").value.trim(),limit:"500"});
         const data = await req("/api/threat-intelligence/scan-results?"+query.toString());
-        matchingRows = sortNewestFirst(data.items || []);
+        matchingRows = sortCveAscending(data.items || []);
         for (const status of ["new","under_review","approved","rejected"]) {
             const count = matchingRows.filter(item => item.review_status === status).length;
             const badge = document.querySelector('[data-status-count="'+status+'"]');
@@ -129,7 +128,6 @@
         $("result-cvss").value = x.cvss_score ?? "";
         $("result-product").value = x.affected_product || "";
         $("result-versions").value = x.affected_versions || "";
-        $("result-remediation").value = x.remediation || "";
         $("result-description").value = x.nvd_description || "";
         $("result-references").value = x.references_text || "";
         $("result-nvd-message").textContent = x.nvd_status === "not_found"
@@ -149,7 +147,6 @@
             cvss_score:$("result-cvss").value===""?null:Number($("result-cvss").value),
             affected_product:$("result-product").value.trim()||null,
             affected_versions:$("result-versions").value.trim()||null,
-            remediation:$("result-remediation").value.trim()||null,
             description:$("result-description").value.trim()||null,
             references_text:$("result-references").value.trim()||null
         };
