@@ -348,17 +348,17 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
         started = monotonic_time.perf_counter()
         record_event(
             "INFO", "nvd", "NVD enrichment", "lookup_started",
-            f"Started NVD lookup for {cve_id}.",
+            f"Started multi-source CVE lookup for {cve_id}.",
             cve_id=cve_id, scan_run_id=run_id,
             details={"matching_scan_results": len(items)},
         )
         try:
-            enrich_scan_result_from_nvd(db, representative)
+            enrich_scan_result_from_sources(db, representative)
             elapsed_ms = int((monotonic_time.perf_counter() - started) * 1000)
             record_event(
                 "INFO" if representative.nvd_status in {"success", "partial"} else "WARNING",
                 "nvd", "NVD enrichment", "lookup_finished",
-                f"NVD lookup finished with status {representative.nvd_status}.",
+                f"Multi-source CVE lookup finished with status {representative.nvd_status}.",
                 cve_id=cve_id, scan_run_id=run_id, duration_ms=elapsed_ms,
                 details={"nvd_status": representative.nvd_status,
                          "missing_fields": representative.nvd_missing_fields},
@@ -432,7 +432,7 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     if feed and feed.api_key:
         headers["apiKey"] = feed.api_key
     timeout = feed.timeout_seconds if feed else 20
-    request_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    request_url = feed.url if feed else "https://services.nvd.nist.gov/rest/json/cves/2.0"
     with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         response = None
         max_attempts = 8
@@ -537,6 +537,401 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     item.nvd_status = "partial" if missing else "success"
     item.nvd_error = None
     item.updated_at = datetime.utcnow()
+    db.commit()
+
+
+_GHSA_REQUEST_LOCK = threading.Lock()
+_GHSA_NEXT_REQUEST_AT = 0.0
+
+
+def _wait_for_github_request_slot(authenticated: bool) -> None:
+    """Respect GitHub's public API quota when the feed has no token."""
+    global _GHSA_NEXT_REQUEST_AT
+    minimum_interval = 1.0 if authenticated else 65.0
+    with _GHSA_REQUEST_LOCK:
+        now = monotonic_time.monotonic()
+        if _GHSA_NEXT_REQUEST_AT > now:
+            import time as time_module
+            time_module.sleep(_GHSA_NEXT_REQUEST_AT - now)
+        _GHSA_NEXT_REQUEST_AT = monotonic_time.monotonic() + minimum_interval
+
+
+def _source_headers(feed: Feed, github: bool = False) -> dict[str, str]:
+    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.2.0"}
+    if github:
+        headers["Accept"] = "application/vnd.github+json"
+        headers["X-GitHub-Api-Version"] = "2022-11-28"
+        if feed.api_key:
+            headers["Authorization"] = f"Bearer {feed.api_key}"
+    elif feed.auth_type == "api_key" and feed.api_key:
+        headers["apiKey"] = feed.api_key
+    elif feed.auth_type == "bearer" and feed.api_key:
+        headers["Authorization"] = f"Bearer {feed.api_key}"
+    return headers
+
+
+def _source_get_json(
+    feed: Feed,
+    url: str,
+    cve_id: str,
+    params: dict | None = None,
+    github: bool = False,
+):
+    """GET JSON with conservative retries for transient errors and source-specific pacing."""
+    with httpx.Client(
+        timeout=max(10, feed.timeout_seconds),
+        follow_redirects=True,
+        headers=_source_headers(feed, github=github),
+    ) as client:
+        for attempt in range(4):
+            if github:
+                _wait_for_github_request_slot(authenticated=bool(feed.api_key))
+            try:
+                response = client.get(url, params=params)
+            except httpx.HTTPError:
+                if attempt >= 3:
+                    raise
+                import time as time_module
+                time_module.sleep(min(120, 10 * (2 ** attempt)))
+                continue
+
+            if response.status_code == 404:
+                return None
+            if response.status_code == 403 and response.headers.get("X-RateLimit-Remaining") == "0":
+                raise httpx.HTTPStatusError(
+                    f"{feed.name} rate limit exhausted.",
+                    request=response.request,
+                    response=response,
+                )
+            if response.status_code in {429, 500, 502, 503, 504}:
+                if attempt >= 3:
+                    response.raise_for_status()
+                retry_after = response.headers.get("Retry-After")
+                try:
+                    wait_seconds = max(1, min(900, int(retry_after))) if retry_after else min(300, 15 * (2 ** attempt))
+                except ValueError:
+                    wait_seconds = min(300, 15 * (2 ** attempt))
+                response.close()
+                import time as time_module
+                time_module.sleep(wait_seconds)
+                continue
+            response.raise_for_status()
+            return response.json()
+    return None
+
+
+def _cve_program_record_url(feed: Feed, cve_id: str) -> str:
+    parts = cve_id.upper().split("-")
+    if len(parts) != 3 or not parts[2].isdigit() or len(parts[2]) < 4:
+        raise ValueError(f"Invalid CVE identifier: {cve_id}")
+    year, sequence = parts[1], parts[2]
+    bucket = f"{sequence[:-3]}xxx"
+    return f"{feed.url.rstrip('/')}/{year}/{bucket}/{cve_id.upper()}.json"
+
+
+def _severity_from_score(score):
+    if score is None:
+        return None
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        return None
+    return "CRITICAL" if score >= 9 else "HIGH" if score >= 7 else "MEDIUM" if score >= 4 else "LOW"
+
+
+def _extract_cve_program_record(payload: dict, record_url: str) -> dict | None:
+    metadata = payload.get("cveMetadata") or {}
+    if str(metadata.get("state") or "").upper() in {"REJECTED", "REJECT"}:
+        return None
+
+    containers = payload.get("containers") or {}
+    cna = containers.get("cna") or {}
+    adp = containers.get("adp") or []
+    containers_to_check = [cna] + [item for item in adp if isinstance(item, dict)]
+
+    descriptions = cna.get("descriptions") or []
+    description = next(
+        (entry.get("value") for entry in descriptions
+         if entry.get("lang") == "en" and entry.get("value")),
+        None,
+    )
+
+    score = None
+    severity = None
+    for container in containers_to_check:
+        for metric in container.get("metrics") or []:
+            if not isinstance(metric, dict):
+                continue
+            for key in ("cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0", "cvssV2"):
+                cvss = metric.get(key)
+                if not isinstance(cvss, dict):
+                    continue
+                score = cvss.get("baseScore")
+                severity = cvss.get("baseSeverity") or cvss.get("severity")
+                if not severity:
+                    severity = _severity_from_score(score)
+                break
+            if score is not None or severity:
+                break
+        if score is not None or severity:
+            break
+
+    products = set()
+    versions = set()
+    for container in containers_to_check:
+        for affected in container.get("affected") or []:
+            if not isinstance(affected, dict):
+                continue
+            product = str(affected.get("product") or "").strip()
+            vendor = str(affected.get("vendor") or "").strip()
+            bad_values = {"", "n/a", "unknown", "unspecified", "*"}
+            product_valid = product.lower() not in bad_values
+            vendor_valid = vendor.lower() not in bad_values
+            if product_valid:
+                label = f"{vendor} {product}".strip() if vendor_valid and vendor.lower() not in product.lower() else product
+                products.add(label)
+
+            for version in affected.get("versions") or []:
+                if not isinstance(version, dict):
+                    continue
+                if str(version.get("status") or "").lower() in {"unaffected", "unaffected by default"}:
+                    continue
+                current = str(version.get("version") or "").strip()
+                lower = str(version.get("lessThanOrEqual") or version.get("lessThan") or "").strip()
+                current_valid = current.lower() not in bad_values
+                lower_valid = lower.lower() not in bad_values
+                if current_valid and lower_valid:
+                    operator = "<=" if version.get("lessThanOrEqual") else "<"
+                    versions.add(f">= {current}, {operator} {lower}")
+                elif current_valid:
+                    versions.add(current)
+                elif lower_valid:
+                    operator = "<=" if version.get("lessThanOrEqual") else "<"
+                    versions.add(f"< {lower}" if operator == "<" else f"<= {lower}")
+
+    references = []
+    for container in containers_to_check:
+        for reference in container.get("references") or []:
+            url = reference.get("url") if isinstance(reference, dict) else None
+            if url:
+                references.append(url)
+
+    return {
+        "source": "CVE Program",
+        "source_url": record_url,
+        "severity": severity.upper() if severity else None,
+        "cvss_score": score,
+        "affected_product": "\n".join(sorted(products)) or None,
+        "affected_versions": "\n".join(sorted(versions)) or None,
+        "description": description,
+        "references": references,
+    }
+
+
+def _extract_github_advisory_records(payload, cve_id: str) -> dict | None:
+    advisories = payload if isinstance(payload, list) else ([payload] if isinstance(payload, dict) else [])
+    selected = None
+    for advisory in advisories:
+        if not isinstance(advisory, dict) or advisory.get("withdrawn_at"):
+            continue
+        identifiers = advisory.get("identifiers") or []
+        has_cve = str(advisory.get("cve_id") or "").upper() == cve_id.upper()
+        has_cve = has_cve or any(
+            isinstance(identifier, dict)
+            and str(identifier.get("type") or "").upper() == "CVE"
+            and str(identifier.get("value") or "").upper() == cve_id.upper()
+            for identifier in identifiers
+        )
+        if has_cve:
+            selected = advisory
+            break
+    if selected is None:
+        return None
+
+    cvss_severities = selected.get("cvss_severities") or {}
+    metric = cvss_severities.get("cvss_v4") or cvss_severities.get("cvss_v3") or {}
+    legacy_cvss = selected.get("cvss") or {}
+    score = metric.get("score")
+    if score is None:
+        score = legacy_cvss.get("score")
+    severity = selected.get("severity") or metric.get("severity")
+    if severity:
+        severity = str(severity).upper()
+        if severity == "MODERATE":
+            severity = "MEDIUM"
+    if not severity:
+        severity = _severity_from_score(score)
+
+    products = set()
+    versions = set()
+    references = []
+    for vulnerability in selected.get("vulnerabilities") or []:
+        if not isinstance(vulnerability, dict):
+            continue
+        package = vulnerability.get("package") or {}
+        package_name = str(package.get("name") or "").strip()
+        ecosystem = str(package.get("ecosystem") or "").strip()
+        if package_name:
+            products.add(f"{ecosystem}: {package_name}" if ecosystem else package_name)
+        range_text = str(vulnerability.get("vulnerable_version_range") or "").strip()
+        first_patched = vulnerability.get("first_patched_version") or {}
+        first_patched_value = str(first_patched.get("identifier") or "").strip() if isinstance(first_patched, dict) else ""
+        if range_text and first_patched_value:
+            versions.add(f"{range_text}; first patched: {first_patched_value}")
+        elif range_text:
+            versions.add(range_text)
+        elif first_patched_value:
+            versions.add(f"first patched: {first_patched_value}")
+
+    html_url = selected.get("html_url") or selected.get("url") or ""
+    if html_url:
+        references.append(html_url)
+    for reference in selected.get("references") or []:
+        if isinstance(reference, str):
+            references.append(reference)
+        elif isinstance(reference, dict) and reference.get("url"):
+            references.append(reference["url"])
+
+    return {
+        "source": "GitHub Security Advisories",
+        "source_url": html_url,
+        "severity": severity,
+        "cvss_score": score,
+        "affected_product": "\n".join(sorted(products)) or None,
+        "affected_versions": "\n".join(sorted(versions)) or None,
+        "description": selected.get("description") or selected.get("summary"),
+        "references": references,
+    }
+
+
+def _missing_core_fields(item: TelegramScanResult) -> list[str]:
+    missing = []
+    if not item.severity:
+        missing.append("Severity")
+    if not item.affected_product:
+        missing.append("Affected Product")
+    if not item.affected_versions:
+        missing.append("Affected Version")
+    return missing
+
+
+def _append_source_references(item: TelegramScanResult, source: dict) -> None:
+    lines = [line.strip() for line in (item.references_text or "").splitlines() if line.strip()]
+    source_url = source.get("source_url")
+    if source_url:
+        lines.append(f"[Source: {source['source']}] {source_url}")
+    lines.extend(
+        f"[{source['source']}] {url}"
+        for url in source.get("references") or []
+        if url
+    )
+    item.references_text = "\n".join(dict.fromkeys(lines)) or None
+
+
+def _merge_supplemental_record(item: TelegramScanResult, source: dict) -> None:
+    if not item.severity and source.get("severity"):
+        item.severity = source["severity"]
+    if item.cvss_score is None and source.get("cvss_score") is not None:
+        try:
+            item.cvss_score = float(source["cvss_score"])
+        except (TypeError, ValueError):
+            pass
+    if not item.severity and item.cvss_score is not None:
+        item.severity = _severity_from_score(item.cvss_score)
+    if not item.affected_product and source.get("affected_product"):
+        item.affected_product = source["affected_product"]
+    if not item.affected_versions and source.get("affected_versions"):
+        item.affected_versions = source["affected_versions"]
+    if not item.nvd_description and source.get("description"):
+        item.nvd_description = source["description"]
+    _append_source_references(item, source)
+
+
+def enrich_scan_result_from_sources(db, item: TelegramScanResult) -> None:
+    """Use NVD first, then enabled supplemental feeds to fill missing CVE fields."""
+    errors = []
+    sources_used = []
+
+    try:
+        enrich_scan_result_from_nvd(db, item)
+        if item.nvd_status in {"success", "partial"}:
+            sources_used.append("NVD")
+    except LookupError as error:
+        errors.append(f"NVD: {str(error)[:200]}")
+    except (httpx.HTTPError, ValueError) as error:
+        item.nvd_status = "error"
+        item.nvd_error = f"NVD request failed: {error.__class__.__name__}: {str(error)[:250]}"
+        errors.append(item.nvd_error)
+        db.commit()
+
+    if _missing_core_fields(item):
+        feeds = db.scalars(
+            select(Feed)
+            .where(
+                Feed.enabled.is_(True),
+                Feed.feed_type.in_(["cve_program", "github_advisory"]),
+            )
+            .order_by(Feed.id.asc())
+        ).all()
+        for feed in feeds:
+            if not _missing_core_fields(item):
+                break
+            try:
+                if feed.feed_type == "cve_program":
+                    record_url = _cve_program_record_url(feed, item.cve_id)
+                    payload = _source_get_json(feed, record_url, item.cve_id)
+                    source_data = _extract_cve_program_record(payload, record_url) if payload else None
+                elif feed.feed_type == "github_advisory":
+                    payload = _source_get_json(
+                        feed,
+                        feed.url,
+                        item.cve_id,
+                        params={"cve_id": item.cve_id, "per_page": 100},
+                        github=True,
+                    )
+                    source_data = _extract_github_advisory_records(payload, item.cve_id) if payload else None
+                else:
+                    continue
+
+                if source_data:
+                    _merge_supplemental_record(item, source_data)
+                    sources_used.append(source_data["source"])
+                    db.commit()
+                    record_event(
+                        "INFO", "enrichment", "CVE source", "supplemental_source_found",
+                        f"{source_data['source']} returned data for {item.cve_id}.",
+                        cve_id=item.cve_id,
+                        details={"source": source_data["source"], "missing_fields": _missing_core_fields(item)},
+                    )
+                else:
+                    record_event(
+                        "INFO", "enrichment", "CVE source", "supplemental_source_empty",
+                        f"{feed.name} returned no matching record for {item.cve_id}.",
+                        cve_id=item.cve_id,
+                        details={"feed_id": feed.id, "feed_type": feed.feed_type},
+                    )
+            except (httpx.HTTPError, ValueError, TypeError, KeyError) as error:
+                detail = f"{feed.name}: {error.__class__.__name__}: {str(error)[:200]}"
+                errors.append(detail)
+                record_event(
+                    "WARNING", "enrichment", "CVE source", "supplemental_source_failed",
+                    f"Supplemental lookup failed for {item.cve_id}: {detail}",
+                    cve_id=item.cve_id,
+                    details={"feed_id": feed.id, "feed_type": feed.feed_type, **exception_details(error)},
+                )
+
+    missing = _missing_core_fields(item)
+    item.nvd_missing_fields = json.dumps(missing, ensure_ascii=False)
+    item.updated_at = datetime.utcnow()
+    if sources_used:
+        item.nvd_status = "success" if not missing else "partial"
+        item.nvd_error = None
+    elif errors:
+        item.nvd_status = "error"
+        item.nvd_error = "All enabled CVE sources failed to return usable data. " + " | ".join(errors)[:700]
+    else:
+        item.nvd_status = "not_found"
+        item.nvd_error = None
     db.commit()
 
 
