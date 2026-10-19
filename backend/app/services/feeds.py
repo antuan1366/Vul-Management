@@ -59,6 +59,8 @@ def _validate_feed_data(feed_type: str, method: str, auth_type: str) -> None:
         raise ValueError(f"Unsupported feed type: {feed_type}.")
     if method not in METHODS:
         raise ValueError(f"Unsupported HTTP method: {method}.")
+    if feed_type in {"cve_program", "github_advisory"} and method != "GET":
+        raise ValueError(f"{feed_type} feeds must use GET.")
     if auth_type not in AUTH_TYPES:
         raise ValueError(f"Unsupported authentication type: {auth_type}.")
 
