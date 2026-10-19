@@ -9,7 +9,11 @@
 - [ ] Test Alembic current/history/upgrade using a backed-up test database.
 - [ ] Test Nessus upload and analysis using a synthetic XML fixture.
 - [ ] Verify finding state transitions, CVE validation, register deduplication, and host mapping.
-- [ ] Test Telegram scan, source context retention, NVD enrichment, review, and promotion.
+- [ ] Test Telegram scan, source context retention, NVD-first multi-source enrichment, review, and promotion.
+- [ ] Verify new CVE Program and GitHub Security Advisory feeds are automatically seeded, enabled, and individually testable.
+- [ ] Test `CVE-2018-10388` end-to-end and confirm the CVE Program description/source reference is retrieved when NVD fields are unavailable.
+- [ ] Verify feed disablement, NVD 429/503 retry behavior, GitHub anonymous pacing/token behavior, and retry of CVEs previously marked not found.
+- [ ] Verify Remediation/Mitigation are manually maintained in Vulnerabilities and are not required by Scan Result enrichment.
 - [ ] Test Jira issue creation using a non-production project and API token.
 - [ ] Run automated/backend checks available in the repository and record exact results.
 
