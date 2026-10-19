@@ -412,7 +412,7 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
     # NVD's public API can be queried without a key. Use a configured key if one exists,
     # but do not require an Administration feed just to perform a public CVE lookup.
     feed = db.scalar(select(Feed).where(Feed.feed_type == "nvd_cve", Feed.enabled.is_(True)).order_by(Feed.id))
-    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.0.0"}
+    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.2.0"}
     if feed and feed.api_key:
         headers["apiKey"] = feed.api_key
     timeout = feed.timeout_seconds if feed else 20
