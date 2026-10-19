@@ -15,6 +15,8 @@ function feedTypeLabel(type) {
     const labels = {
         nvd_cpe: "NVD CPE",
         nvd_cve: "NVD CVE",
+        cve_program: "CVE Program (Official)",
+        github_advisory: "GitHub Security Advisories",
         cisa_kev: "CISA KEV",
         osv: "OSV",
         custom: "Custom"
