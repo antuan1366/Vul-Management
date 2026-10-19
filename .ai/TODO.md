@@ -1,21 +1,31 @@
 # TODO
 
-## v3.1.0 Nessus workflow
-- [x] Add Nessus XML upload and explicit analysis endpoint.
-- [x] Store report and plugin findings separately from CVE register data.
-- [x] Add Nessus Scan Result review tabs: New, Under Review, Accept, Reject.
-- [x] Promote accepted valid CVEs to the existing shared Vulnerability Register.
-- [x] Block CVE-register promotion for findings without valid CVEs.
-- [x] Add Administration → Nessus Host Mapping.
-- [x] Add Alembic 0008 and declare application version 3.1.0/schema max 8.
-- [ ] Install dependencies and run startup/migration checks.
-- [ ] Test upload, analysis, review, register deduplication and host mappings with a synthetic report.
-- [ ] Verify Table Setting, responsive layout and all UI actions.
-- [ ] Validate parsing against a real Nessus XML report.
+## v3.2.0 — verification
+- [x] Synchronize `main` and `develop` before local testing.
+- [x] Update backend, sidebar, and service User-Agent version declarations to 3.2.0.
+- [x] User-confirmed local application startup.
+- [x] User-confirmed page smoke tests: Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, Logs & Events.
+- [ ] Capture `/api/info` version and schema output in release notes.
+- [ ] Test Alembic current/history/upgrade using a backed-up test database.
+- [ ] Test Nessus upload and analysis using a synthetic XML fixture.
+- [ ] Verify finding state transitions, CVE validation, register deduplication, and host mapping.
+- [ ] Test Telegram scan, source context retention, NVD enrichment, review, and promotion.
+- [ ] Test Jira issue creation using a non-production project and API token.
+- [ ] Run automated/backend checks available in the repository and record exact results.
 
-## Existing verification backlog
-- [ ] Verify Telegram scanning, NVD enrichment, accept/reject and register promotion.
+## Customer deployment
+- [ ] Define supported OS and Python version.
+- [ ] Create a clean package excluding local database, credentials, virtual environment, caches, and session files.
+- [ ] Provide a documented configuration template with placeholder values only.
+- [ ] Add clear install/start/stop/upgrade instructions.
+- [ ] Document database backup and restore.
+- [ ] Test install and startup on a separate clean machine.
+- [ ] Verify customer package can initialize a new database without relying on the developer's local DB.
+- [ ] Decide delivery format (source package vs. installer) after clean-machine testing.
+- [ ] Create and verify an immutable `v3.2.0` tag/release only after release approval.
+
+## Product backlog
+- [ ] Verify existing Telegram/NVD workflow end-to-end.
 - [ ] Verify CRUD for all asset types and custom fields.
-- [ ] Verify sidebar/navigation, Table Setting, pagination and responsive layout.
-- [ ] Confirm no local DB, secrets, or runtime data are included in Git.
-- [ ] User approves any merge to `main`.
+- [ ] Verify sidebar, table settings, pagination, and responsive layout.
+- [ ] Confirm runtime data and secrets are excluded from Git.
