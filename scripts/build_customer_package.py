@@ -8,7 +8,6 @@ The generated archive is written to dist/Vul-Management-customer.zip.
 """
 from __future__ import annotations
 
-import re
 import sys
 import zipfile
 from pathlib import Path
@@ -43,7 +42,11 @@ SENSITIVE_TEMPLATE_KEYS = {
 
 def is_runtime_data_dir(relative_path: Path) -> bool:
     normalized = relative_path.as_posix().strip("/")
-    return normalized in {"data", "backend/data"}
+    return (
+        normalized in {"data", "backend/data"}
+        or normalized.startswith("data/")
+        or normalized.startswith("backend/data/")
+    )
 
 
 def should_exclude(relative_path: Path) -> bool:
@@ -56,7 +59,20 @@ def should_exclude(relative_path: Path) -> bool:
     name = relative_path.name
     if name != ".env.example" and (name == ".env" or name.startswith(".env.")):
         return True
-    if name.endswith((".db", ".sqlite", ".sqlite3", ".log", ".session", ".session-journal", ".pyc", ".pyo", ".tmp", ".temp")):
+    if name.endswith(
+        (
+            ".db",
+            ".sqlite",
+            ".sqlite3",
+            ".log",
+            ".session",
+            ".session-journal",
+            ".pyc",
+            ".pyo",
+            ".tmp",
+            ".temp",
+        )
+    ):
         return True
     return False
 
@@ -115,6 +131,8 @@ def main() -> int:
         forbidden = []
         for name in names:
             relative = Path(name).relative_to("Vul-Management")
+            if relative.as_posix() == "backend/.env":
+                continue  # This is the clean generated file, not the developer's .env.
             if should_exclude(relative):
                 forbidden.append(name)
         if forbidden:
