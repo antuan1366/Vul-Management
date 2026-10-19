@@ -20,22 +20,31 @@ from app.models.threat_intelligence import TelegramFeed, TelegramScanResult, Tel
 
 CVE_PATTERN = re.compile(r"\bCVE-\d{4}-\d{4,}\b", re.IGNORECASE)
 
-# NVD's unauthenticated API limit is 5 requests per 30 seconds. Keep a
-# process-wide limiter so scan workers and manual enrichment share the same pace.
+# Keep a process-wide limiter so scan workers and manual lookups share a pace.
+# Anonymous NVD requests: 7 seconds (below the 5-request / 30-second limit).
+# API-key requests: 2.5 seconds (12 requests / 30 seconds, leaving wide headroom).
 _NVD_REQUEST_LOCK = threading.Lock()
 _NVD_NEXT_REQUEST_AT = 0.0
-_NVD_MIN_REQUEST_INTERVAL_SECONDS = 8.0
+_NVD_MIN_REQUEST_INTERVAL_SECONDS = 7.0
+_NVD_API_KEY_INTERVAL_SECONDS = 2.5
 
 
-def _wait_for_nvd_request_slot() -> None:
+def _wait_for_nvd_request_slot(minimum_interval_seconds: float | None = None) -> None:
     global _NVD_NEXT_REQUEST_AT
+    interval = max(
+        0.1,
+        float(
+            _NVD_MIN_REQUEST_INTERVAL_SECONDS
+            if minimum_interval_seconds is None
+            else minimum_interval_seconds
+        ),
+    )
     with _NVD_REQUEST_LOCK:
         now = monotonic_time.monotonic()
         if _NVD_NEXT_REQUEST_AT > now:
             import time as time_module
             time_module.sleep(_NVD_NEXT_REQUEST_AT - now)
-        _NVD_NEXT_REQUEST_AT = monotonic_time.monotonic() + _NVD_MIN_REQUEST_INTERVAL_SECONDS
-
+        _NVD_NEXT_REQUEST_AT = monotonic_time.monotonic() + interval
 
 def serialize_feed(item: TelegramFeed) -> dict:
     return {
@@ -445,7 +454,9 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
         max_attempts = 8
         for attempt in range(max_attempts):
             attempt_started = monotonic_time.perf_counter()
-            _wait_for_nvd_request_slot()
+            _wait_for_nvd_request_slot(
+                _NVD_API_KEY_INTERVAL_SECONDS if feed.api_key else _NVD_MIN_REQUEST_INTERVAL_SECONDS
+            )
             try:
                 response = client.get(request_url, params={"cveId": item.cve_id})
                 request_ms = int((monotonic_time.perf_counter() - attempt_started) * 1000)
@@ -559,7 +570,9 @@ _GHSA_NEXT_REQUEST_AT = 0.0
 def _wait_for_github_request_slot(authenticated: bool) -> None:
     """Respect GitHub's public API quota when the feed has no token."""
     global _GHSA_NEXT_REQUEST_AT
-    minimum_interval = 1.0 if authenticated else 65.0
+    # Leave margin below GitHub's 60 unauthenticated requests/hour primary limit.
+    # Authenticated calls stay comfortably below 5,000 requests/hour.
+    minimum_interval = 1.25 if authenticated else 62.0
     with _GHSA_REQUEST_LOCK:
         now = monotonic_time.monotonic()
         if _GHSA_NEXT_REQUEST_AT > now:
