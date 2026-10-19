@@ -231,8 +231,8 @@ async def collect_telegram_scan(run_id: int) -> None:
         except Exception:
             pass
         if result_count:
-            # NVD enrichment is a separate background phase; the scan response and UI remain usable.
-            # Run NVD enrichment in the same managed task so it cannot become an untracked fire-and-forget task.
+            # CVE enrichment is a separate background phase; the scan response and UI remain usable.
+            # Run multi-source enrichment in the same managed task so it cannot become an untracked fire-and-forget task.
             await enrich_scan_run_from_nvd(completed_run_id)
     except Exception as error:
         run.status = "failed"
@@ -297,8 +297,8 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             run.finished_at = datetime.utcnow()
             db.commit()
             record_event("WARNING" if run.status == "completed_with_errors" else "INFO",
-                         "nvd", "NVD enrichment", "scan_enrichment_finished",
-                         f"NVD enrichment phase finished with status {run.status}.",
+                         "enrichment", "CVE source enrichment", "scan_enrichment_finished",
+                         f"CVE source enrichment phase finished with status {run.status}.",
                          scan_run_id=run_id,
                          details={"failed_lookups": failures, "finished_at": str(run.finished_at)})
     except Exception as error:
@@ -307,11 +307,11 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             run = db.get(TelegramScanRun, run_id)
             if run:
                 run.status = "completed_with_errors"
-                detail = f"NVD enrichment worker: {error.__class__.__name__}: {str(error)[:250]}"
+                detail = f"CVE source enrichment worker: {error.__class__.__name__}: {str(error)[:250]}"
                 run.error_message = (run.error_message + "\n" if run.error_message else "") + detail
                 run.finished_at = datetime.utcnow()
                 db.commit()
-                record_event("ERROR", "nvd", "NVD enrichment", "worker_failed",
+                record_event("ERROR", "enrichment", "CVE source enrichment", "worker_failed",
                              detail, scan_run_id=run_id, details=exception_details(error))
         finally:
             db.close()
@@ -349,7 +349,7 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
         representative = items[0]
         started = monotonic_time.perf_counter()
         record_event(
-            "INFO", "nvd", "NVD enrichment", "lookup_started",
+            "INFO", "enrichment", "CVE source enrichment", "lookup_started",
             f"Started multi-source CVE lookup for {cve_id}.",
             cve_id=cve_id, scan_run_id=run_id,
             details={"matching_scan_results": len(items)},
@@ -359,7 +359,7 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
             elapsed_ms = int((monotonic_time.perf_counter() - started) * 1000)
             record_event(
                 "INFO" if representative.nvd_status in {"success", "partial"} else "WARNING",
-                "nvd", "NVD enrichment", "lookup_finished",
+                "enrichment", "CVE source enrichment", "lookup_finished",
                 f"Multi-source CVE lookup finished with status {representative.nvd_status}.",
                 cve_id=cve_id, scan_run_id=run_id, duration_ms=elapsed_ms,
                 details={"nvd_status": representative.nvd_status,
@@ -368,7 +368,7 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
         except LookupError as error:
             # The not-found result has already been saved on the representative.
             record_event(
-                "WARNING", "nvd", "NVD enrichment", "cve_not_found",
+                "WARNING", "enrichment", "CVE source enrichment", "cve_not_found",
                 str(error), cve_id=cve_id, scan_run_id=run_id,
                 duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
             )
@@ -377,15 +377,15 @@ def _enrich_cve_for_scan_run(run_id: int, cve_id: str) -> None:
             representative.nvd_error = f"NVD request failed: {error.__class__.__name__}: {str(error)[:500]}"
             db.commit()
             record_event(
-                "ERROR", "nvd", "NVD enrichment", "lookup_failed",
-                f"NVD lookup failed for {cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
+                "ERROR", "enrichment", "CVE source enrichment", "lookup_failed",
+                f"CVE source lookup failed for {cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
                 cve_id=cve_id, scan_run_id=run_id,
                 duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
                 details=exception_details(error),
             )
         except Exception as error:
             record_event(
-                "ERROR", "nvd", "NVD enrichment", "unexpected_lookup_error",
+                "ERROR", "enrichment", "CVE source enrichment", "unexpected_lookup_error",
                 f"Unexpected error while looking up {cve_id}: {error.__class__.__name__}: {str(error)[:500]}",
                 cve_id=cve_id, scan_run_id=run_id,
                 duration_ms=int((monotonic_time.perf_counter() - started) * 1000),
