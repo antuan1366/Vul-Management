@@ -2,7 +2,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings,SettingsConfigDict
 class Settings(BaseSettings):
     app_name:str="Vul-Management"
-    app_version:str="3.1.0"
+    app_version:str="3.2.0"
     debug:bool=True
     database_url:str="sqlite:///./data/vul_management.db"
     db_schema_min:int=1
