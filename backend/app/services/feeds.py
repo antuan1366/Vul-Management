@@ -24,6 +24,20 @@ DEFAULT_FEEDS = [
         "description": "NVD CVE 2.0 API.",
     },
     {
+        "name": "CVE Program Official List",
+        "feed_type": "cve_program",
+        "url": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves",
+        "method": "GET",
+        "description": "Official CVE Program records in CVE JSON format. Used as a supplemental source when NVD data is missing.",
+    },
+    {
+        "name": "GitHub Security Advisories",
+        "feed_type": "github_advisory",
+        "url": "https://api.github.com/advisories",
+        "method": "GET",
+        "description": "GitHub-reviewed global security advisories queried by CVE ID. A GitHub token may be configured to increase API rate limits.",
+    },
+    {
         "name": "CISA KEV Catalog",
         "feed_type": "cisa_kev",
         "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
@@ -203,6 +217,21 @@ def test_feed(db: Session, feed: Feed) -> dict:
                 response = client.get(
                     feed.url,
                     params={"cveId": "CVE-2021-44228"},
+                )
+            elif feed.feed_type == "cve_program":
+                test_cve = "CVE-2021-44228"
+                year, sequence = test_cve.split("-")[1:]
+                bucket = f"{sequence[:-3]}xxx"
+                record_url = f"{feed.url.rstrip('/')}/{year}/{bucket}/{test_cve}.json"
+                response = client.get(record_url)
+            elif feed.feed_type == "github_advisory":
+                headers = {"Accept": "application/vnd.github+json"}
+                if feed.api_key:
+                    headers["Authorization"] = f"Bearer {feed.api_key}"
+                response = client.get(
+                    feed.url,
+                    params={"cve_id": "CVE-2021-44228", "per_page": 1},
+                    headers=headers,
                 )
             else:
                 response = client.get(feed.url)
