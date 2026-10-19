@@ -14,7 +14,7 @@
     function nvdLabel(item) {
         if (item.nvd_status === "success") return "Complete";
         if (item.nvd_status === "partial") return "Partial";
-        if (item.nvd_status === "not_found") return "No NVD Detected";
+        if (item.nvd_status === "not_found") return "No data found in enabled sources";
         if (item.nvd_status === "error") return "Lookup error";
         if (item.nvd_status === "queued") return "Queued";
         if (item.nvd_status === "skipped") return "Skipped";
@@ -130,9 +130,9 @@
         $("result-versions").value = x.affected_versions || "";
         $("result-description").value = x.nvd_description || "";
         $("result-references").value = x.references_text || "";
-        $("result-nvd-message").textContent = x.nvd_status === "not_found"
-            ? "No NVD Detected"
-            : (x.nvd_missing_fields ? "NVD missing fields: "+x.nvd_missing_fields : "NVD status: "+nvdLabel(x));
+        $("result-nvd-message").textContent = x.nvd_missing_fields && JSON.parse(x.nvd_missing_fields || "[]").length
+            ? "Missing core fields across enabled sources: "+x.nvd_missing_fields+" · See References / Sources for provider details."
+            : "Lookup status: "+nvdLabel(x)+" · See References / Sources for provider details.";
         $("result-modal-error").textContent = x.nvd_error || "";
         $("accept-result-button").hidden = x.review_status === "approved";
         $("reject-result-button").hidden = ["approved","rejected"].includes(x.review_status);
