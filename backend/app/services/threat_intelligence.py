@@ -517,7 +517,10 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
             break
     cpe_entries = list(_walk_cpe_matches(cve.get("configurations") or []))
     products = sorted(set(entry[0] for entry in cpe_entries))
-    versions = sorted(set(entry[1] for entry in cpe_entries))
+    versions = sorted(set(
+        entry[1] for entry in cpe_entries
+        if entry[1] and entry[1].strip().lower() != "version range not specified"
+    ))
     references = []
     for reference in cve.get("references") or []:
         url = reference.get("url")
@@ -813,15 +816,27 @@ def _extract_github_advisory_records(payload, cve_id: str) -> dict | None:
     }
 
 
+def _has_meaningful_value(value) -> bool:
+    text = str(value or "").strip().lower()
+    if not text:
+        return False
+    placeholders = {
+        "n/a", "na", "unknown", "unspecified", "not available",
+        "data not found in nvd", "not available from enabled sources",
+        "version range not specified",
+    }
+    return text not in placeholders and "not found in nvd" not in text
+
+
 def _missing_core_fields(item: TelegramScanResult) -> list[str]:
     missing = []
-    if not item.severity:
+    if not _has_meaningful_value(item.severity):
         missing.append("Severity")
-    if not item.affected_product:
+    if not _has_meaningful_value(item.affected_product):
         missing.append("Affected Product")
-    if not item.affected_versions:
+    if not _has_meaningful_value(item.affected_versions):
         missing.append("Affected Version")
-    if not item.nvd_description:
+    if not _has_meaningful_value(item.nvd_description):
         missing.append("Description")
     return missing
 
@@ -849,11 +864,11 @@ def _merge_supplemental_record(item: TelegramScanResult, source: dict) -> None:
             pass
     if not item.severity and item.cvss_score is not None:
         item.severity = _severity_from_score(item.cvss_score)
-    if not item.affected_product and source.get("affected_product"):
+    if not _has_meaningful_value(item.affected_product) and source.get("affected_product"):
         item.affected_product = source["affected_product"]
-    if not item.affected_versions and source.get("affected_versions"):
+    if not _has_meaningful_value(item.affected_versions) and source.get("affected_versions"):
         item.affected_versions = source["affected_versions"]
-    if not item.nvd_description and source.get("description"):
+    if not _has_meaningful_value(item.nvd_description) and source.get("description"):
         item.nvd_description = source["description"]
     _append_source_references(item, source)
 
