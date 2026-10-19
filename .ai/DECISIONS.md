@@ -32,3 +32,10 @@ Use a fixed dark charcoal collapsible sidebar and a light workspace with white c
 
 ## 011 — Human review of threat intelligence
 Public Telegram messages and external feed records are untrusted inputs. Extract CVE data, retain source context, enrich where possible, and preserve the review/approval boundary. Jira integration is a desired capability, not an implemented feature unless verified.
+
+
+## 012 — NVD-first multi-source CVE enrichment
+Keep NVD as the primary source for severity, CVSS, CPE, affected products and version ranges. When key fields are missing, query the enabled official CVE Program JSON record, then GitHub Security Advisories as necessary. Only fill blank fields from supplemental data; label provider record URLs and references. Respect the enabled state of each Feed. Use conservative per-source pacing and retries because completeness is preferred over throughput.
+
+## 013 — Administrator-owned Remediation and Mitigation
+Do not treat Remediation or Mitigation as required fields for automated CVE-provider enrichment. The administrator defines and maintains those fields in Vulnerabilities after reviewing a finding.
