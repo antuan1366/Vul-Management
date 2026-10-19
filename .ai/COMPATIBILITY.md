@@ -1,25 +1,25 @@
 # Application / Database Compatibility
 
-## Release 3.1.0
-- Branch: `develop`
-- Application version: `3.1.0`
-- Migration: `0008`, revises `0007`
-- Declared supported schema range: `1–8`
-- Migration intent: additive; creates `nessus_imports`, `nessus_findings`, and `nessus_host_mappings`.
-- No existing tables are intentionally dropped or transformed during upgrade.
-- Downgrade 0008 drops these three tables and deletes Nessus import data. Back up the database first and do not downgrade after importing reports unless that data is disposable.
+## Release 3.2.0
+- Application version declarations: `3.2.0` (backend API and sidebar).
+- Declared Alembic schema range: `1–8`; latest known migration: `0008`.
+- Migration 0008 adds the Nessus import, finding, and host-mapping tables.
+- No migration was performed as part of this documentation update.
+- The user's local smoke test reports the app starts and page-level checks pass. Full migration/upgrade and Nessus XML workflow testing remain unconfirmed.
 
 ## Database
-- SQLite default: `backend/data/vul_management.db`
+- SQLite default path: `backend/data/vul_management.db`.
 - SQLAlchemy is the data-access layer; Alembic manages schema revisions.
-- Never commit, delete, or replace the runtime database.
+- Never commit, delete, reset, or replace the runtime database as a routine troubleshooting step.
+- Before any migration or customer upgrade, identify the actual DB path and make a verified backup.
+- Downgrading migration 0008 drops Nessus tables and deletes Nessus import data; do not downgrade unless that data is disposable and a backup exists.
 
-## Checks (not yet run)
-From `backend`, after installing requirements:
+## Verification commands
+Run from `backend` with the project's virtual environment active:
 ```powershell
 alembic current
 alembic history
 alembic upgrade head
 python -m uvicorn app.main:app --reload
 ```
-Verify the active environment and database path before migration. The source change is not runtime-verified; validate with a synthetic fixture and a real Nessus export before release sign-off.
+Verify the selected environment and database path before running migrations. A successful startup alone does not prove a database upgrade, real Nessus report parsing, or every workflow is correct.

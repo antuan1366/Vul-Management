@@ -1,24 +1,28 @@
 # SESSION
 
-## Current task
-Version 3.1.0 Nessus workflow on `develop`.
+## Current state
+- Current version: 3.2.0.
+- Main and develop were synchronized before local testing; this documentation change is prepared separately on `docs/v3.2.0-tested`.
+- The user reports successful local startup and successful page-level smoke checks for Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, and Logs & Events.
 
-## Implemented in source
-- Nessus Manual Scan upload page with separate Upload File and Analyse File actions.
-- API accepts `.nessus` / `.xml` up to 25 MB and parses Nessus ReportHost/ReportItem using defusedxml.
-- Nessus Scan Result page uses the same four review states as Scan Result: New, Under Review, Accept, Reject.
-- Accepting a finding requires a valid CVE and creates/links the CVE in the existing shared Vulnerability Register.
-- Added Nessus Host Mapping administration for reported hostname/FQDN/IP/MAC/UUID → actual hostname.
-- Added Alembic revision 0008, app version 3.1.0, and required upload/XML parsing dependencies.
+## Nessus workflow in source
+- Manual Scan page supports Nessus file upload and a separate analysis action.
+- The backend declares parsing dependencies including `defusedxml` and `python-multipart`.
+- Findings review and host mapping are present in the current source.
+- Do not treat page visibility as proof that file upload, XML parsing, finding acceptance, deduplication, or mapping has passed end-to-end testing.
 
-## Required verification
-1. Install backend requirements and run Alembic current/history/upgrade checks against a backed-up local DB.
-2. Start FastAPI and check /api/info reports 3.1.0 and schema 8.
-3. Test upload separately from analysis using a synthetic Nessus XML fixture.
-4. Verify all ReportItems appear under New, including non-CVE findings.
-5. Accept a CVE finding and confirm it appears once in the same Vulnerability Register as Telegram CVEs.
-6. Verify no-CVE acceptance is blocked, rejection works, and duplicate CVEs do not create duplicate register rows.
-7. Test each host mapping identifier type and Table Setting.
-8. Validate optional fields/namespaces against the user's real Nessus export.
+## Next verification
+1. Check `/api/info` reports version 3.2.0 and the expected schema version.
+2. Check Alembic current/history and migration behavior against a backed-up test database before any customer migration.
+3. Upload and analyse a synthetic Nessus XML fixture; verify expected host and finding counts.
+4. Test New, Under Review, Accept, and Reject actions.
+5. Confirm accepted CVE findings appear once in the shared vulnerability register and findings without CVEs cannot be promoted.
+6. Test hostname/FQDN/IP/MAC/UUID host mapping.
+7. Exercise Telegram scan, review, NVD enrichment, and promotion with controlled test data.
+8. Verify Jira integration with a test project before enabling it for a customer.
+9. Prepare and test a clean deployment package on a separate machine.
 
-Runtime tests have not been run from the GitHub connector environment. Do not merge to main without user approval.
+## Safety
+- Preserve the local runtime database.
+- Do not change `.ai/` on the user's working copy until the documentation PR is reviewed/merged and pulled.
+- Do not claim unperformed API, migration, integration, or clean-machine tests.
