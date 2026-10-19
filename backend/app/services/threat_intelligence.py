@@ -264,9 +264,9 @@ async def enrich_scan_run_from_nvd(run_id: int) -> None:
             by_cve.setdefault(item.cve_id, []).append(item)
 
         work_cves = []
-        # Retry not-found CVEs on later scans because sources may publish or correct
-        # records after an earlier lookup. Successful/partial results remain cached.
-        terminal_success = {"success", "partial"}
+        # Cache only complete results. Partial and not-found CVEs are retried on
+        # future scans so newly available provider data can fill missing fields.
+        terminal_success = {"success"}
         for cve_id, items in by_cve.items():
             existing = next((item for item in items if item.nvd_status in terminal_success), None)
             if existing is not None:
