@@ -183,13 +183,18 @@ def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
         if statuses and all(status in processed_statuses for status in statuses)
     )
     remaining = max(0, result_total - result_processed)
+    github_feed = db.scalar(
+        select(Feed).where(Feed.feed_type == "github_advisory", Feed.enabled.is_(True)).order_by(Feed.id)
+    )
+    # NVD is paced at 8 seconds. Unauthenticated GitHub requests are deliberately
+    # spaced 65 seconds apart to stay below the documented public API quota.
+    estimated_seconds_per_cve = 65 if github_feed and not github_feed.api_key else 8
     return {
         **serialize_scan_run(item),
         "nvd_total": result_total,
         "nvd_processed": result_processed,
         "nvd_remaining": remaining,
-        # Conservative estimate assumes at least six seconds per remaining public NVD request.
-        "nvd_estimated_seconds": remaining * 8 if item.status == "nvd_scanning" else 0,
+        "nvd_estimated_seconds": remaining * estimated_seconds_per_cve if item.status == "nvd_scanning" else 0,
     }
 
 
