@@ -141,6 +141,9 @@
             ? "Missing fields across enabled sources: "+missingFields.join(", ")+" · See References / Sources for provider details."
             : "Lookup status: "+nvdLabel(x)+" · See References / Sources for provider details.";
         $("result-modal-error").textContent = x.nvd_error || "";
+        $("refresh-result-sources").hidden = x.review_status === "rejected";
+        $("refresh-result-sources").disabled = false;
+        $("refresh-result-sources").textContent = "Refresh Sources";
         $("accept-result-button").hidden = x.review_status === "approved";
         $("reject-result-button").hidden = ["approved","rejected"].includes(x.review_status);
         $("result-modal").classList.add("is-open");
@@ -157,6 +160,25 @@
             description:$("result-description").value.trim()||null,
             references_text:$("result-references").value.trim()||null
         };
+    }
+    async function refreshSources() {
+        if (!active || active.review_status === "rejected") return;
+        const button = $("refresh-result-sources");
+        const id = active.id;
+        button.disabled = true;
+        button.textContent = "Checking Sources...";
+        $("result-modal-error").textContent = "";
+        try {
+            active = await req("/api/threat-intelligence/scan-results/"+id+"/enrich",{method:"POST"});
+            fillModal(active);
+            await loadResults();
+            showMessage("Source lookup finished for "+active.cve_id+". Review References / Sources and missing fields.");
+        } catch (error) {
+            $("result-modal-error").textContent = error.message || String(error);
+        } finally {
+            button.disabled = false;
+            button.textContent = "Refresh Sources";
+        }
     }
     async function saveDetails() {
         if (!active) return;
@@ -266,6 +288,7 @@
         $("close-result-modal").addEventListener("click",closeModal);
         $("result-modal").addEventListener("click",e=>{if(e.target===$("result-modal"))closeModal();});
         $("save-result-details").addEventListener("click",()=>saveDetails().catch(e=>$("result-modal-error").textContent=e.message));
+        $("refresh-result-sources").addEventListener("click",()=>refreshSources());
         $("accept-result-button").addEventListener("click",()=>{if(active)accept(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         $("reject-result-button").addEventListener("click",()=>{if(active)reject(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         loadResults().catch(e=>showMessage(e.message,true));
