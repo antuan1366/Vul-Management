@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Vul-Management"
-    app_version: str = "3.4.0"
+    app_version: str = "3.5.0"
     debug: bool = True
 
     # DATA_DIR is resolved from the process working directory when relative.
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     bootstrap_admin_username: str = Field(default="admin", validation_alias="VULM_BOOTSTRAP_ADMIN_USERNAME")
 
     db_schema_min: int = 1
-    db_schema_max: int = 10
+    db_schema_max: int = 11
 
     telegram_api_id: str | None = None
     telegram_api_hash: str | None = None
