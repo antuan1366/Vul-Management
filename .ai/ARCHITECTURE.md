@@ -92,6 +92,11 @@ Target domain workflow:
 
 Keep acquisition, parsing, enrichment, review and approval as distinct responsibilities. A raw external message is untrusted input. Do not promote an unreviewed candidate automatically. Verify actual models, endpoints and services before extending the workflow.
 
+### Asset-message matching for Scan Result
+- `backend/app/services/asset_message_matching.py` builds a request-scoped index from asset system fields and non-generic custom `AssetFieldValue` records. It matches normalized phrases/tokens against the original Telegram `message_text`.
+- Scan Result list and detail/update/enrich/review responses attach an `asset_match` payload. This is computed from the live inventory and does not require a schema migration. The frontend marks the row and gives the operator the asset names, type and matching terms.
+- Filter generic identifiers and use token boundaries to reduce noisy matches. The result is advisory only; it must not automatically approve, assign or declare a CVE applicable to an asset.
+
 ## Long-running work
 Scanning/enrichment can take time. Use the project's existing job/progress mechanism where available. UI should show status, progress, useful result/error information and should not block unrelated interactions. Do not create a new job framework without checking the existing implementation.
 
