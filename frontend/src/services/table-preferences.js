@@ -78,7 +78,7 @@
         return Array.from(table.querySelectorAll("thead tr:first-child th")).map((th, index) => {
             let label = (th.innerText || th.textContent || "").trim().replace(/\s+/g, " ");
             if (!label && th.querySelector("input[type=checkbox]")) label = "Selection";
-            return { index, label: label || ("Column " + (index + 1)), key: "col-" + index };
+            return { index, label: label || ("Column " + (index + 1)), key: th.dataset.columnKey || ("col-" + index) };
         });
     }
 
@@ -233,10 +233,60 @@
         });
     }
 
+    function migrateLegacyColumnSettings(saved) {
+        const layouts = {
+            "scan-results": {
+                0: "selection",
+                1: "row-number",
+                2: "scan-date",
+                3: "cve",
+                5: "score",
+                6: "affected",
+                7: "affected-version",
+                8: "actions"
+            },
+            "vulnerabilities": {
+                0: "selection",
+                1: "row-number",
+                2: "cve",
+                4: "cvss",
+                5: "affected-product",
+                6: "affected-version",
+                7: "mitigation",
+                8: "date",
+                9: "jira",
+                10: "actions"
+            }
+        };
+        const layout = layouts[tableKey];
+        if (!layout) return saved;
+
+        const columns = { ...(saved?.columns || {}) };
+        const widths = { ...(saved?.widths || {}) };
+        const allKeys = [...Object.keys(columns), ...Object.keys(widths)];
+        if (allKeys.some(key => !/^col-\\d+$/.test(key))) return saved;
+
+        const migrate = (source) => {
+            const target = {};
+            for (const [legacyIndex, stableKey] of Object.entries(layout)) {
+                const legacyKey = "col-" + legacyIndex;
+                if (Object.prototype.hasOwnProperty.call(source, legacyKey)) {
+                    target[stableKey] = source[legacyKey];
+                }
+            }
+            return target;
+        };
+        return { ...(saved || {}), columns: migrate(columns), widths: migrate(widths) };
+    }
+
     async function loadSettings() {
         try {
             const data = await apiRequest("/api/table-preferences/" + encodeURIComponent(tableKey));
-            settings = { ...structuredClone(defaults), ...(data.settings || {}), columns: { ...(data.settings?.columns || {}) }, widths: { ...(data.settings?.widths || {}) } };
+            const saved = migrateLegacyColumnSettings(data.settings || {});
+            settings = { ...structuredClone(defaults), ...saved, columns: { ...(saved.columns || {}) }, widths: { ...(saved.widths || {}) } };
+            if (saved !== (data.settings || {})) {
+                await saveSettings();
+            }
         } catch (error) {
             console.error("Could not load table settings:", error);
         }
