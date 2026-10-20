@@ -4,7 +4,7 @@
 - Name: Vul-Management
 - Repository: `antuan1366/Vul-Management`
 - Active development branch: `develop`
-- Current backend/sidebar version declaration in source: 3.5.0 (development)
+- Current backend/sidebar version declaration in source: 3.6.0 (development)
 
 ## Goal
 Build a modular web application for vulnerability management and threat intelligence, with an asset inventory, vulnerability discovery, human review, NVD enrichment, remediation workflow and reporting. The application should remain understandable and maintainable by another developer or AI using the documentation in `.ai/`.
