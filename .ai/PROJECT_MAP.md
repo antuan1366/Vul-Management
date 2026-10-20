@@ -7,11 +7,11 @@
 - App entry: `backend/app/main.py`
 - API routes: `backend/app/api/` (including auth.py and users.py for authentication/account administration)
 - Core/configuration: `backend/app/core/`
-- SQLAlchemy models: `backend/app/models/` (including user.py)
+- SQLAlchemy models: `backend/app/models/` (including user.py and Threat Intelligence/VulnerabilityCustomField models)
 - Pydantic schemas: `backend/app/schemas/` (including auth.py and user.py)
 - Business logic/integrations: `backend/app/services/`
 - Database setup: `backend/app/database.py`
-- Migrations: `backend/alembic/versions/`
+- Migrations: `backend/alembic/versions/` (latest on develop: 0011_vulnerability_custom_fields.py)
 
 Inspect the live repository tree before assuming exact module filenames.
 
@@ -22,6 +22,7 @@ Inspect the live repository tree before assuming exact module filenames.
 - Global styles: `frontend/src/styles/main.css`
 - Sidebar: `frontend/src/services/sidebar.js`
 - Table preferences: `frontend/src/services/table-preferences.js`
+- Vulnerability Register custom fields: `frontend/src/pages/vulnerabilities.html`, `frontend/src/services/threat-intelligence.js`, `backend/app/api/threat_intelligence.py`, and `backend/app/models/threat_intelligence.py`
 
 ## Known frontend pages
 - `login.html`, `setup.html`, `change-password.html`, `users.html`
