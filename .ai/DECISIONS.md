@@ -63,3 +63,10 @@ Do not treat Remediation or Mitigation as required fields for automated CVE-prov
 ## 015 — Unified affected product and version presentation
 - In the Vulnerability Register and Scan Result tables, display affected product and affected version in one column with the version on a secondary line.
 - Keep the underlying product/version fields distinct in storage and in record details so enrichment and existing API contracts remain compatible.
+
+
+## 016 — Advisory asset matching in Scan Result
+- Compare original Scan Result message text against identifying fields from existing asset inventory and useful custom asset-field values; do not maintain a separate manually duplicated keyword list.
+- A match should produce both a clearly visible row highlight/flag and details identifying which asset fields/terms matched.
+- Matching is heuristic and must not automatically accept findings, state that an asset is vulnerable, or replace version/applicability validation.
+- Compute matches from live inventory when returning Scan Results so asset edits are reflected without a separate matching database or schema migration.
