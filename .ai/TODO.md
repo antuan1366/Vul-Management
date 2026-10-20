@@ -30,6 +30,16 @@
 - [ ] Confirm HTTP-only and SameSite cookie attributes, TLS Secure behavior, and that session-signing key/database files remain outside Git.
 - [ ] Review permissions for non-user-management application actions before production deployment; current User role only prevents access to user administration.
 
+## v3.5.0 — Vulnerability Register custom fields and table layout
+- [ ] Verify migration 0011 upgrades a backed-up schema-10 database and preserves existing Vulnerability Register records.
+- [ ] Verify a fresh install stamps/creates schema 11 correctly.
+- [ ] Test Admin-only custom field create, rename, required/show-in-table toggles, and delete.
+- [ ] Test custom values on create/edit; test required-field validation and duplicate field-name rejection.
+- [ ] Verify custom values appear under their dynamic table columns, and that deleting a field removes only its own stored values.
+- [ ] Verify combined Affected Product / Version columns on Scan Result and Vulnerability Register.
+- [ ] Verify prior table settings migrate visibility/width preferences correctly after merging the columns.
+- [ ] Run backend tests and browser smoke tests; record actual outcomes before release.
+
 ## Customer deployment
 - [ ] Define supported OS and Python version.
 - [ ] Create a clean package excluding local database, credentials, virtual environment, caches, and session files.
