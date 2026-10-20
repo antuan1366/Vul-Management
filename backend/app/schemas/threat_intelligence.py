@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TelegramFeedCreate(BaseModel):
@@ -55,5 +55,40 @@ class TelegramVerificationSubmit(BaseModel):
     password: str | None = Field(default=None, max_length=256)
 
 
+class IntelligenceRegisterUpdate(IntelligenceUpdate):
+    custom_fields: dict[str, str | None] | None = None
+
+
 class IntelligenceCreate(IntelligenceUpdate):
+    custom_fields: dict[str, str | None] = Field(default_factory=dict)
     cve_id: str = Field(min_length=4, max_length=30, pattern=r"^CVE-\d{4}-\d{4,}$")
+
+
+class VulnerabilityCustomFieldCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    is_required: bool = False
+    show_in_table: bool = True
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Field name cannot be empty.")
+        return normalized
+
+
+class VulnerabilityCustomFieldUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    is_required: bool | None = None
+    show_in_table: bool | None = None
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Field name cannot be empty.")
+        return normalized
