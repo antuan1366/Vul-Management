@@ -10,6 +10,7 @@
 - SQLAlchemy models: `backend/app/models/` (including user.py and Threat Intelligence/VulnerabilityCustomField models)
 - Pydantic schemas: `backend/app/schemas/` (including auth.py and user.py)
 - Business logic/integrations: `backend/app/services/`
+- Scan Result inventory matching: `backend/app/services/asset_message_matching.py`
 - Database setup: `backend/app/database.py`
 - Migrations: `backend/alembic/versions/` (latest on develop: 0011_vulnerability_custom_fields.py)
 
