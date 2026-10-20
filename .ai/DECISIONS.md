@@ -53,3 +53,13 @@ Do not treat Remediation or Mitigation as required fields for automated CVE-prov
 - The temporary password is written to `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`, excluded by `/backend/data/` in `.gitignore`.
 - First successful login is forced to change the password. The temporary-credential file is removed only after the new password is committed successfully.
 - Existing account records are not overwritten or replaced by a bootstrap admin.
+
+
+## 014 — Vulnerability Register custom fields
+- Custom field definitions are administrator-managed, use generated stable keys and text values, and can be required or shown as table columns.
+- Store values as JSON on each `ThreatIntelligence` record so administrators can add fields without a migration per field. A schema migration is still required for the feature's initial storage support.
+- Custom field creation, edits and deletion require the Admin role. Deleting a field deletes its saved values from the register; renaming a field retains its generated key and saved values.
+
+## 015 — Unified affected product and version presentation
+- In the Vulnerability Register and Scan Result tables, display affected product and affected version in one column with the version on a secondary line.
+- Keep the underlying product/version fields distinct in storage and in record details so enrichment and existing API contracts remain compatible.
