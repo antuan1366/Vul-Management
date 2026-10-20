@@ -1,84 +1,67 @@
 # PROJECT
 
 ## Identity
-- Name: Vul-Management
-- Repository: `antuan1366/Vul-Management`
-- Active development branch: `develop`
-- Current backend/sidebar version declaration in source: 3.6.0 (development)
+- Name: Vul-Management.
+- Repository: antuan1366/Vul-Management.
+- Version selected for the current promotion: **3.6.5**.
+- Ongoing development branch: develop; released/integrated changes are promoted to main through an explicitly authorized pull request.
+- Database schema target: 11 (latest migration 0011).
 
 ## Goal
-Build a modular web application for vulnerability management and threat intelligence, with an asset inventory, vulnerability discovery, human review, NVD enrichment, remediation workflow and reporting. The application should remain understandable and maintainable by another developer or AI using the documentation in `.ai/`.
+Build a modular web application for vulnerability management and threat intelligence, including asset inventory, vulnerability discovery, human review, enrichment, remediation workflow and reporting. Keep the application understandable to another developer or AI through the documentation in .ai/.
 
 ## Technology
 ### Backend
-- Python
-- FastAPI
-- SQLAlchemy
-- Pydantic
-- Alembic
-- SQLite
+Python, FastAPI, SQLAlchemy, Pydantic, Alembic and SQLite.
 
 ### Frontend
-- HTML
-- CSS
-- Plain JavaScript
-- Served by FastAPI; no frontend framework is required by the current architecture.
+Plain HTML, CSS and JavaScript served by FastAPI. Do not add a frontend framework without a clear need and explicit approval.
 
 ## Main areas
-1. Dashboard
-2. Assets: Equipment, Operating Systems, Applications, Libraries
-3. Dynamic asset-field configuration
-4. Threat Intelligence: Vulnerability Scan, Scan Result, Vulnerability Register (current source labels/routes; intended user-facing register label is **Vulnerabilities**, so verify and reconcile the sidebar text)
-5. Vulnerability feeds
-6. Telegram feeds and Telegram account/session configuration
-7. Logs & Events
-8. User Management and login/session handling
-9. Future reporting, remediation, risk prioritization and integrations
+1. Dashboard.
+2. Asset inventory: Equipment, Operating Systems, Applications and Libraries.
+3. Administrator-managed asset fields.
+4. Threat Intelligence: Scan, Scan Result and Vulnerability Register (user-facing label should be Vulnerabilities where appropriate).
+5. NVD, official CVE Program and GitHub Security Advisory enrichment feeds.
+6. Telegram feed administration, scan schedules and source-message review.
+7. Nessus manual import, finding review and host mapping.
+8. Local authentication, user management and Logs & Events.
+9. Jira issue creation and future reporting/remediation workflow (Jira still requires end-to-end verification).
 
 ## Asset management
-- The administrator enters known asset information.
-- Asset categories have their own pages and field configuration.
-- Shared asset-field behavior should be reused rather than copied across pages.
-- Identifier/CPE/PURL logic and vulnerability applicability must be verified in the backend before being changed.
-- Keep system fields and administrator-managed custom fields distinct.
+- Known assets are entered and maintained by the administrator.
+- Asset categories have separate pages and field configuration.
+- Reuse shared asset-field behavior rather than duplicating it.
+- Keep system fields distinct from administrator-managed custom fields.
+- Verify identifier/CPE/PURL logic and version applicability in the backend before changing it.
 
 ## Threat-intelligence workflow
-Target workflow:
 1. Configure public Telegram channels/feeds in Administration.
-2. Scan configured sources on a schedule or from a selected start date, where supported by the current implementation.
-3. Extract CVE identifiers and preserve the source message/context.
-4. Store scan results with a system intake timestamp and a concise table summary; expose full content on hover or in a detail view.
-5. Allow an administrator to accept/reject or otherwise review findings.
-6. Enrich CVEs from NVD first, then enabled supplemental feeds such as the official CVE Program and GitHub Security Advisories when important fields are missing. Preserve source provenance in labelled references.
-7. Have an administrator define Remediation, Mitigation, and any deployment-specific custom fields in Vulnerabilities; custom field definitions and table visibility are administrator-managed. These fields are not required from external CVE APIs.
-8. Promote approved items into the vulnerability intelligence/register workflow.
-9. Jira issue creation is a desired integration and must be treated as incomplete until implemented and tested.
-10. Compare each Scan Result's original Telegram message with current asset identifying fields and useful custom asset-field values. Visually flag possible matches and expose matched asset/term details for administrator review; this hint must not be treated as confirmation that the asset is vulnerable.
+2. Scan configured sources on a schedule or from a selected starting date, as implemented.
+3. Extract CVE identifiers while preserving source context and the system intake timestamp.
+4. Show concise summaries in Scan Result and retain full source text for details/hover.
+5. Let an administrator review and accept/reject findings.
+6. Query enabled sources: NVD first, then the official CVE Program and GitHub Security Advisories when key fields remain missing. Preserve provenance and respect per-source enablement/pacing.
+7. Maintain Remediation, Mitigation and deployment-specific custom fields through administrator workflow where appropriate.
+8. Promote approved findings into the shared vulnerability register.
+9. Create Jira issues only after configuration is validated; verify against a non-production Jira project.
+10. Compare original Scan Result messages with live asset identifiers/custom field values to flag possible matches. A match is advisory and is not a vulnerability applicability verdict.
 
-Do not mark each step as implemented based only on this description. Inspect backend routes, models, services and frontend handlers.
+Do not claim every step is end-to-end verified merely because the code path or UI exists.
 
 ## Authentication and account administration
-- If the users table is empty, startup creates the default `admin` account with password `vulmgm`; first login is not forced to change it. A previous bootstrap account is converted to the requested default only if it is still marked as requiring its first password change. Established passwords are preserved. The shared default is for local/testing only and must be changed before exposing the app to an untrusted network.
-- Administrators can create, edit, disable, reset passwords for and delete accounts; the last active administrator cannot be locked out through normal UI/API operations.
-- Sessions use signed, HTTP-only cookies; password hashes use PBKDF2-HMAC-SHA256.
-- The Admin role manages accounts. The User role cannot access user-management endpoints; finer permissions for other application actions remain future work and must be reviewed before production exposure.
+- When no users exist, startup creates local/testing default account admin with password vulmgm; there is no forced first-login password change in the current bootstrap path. Change this default before exposing the app to an untrusted network.
+- Passwords are stored using PBKDF2-HMAC-SHA256; session cookies are signed and HTTP-only.
+- Admin can manage local user accounts; User is restricted from user-management operations. Fine-grained authorization for other application actions remains a production review item.
 
 ## Database
-- Engine: SQLite.
-- Schema target on `develop`: 11 (migration 0011 adds custom fields to the Vulnerability Register).
-- Default path: `backend/data/vul_management.db`.
-- SQLAlchemy is the data access layer.
-- Alembic manages schema revisions.
-- Database and other local runtime state are excluded from Git. Never delete or overwrite them casually.
+- Engine: SQLite; default path backend/data/vul_management.db.
+- SQLAlchemy is the data-access layer; Alembic manages schema changes.
+- Schema max on the current version: 11; migration 0011 provides Vulnerability Register custom-field storage.
+- The database and local runtime state are excluded from Git. Never delete or overwrite them casually.
 
 ## UI contract
-The shared UI is a dark charcoal collapsible sidebar with a light workspace, white cards, neutral borders, compact operational tables, consistent primary/secondary/danger buttons, and modal-based forms where appropriate. The detailed rules and measurements are in `.ai/UI_STYLE_GUIDE.md`.
+Use a dark charcoal collapsible sidebar and light workspace, white cards, neutral borders, compact operational tables, consistent action buttons and modal forms. See .ai/UI_STYLE_GUIDE.md.
 
 ## AI development contract
-An AI must:
-- Read the `.ai/` documents before making changes.
-- Inspect real source code and API contracts.
-- Preserve modular files and existing working behavior.
-- Avoid adding frameworks or dependencies without a clear need.
-- Run relevant tests and report exact verification.
-- Keep documentation current after significant changes.
+An AI contributor must read the .ai/ documents, inspect actual routes/models/services, preserve modular boundaries, run relevant tests, update this documentation after significant changes and clearly report unverified areas. Core operation must not depend on AI.
