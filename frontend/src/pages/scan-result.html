@@ -28,6 +28,11 @@
         #scan-results-table td{vertical-align:middle}
         #scan-results-table .review-actions{min-height:34px}
         #scan-results-table .review-status-select{align-self:center}
+        .review-action-control{box-sizing:border-box;height:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #d5d8dd;border-radius:6px;background:#fff;color:#333;font-family:inherit;font-size:13px;line-height:1}
+        button.review-action-control{cursor:pointer}
+        select.review-action-control{min-width:140px;max-width:155px;padding-right:28px;appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#555 50%),linear-gradient(135deg,#555 50%,transparent 50%);background-position:calc(100% - 11px) 13px,calc(100% - 7px) 13px;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
+        .review-action-control:focus-visible{outline:2px solid rgba(49,91,154,.35);outline-offset:1px}
+        .review-action-control:disabled{opacity:.55;cursor:not-allowed;background-color:#f4f5f7}
         .review-message{font-size:12px;opacity:.78}
         .review-message.error{color:#b42318;opacity:1}
         .review-status-select{min-width:125px;max-width:155px}
@@ -71,8 +76,8 @@
             <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="rejected">Reject <span class="review-status-tab-count" data-status-count="rejected">0</span></button>
         </div>
         <div class="table-container"><table id="scan-results-table">
-            <thead><tr><th><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th>#</th><th>Scan Date</th><th>CVE</th><th>Severity</th><th>Score</th><th>Affected</th><th>Affected Version</th><th>Actions</th></tr></thead>
-            <tbody id="results-table-body"><tr><td colspan="9">Loading results…</td></tr></tbody>
+            <thead><tr><th data-column-key="selection"><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th data-column-key="row-number">#</th><th data-column-key="scan-date">Scan Date</th><th data-column-key="cve">CVE</th><th data-column-key="score">Score</th><th data-column-key="affected">Affected</th><th data-column-key="affected-version">Affected Version</th><th data-column-key="actions">Actions</th></tr></thead>
+            <tbody id="results-table-body"><tr><td colspan="8">Loading results…</td></tr></tbody>
         </table></div>
         <p class="review-message">Scan Date is when Vul-Management collected the finding. Hover over a cell or open Details to inspect full data and the original Telegram message.</p>
     </section>
