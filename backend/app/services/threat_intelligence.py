@@ -458,7 +458,7 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
         item.nvd_error = None
         db.commit()
         return
-    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.6.0"}
+    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.6.5"}
     if feed.api_key:
         headers["apiKey"] = feed.api_key
     timeout = feed.timeout_seconds
@@ -596,7 +596,7 @@ def _wait_for_github_request_slot(authenticated: bool) -> None:
 
 
 def _source_headers(feed: Feed, github: bool = False) -> dict[str, str]:
-    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.5.0"}
+    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.6.5"}
     if github:
         headers["Accept"] = "application/vnd.github+json"
         headers["X-GitHub-Api-Version"] = "2022-11-28"
