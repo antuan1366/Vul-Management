@@ -144,6 +144,12 @@ async def enforce_authentication(request: Request, call_next):
             return RedirectResponse(destination, status_code=303)
         return await call_next(request)
 
+    if path == "/src/pages/users.html" and signed_in_user_id is not None:
+        with SessionLocal() as auth_db:
+            signed_in_user = auth_db.get(User, signed_in_user_id)
+            if signed_in_user is None or signed_in_user.role != "admin":
+                return RedirectResponse("/src/pages/dashboard.html", status_code=303)
+
     protected_api = path.startswith("/api/")
     protected_page = path.startswith("/src/pages/") and path.endswith(".html")
     protected_docs = path in {"/docs", "/redoc", "/openapi.json"}
