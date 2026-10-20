@@ -86,8 +86,7 @@
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_product || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_versions || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_versions,"Not available from enabled sources"))+'</td>'+
+                '<td class="result-cell"><div class="affected-combined" title="'+esc((x.affected_product || "Not available from enabled sources")+" | Version: "+(x.affected_versions || "Not specified"))+'"><strong>'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</strong><small>Version: '+esc(shortValue(x.affected_versions,"Not specified"))+'</small></div></td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
         $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
