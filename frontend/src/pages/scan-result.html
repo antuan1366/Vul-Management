@@ -40,6 +40,19 @@
         .affected-combined{display:flex;flex-direction:column;gap:4px;max-width:270px}
         .affected-combined strong{font-size:13px;font-weight:600;color:#333}
         .affected-combined small{font-size:12px;color:#717782;white-space:normal}
+        #scan-results-table tr.scan-result-asset-match td{background:#fff7e6}
+        #scan-results-table tr.scan-result-asset-match:hover td{background:#ffefc9}
+        .asset-match-cell{min-width:140px;max-width:240px}
+        .asset-match-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid #e5bd62;border-radius:5px;background:#ffedbf;color:#704b00;font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
+        .asset-match-badge::before{content:"!";display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#8a5b00;color:#fff;font-size:10px;font-weight:900}
+        .asset-match-assets{display:block;max-width:220px;margin-top:4px;color:#775c22;font-size:11px;white-space:normal;overflow-wrap:anywhere}
+        .asset-match-none{color:#a0a4ac}
+        .result-asset-match-panel{border-color:#e5bd62!important;background:#fff8e8!important}
+        .result-asset-match-panel strong,.result-asset-match-panel p,.result-asset-match-panel li{color:#654a14!important}
+        .result-asset-match-panel[hidden]{display:none}
+        .result-asset-match-list{margin:8px 0 0;padding-left:22px}
+        .result-asset-match-list li{margin:4px 0;overflow-wrap:anywhere}
+
         .review-modal-card{width:min(900px,100%);color-scheme:light;background:#fff!important;color:#222!important}
         .review-modal-card h2,.review-modal-card strong,.review-modal-card label,.review-modal-card p,.review-modal-card .section-description,.review-modal-card a{color:#222}
         .review-modal-card input,.review-modal-card select,.review-modal-card textarea{color-scheme:light;background:#fff!important;background-color:#fff!important;color:#222!important;-webkit-text-fill-color:#222;border:1px solid #ccc}
@@ -79,8 +92,8 @@
             <button type="button" class="review-status-tab" role="tab" aria-selected="false" data-status-tab="rejected">Reject <span class="review-status-tab-count" data-status-count="rejected">0</span></button>
         </div>
         <div class="table-container"><table id="scan-results-table">
-            <thead><tr><th data-column-key="selection"><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th data-column-key="row-number">#</th><th data-column-key="scan-date">Scan Date</th><th data-column-key="cve">CVE</th><th data-column-key="score">Score</th><th data-column-key="affected">Affected Product / Version</th><th data-column-key="actions">Actions</th></tr></thead>
-            <tbody id="results-table-body"><tr><td colspan="7">Loading results…</td></tr></tbody>
+            <thead><tr><th data-column-key="selection"><input id="select-all-results" type="checkbox" aria-label="Select all visible results"></th><th data-column-key="row-number">#</th><th data-column-key="scan-date">Scan Date</th><th data-column-key="cve">CVE</th><th data-column-key="asset-match">Asset Match</th><th data-column-key="score">Score</th><th data-column-key="affected">Affected Product / Version</th><th data-column-key="actions">Actions</th></tr></thead>
+            <tbody id="results-table-body"><tr><td colspan="8">Loading results…</td></tr></tbody>
         </table></div>
         <p class="review-message">Scan Date is when Vul-Management collected the finding. Hover over a cell or open Details to inspect full data and the original Telegram message.</p>
     </section>
@@ -88,6 +101,12 @@
 <div id="result-modal" class="modal-overlay review-modal" aria-hidden="true">
     <div class="modal-dialog equipment-modal-dialog review-modal-card" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
         <div class="modal-header"><div><h2 id="result-modal-title">CVE Details</h2><p id="result-modal-subtitle" class="section-description"></p></div><button id="close-result-modal" class="modal-close-button" type="button" aria-label="Close">&times;</button></div>
+        <div id="result-asset-match-panel" class="content-card result-asset-match-panel" style="margin:12px 0" hidden>
+            <strong>Potentially related inventory assets</strong>
+            <p id="result-asset-match-summary"></p>
+            <ul id="result-asset-match-list" class="result-asset-match-list"></ul>
+            <p style="font-size:12px;margin:8px 0 0">This is a keyword-based hint, not confirmation that the asset is affected. Verify product and version applicability before taking action.</p>
+        </div>
         <div class="content-card" style="margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere"><strong>Original Telegram Message</strong><p id="result-original-message"></p><a id="result-message-link" href="#" target="_blank" rel="noopener" hidden>Open original Telegram message</a></div>
         <div class="review-detail-grid">
             <div><label for="result-severity">Severity</label><input id="result-severity"></div>
