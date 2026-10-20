@@ -28,7 +28,7 @@
         #vulnerability-search{height:40px;padding:9px 12px 9px 38px;border-color:#dfe1e5;border-radius:7px;background:#fff;color:#20242a}
         #vulnerability-search:focus{border-color:#747b86;box-shadow:0 0 0 3px rgba(60,70,85,.08)}
         .vulnerability-table-wrap{overflow:auto;border:0;border-bottom:1px solid #e8e9ec;border-radius:0;margin:0 24px 18px;width:calc(100% - 52px);box-sizing:border-box}
-        #vulnerabilities-table{min-width:1150px;width:100%}
+        #vulnerabilities-table{min-width:1080px;width:100%}
         #vulnerabilities-table th{padding:12px 14px;background:#f8f8f8;color:#333;font-family:inherit;font-size:14px;font-weight:600;line-height:1.4;letter-spacing:normal;text-align:left;text-transform:none;border-bottom:1px solid #ddd;white-space:nowrap}
         #vulnerabilities-table td{padding:14px;border-bottom:1px solid #eff0f2;color:#414650;font-size:14px;vertical-align:middle}
         #vulnerabilities-table tbody tr:hover{background:#fafbfc}
@@ -36,11 +36,6 @@
         #vulnerabilities-table td:first-child{color:#8a9099;font-variant-numeric:tabular-nums}
         #vulnerabilities-table td:nth-child(2) strong{color:#20242a;font-size:14px;font-weight:700}
         .vulnerability-text-cell{display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#555b65}
-        .vulnerability-severity{display:inline-flex;align-items:center;padding:4px 8px;border-radius:5px;background:#f0f1f3;color:#555b65;font-size:12px;font-weight:600}
-        .vulnerability-severity[data-severity="critical"]{background:#fde9e8;color:#a52622}
-        .vulnerability-severity[data-severity="high"]{background:#fff0e0;color:#a34b08}
-        .vulnerability-severity[data-severity="medium"]{background:#fff7d8;color:#846400}
-        .vulnerability-severity[data-severity="low"]{background:#e8f5ec;color:#287443}
         .vulnerability-table-empty{padding:52px 20px!important;text-align:center!important;color:#777d86!important;white-space:normal!important}
         .vulnerability-table-empty strong{display:block;margin-bottom:7px;color:#343941;font-size:14px}
         .vulnerability-message{margin:0 24px 14px;padding:0;color:#626873;font-size:12px}
@@ -99,10 +94,10 @@
         <div class="vulnerability-table-wrap">
             <table id="vulnerabilities-table">
                 <thead>
-                    <tr><th><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th>#</th><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Affected Product</th><th>Affected Version</th><th>Mitigation</th><th>DATE</th><th>Jira</th><th>Actions</th></tr>
+                    <tr><th data-column-key="selection"><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th data-column-key="row-number">#</th><th data-column-key="cve">CVE ID</th><th data-column-key="cvss">CVSS</th><th data-column-key="affected-product">Affected Product</th><th data-column-key="affected-version">Affected Version</th><th data-column-key="mitigation">Mitigation</th><th data-column-key="date">DATE</th><th data-column-key="jira">Jira</th><th data-column-key="actions">Actions</th></tr>
                 </thead>
                 <tbody id="vulnerabilities-table-body">
-                    <tr><td class="vulnerability-table-empty" colspan="11">Loading vulnerability records…</td></tr>
+                    <tr><td class="vulnerability-table-empty" colspan="10">Loading vulnerability records…</td></tr>
                 </tbody>
             </table>
         </div>
