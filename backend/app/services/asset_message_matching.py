@@ -38,7 +38,7 @@ GENERIC_TERMS = {
     "a", "an", "the", "and", "or", "for", "with", "from", "to",
     "server", "servers", "network", "networks", "system", "systems",
     "software", "hardware", "application", "applications", "device", "devices",
-    "asset", "assets", "product", "products", "platform", "platforms",
+    "asset", "assets", "product", "products", "platform", "platforms", "app", "host", "hostname",
     "production", "prod", "test", "testing", "development", "dev", "staging",
     "critical", "high", "medium", "low", "unknown", "none", "null",
     "active", "inactive", "enabled", "disabled", "true", "false",
