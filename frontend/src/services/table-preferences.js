@@ -282,8 +282,11 @@
             }
 
             if (tableKey === "scan-results" && Object.prototype.hasOwnProperty.call(target, "affected-version")) {
-                if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
-                    target.affected = target["affected-version"];
+                const affectedWasProvided = Object.prototype.hasOwnProperty.call(target, "affected");
+                if (!affectedWasProvided) {
+                    target.affected = target["affected-version"] !== false;
+                } else {
+                    target.affected = target.affected !== false || target["affected-version"] !== false;
                 }
                 delete target["affected-version"];
             }
