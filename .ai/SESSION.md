@@ -6,7 +6,7 @@
 - The user reports successful local startup and successful page-level smoke checks for Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, and Logs & Events.
 
 ## Authentication and user administration (new; runtime unverified)
-- If no users exist, startup creates `admin` with a random temporary password stored in `backend/data/INITIAL_ADMIN_CREDENTIALS.txt` under the ignored local data directory. First login forces the password to change and then removes that file.
+- If no users exist, startup creates the local/testing default `admin` / `vulmgm`. Established account passwords are preserved. Change this shared default before exposing the application to an untrusted network.
 - Login sessions use signed HTTP-only cookies with an eight-hour maximum age; passwords use PBKDF2-HMAC-SHA256.
 - Admin-only account management supports create/edit/password reset/disable/delete and protects the last active administrator.
 - App pages, data APIs, and docs are gated by server-side authentication middleware.
