@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Vul-Management"
-    app_version: str = "3.6.0"
+    app_version: str = "3.6.5"
     debug: bool = True
 
     # DATA_DIR is resolved from the process working directory when relative.
