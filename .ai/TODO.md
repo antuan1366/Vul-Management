@@ -40,6 +40,16 @@
 - [ ] Verify prior table settings migrate visibility/width preferences correctly after merging the columns.
 - [ ] Run backend tests and browser smoke tests; record actual outcomes before release.
 
+## v3.6.0 — Scan Result asset matching
+- [ ] Run `python -m unittest discover -s tests -p test_asset_message_matching.py` from the repository root.
+- [ ] Verify matching against representative Equipment, Operating System, Application and Library records.
+- [ ] Verify system identifiers (name/vendor/model/IP/serial/CPE/PURL) and custom asset field values cause the expected flags.
+- [ ] Verify generic/common terms and substrings inside longer words do not cause obvious false positives.
+- [ ] Verify Scan Result list, Details, edit/save, refresh-source and review-status changes preserve the asset match flag.
+- [ ] Confirm matched rows are highlighted, the Asset Match column names matched inventory items, and the Details panel lists matching fields/terms.
+- [ ] Confirm asset records added/edited after a scan are reflected on the next Scan Result refresh without a database migration.
+- [ ] Record local backend/browser results; do not treat the heuristic as a definitive asset applicability result.
+
 ## Customer deployment
 - [ ] Define supported OS and Python version.
 - [ ] Create a clean package excluding local database, credentials, virtual environment, caches, and session files.
