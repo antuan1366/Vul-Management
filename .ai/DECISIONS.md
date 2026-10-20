@@ -48,7 +48,7 @@ Do not treat Remediation or Mitigation as required fields for automated CVE-prov
 - The session signing key is persisted under the ignored local data directory unless an environment secret is configured. Do not commit it.
 
 
-## Automatic initial administrator (v3.4.0 development)
+## Automatic initial administrator (v3.4.0 historical implementation)
 - If no accounts exist, the app creates username `admin` with a cryptographically random temporary password; it does not ship a known shared password.
 - The temporary password is written to `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`, excluded by `/backend/data/` in `.gitignore`.
 - First successful login is forced to change the password. The temporary-credential file is removed only after the new password is committed successfully.
