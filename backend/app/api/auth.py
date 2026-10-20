@@ -1,6 +1,4 @@
-import os
 import re
-import secrets
 import threading
 import time
 from datetime import datetime
@@ -8,7 +6,7 @@ from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, insert, select
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -86,46 +84,18 @@ def users_exist() -> bool:
 
 
 BOOTSTRAP_CREDENTIALS_FILENAME = "INITIAL_ADMIN_CREDENTIALS.txt"
+DEFAULT_ADMIN_PASSWORD = "vulmgm"
 
 
-def _bootstrap_credentials(username: str) -> tuple[str, str]:
-    settings.data_dir.mkdir(parents=True, exist_ok=True)
-    credentials_path = settings.data_dir / BOOTSTRAP_CREDENTIALS_FILENAME
-
-    if credentials_path.exists():
-        try:
-            values = {}
-            for line in credentials_path.read_text(encoding="utf-8").splitlines():
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    values[key.strip().lower()] = value.strip()
-            stored_username = values.get("username", "").lower()
-            stored_password = values.get("temporary password", "")
-            if stored_username == username and stored_password:
-                return stored_username, stored_password
-        except OSError:
-            pass
-
-    temporary_password = secrets.token_urlsafe(24)
-    contents = (
-        "Vul-Management initial administrator credentials\n"
-        "===============================================\n"
-        f"Username: {username}\n"
-        f"Temporary password: {temporary_password}\n\n"
-        "This password is temporary. Sign in once and change it immediately.\n"
-        "Keep this file private and do not send it to anyone.\n"
-    )
-    credentials_path.write_text(contents, encoding="utf-8")
+def _remove_bootstrap_credentials() -> None:
     try:
-        os.chmod(credentials_path, 0o600)
+        (settings.data_dir / BOOTSTRAP_CREDENTIALS_FILENAME).unlink(missing_ok=True)
     except OSError:
-        # Windows applies inherited filesystem ACLs rather than POSIX modes.
         pass
-    return username, temporary_password
 
 
 def seed_default_admin() -> None:
-    """Create a one-time admin account and local onboarding credential file if no users exist."""
+    """Ensure a default admin exists on a new install without overwriting an established password."""
     username = settings.bootstrap_admin_username.strip().lower()
     if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}", username):
         raise RuntimeError(
@@ -135,7 +105,7 @@ def seed_default_admin() -> None:
     connection = engine.connect()
     try:
         if settings.database_url and settings.database_url.startswith("sqlite"):
-            # Prevent two local workers from both generating bootstrap passwords.
+            # Serialize bootstrap so multiple local workers cannot create duplicate accounts.
             connection.exec_driver_sql("BEGIN IMMEDIATE")
         else:
             connection.begin()
@@ -143,26 +113,49 @@ def seed_default_admin() -> None:
         user_count = connection.execute(
             select(func.count()).select_from(User.__table__)
         ).scalar_one()
+
+        existing_admin = connection.execute(
+            select(User.__table__.c.id, User.__table__.c.must_change_password)
+            .where(User.__table__.c.username == username)
+        ).first()
+
         if user_count:
-            connection.rollback()
+            # Migrate the temporary admin created by v3.4.0 to the requested default
+            # credentials exactly once. Never overwrite an established password.
+            if existing_admin and existing_admin.must_change_password:
+                connection.execute(
+                    update(User.__table__)
+                    .where(User.__table__.c.id == existing_admin.id)
+                    .values(
+                        password_hash=hash_password(DEFAULT_ADMIN_PASSWORD),
+                        must_change_password=False,
+                        updated_at=datetime.utcnow(),
+                    )
+                )
+                connection.commit()
+                _remove_bootstrap_credentials()
+            else:
+                connection.rollback()
+                if existing_admin:
+                    _remove_bootstrap_credentials()
             return
 
-        username, temporary_password = _bootstrap_credentials(username)
         now = datetime.utcnow()
         connection.execute(
             insert(User.__table__).values(
                 username=username,
                 display_name="Vul-Management Administrator",
-                password_hash=hash_password(temporary_password),
+                password_hash=hash_password(DEFAULT_ADMIN_PASSWORD),
                 role="admin",
                 is_active=True,
-                must_change_password=True,
+                must_change_password=False,
                 created_at=now,
                 updated_at=now,
                 last_login_at=None,
             )
         )
         connection.commit()
+        _remove_bootstrap_credentials()
     except Exception:
         connection.rollback()
         raise
