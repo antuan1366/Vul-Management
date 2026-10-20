@@ -1,5 +1,12 @@
 # Application / Database Compatibility
 
+## Release 3.6.0 (in development on develop)
+- Application version declaration: 3.6.0.
+- Declared database schema range remains 1–11; latest migration remains 0011. Asset-message matching is computed from the live asset inventory at Scan Result API request time and adds no database tables or columns.
+- Scan Result responses include `asset_match` details when the original message contains a registered asset identifier/value. The UI highlights matched rows and displays matched asset names/terms in the table and Details modal.
+- Matching covers identifying system fields and useful non-generic custom asset-field values across Equipment, Operating Systems, Applications and Libraries. It is advisory keyword matching and must not be treated as a definitive vulnerability applicability verdict.
+- Automated tests were added but need to be run locally; full application/database/browser runtime verification remains pending.
+
 ## Release 3.5.0 (in development on develop)
 - Application version declaration: 3.5.0.
 - Declared database schema range: 1–11; latest migration: 0011.
