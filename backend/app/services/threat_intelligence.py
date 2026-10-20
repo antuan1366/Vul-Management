@@ -458,7 +458,7 @@ def enrich_scan_result_from_nvd(db, item: TelegramScanResult) -> None:
         item.nvd_error = None
         db.commit()
         return
-    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.5.0"}
+    headers = {"Accept": "application/json", "User-Agent": "Vul-Management/3.6.0"}
     if feed.api_key:
         headers["apiKey"] = feed.api_key
     timeout = feed.timeout_seconds
