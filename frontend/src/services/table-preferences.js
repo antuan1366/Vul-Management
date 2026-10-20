@@ -287,12 +287,11 @@
                         target.affected = target["affected-version"];
                     }
                 } else {
-                    const affectedWasProvided = Object.prototype.hasOwnProperty.call(target, "affected");
-                    if (!affectedWasProvided) {
-                        target.affected = target["affected-version"] !== false;
-                    } else {
-                        target.affected = target.affected !== false || target["affected-version"] !== false;
-                    }
+                    const affectedProvided = Object.prototype.hasOwnProperty.call(target, "affected");
+                    const versionProvided = Object.prototype.hasOwnProperty.call(target, "affected-version");
+                    const affectedVisible = affectedProvided ? target.affected !== false : true;
+                    const versionVisible = versionProvided ? target["affected-version"] !== false : true;
+                    target.affected = affectedVisible || versionVisible;
                 }
                 delete target["affected-version"];
             }
@@ -305,10 +304,15 @@
                         if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
                             target.affected = target["affected-product"] ?? target["affected-version"];
                         }
-                    } else if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
-                        target.affected = providedAliases.some(key => target[key] !== false);
                     } else {
-                        target.affected = target.affected !== false || providedAliases.some(key => target[key] !== false);
+                        const productProvided = Object.prototype.hasOwnProperty.call(target, "affected-product");
+                        const versionProvided = Object.prototype.hasOwnProperty.call(target, "affected-version");
+                        const productVisible = productProvided ? target["affected-product"] !== false : true;
+                        const versionVisible = versionProvided ? target["affected-version"] !== false : true;
+                        const existingVisible = Object.prototype.hasOwnProperty.call(target, "affected")
+                            ? target.affected !== false
+                            : false;
+                        target.affected = existingVisible || productVisible || versionVisible;
                     }
                     delete target["affected-product"];
                     delete target["affected-version"];
