@@ -14,7 +14,7 @@
     function nvdLabel(item) {
         if (item.nvd_status === "success") return "Complete";
         if (item.nvd_status === "partial") return "Partial";
-        if (item.nvd_status === "not_found") return "No NVD Detected";
+        if (item.nvd_status === "not_found") return "No data found in enabled sources";
         if (item.nvd_status === "error") return "Lookup error";
         if (item.nvd_status === "queued") return "Queued";
         if (item.nvd_status === "skipped") return "Skipped";
@@ -24,10 +24,10 @@
         const text = String(value || "").trim();
         return text ? text.replace(/\s+/g, " ").slice(0, 90) : fallback;
     }
-    function sortNewestFirst(items) {
+    function sortCveAscending(items) {
         return items.sort((a,b) =>
-            new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0) ||
-            Number(b.id || 0) - Number(a.id || 0)
+            String(a.cve_id || "").localeCompare(String(b.cve_id || ""), undefined, {numeric:true, sensitivity:"base"}) ||
+            Number(a.id || 0) - Number(b.id || 0)
         );
     }
     function duration(seconds) {
@@ -50,10 +50,10 @@
         const remaining=Number(run.nvd_remaining??Math.max(0,total-done));
         const channelsTotal=Number(run.channels_total||0),channelsDone=Number(run.channels_processed||0);
         const pct=nvdRunning?(total?Math.min(100,Math.round(done/total*100)):0):(active?(channelsTotal?Math.min(100,Math.round(channelsDone/channelsTotal*100)):0):100);
-        $("nvd-live-title").textContent=nvdRunning?"NVD enrichment is running":(active?"Telegram scan is running":"Latest scan: "+human(run.status));
+        $("nvd-live-title").textContent=nvdRunning?"CVE data enrichment is running":(active?"Telegram scan is running":"Latest scan: "+human(run.status));
         $("nvd-live-value").textContent=nvdRunning?(done+" / "+total+" CVEs"):(active?"In progress":human(run.status));
         let detail=nvdRunning
-            ?("NVD checked "+done+" of "+total+" unique CVEs · "+remaining+" remaining · Estimated time: "+duration(run.nvd_estimated_seconds))
+            ?("CVE data checked "+done+" of "+total+" unique CVEs · "+remaining+" remaining · Estimated time: "+duration(run.nvd_estimated_seconds))
             :(active?("Channels processed "+channelsDone+" of "+channelsTotal+" · Messages: "+(run.messages_processed||0)+" · CVE occurrences: "+(run.cve_occurrences||0)):"Last scan "+(run.finished_at?dt(run.finished_at):dt(run.started_at))+" · CVE occurrences: "+(run.cve_occurrences||0));
         if(run.error_message)detail+=" · "+run.error_message;
         $("nvd-live-detail").textContent=detail;
@@ -71,25 +71,33 @@
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="10">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="8">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
         body.innerHTML = rows.map((x,i) => {
             const actions = '<div class="review-actions">'+
-                '<button class="secondary-button small-button" data-action="details" data-id="'+x.id+'">Details</button>'+
-                '<select class="review-status-select" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
+                '<button class="secondary-button small-button review-action-control" data-action="details" data-id="'+x.id+'">Details</button>'+
+                '<select class="review-status-select review-action-control" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
                 '</div>';
-            return '<tr>'+
+            const match = x.asset_match || {matched:false,asset_match_count:0,asset_matches:[]};
+            const matchAssets = match.asset_matches || [];
+            const matchTitle = matchAssets.map(asset => {
+                const terms = (asset.matched_terms || []).map(term => term.term + " (" + (term.fields || []).join(", ") + ")").join(", ");
+                return asset.asset_name + " [" + asset.asset_type_label + "] — matched: " + terms;
+            }).join("\n") + (match.asset_match_count > matchAssets.length ? "\nAnd " + (match.asset_match_count-matchAssets.length) + " more asset(s)." : "");
+            const visibleNames = matchAssets.slice(0,2).map(asset => esc(asset.asset_name)).join(", ");
+            const matchCell = match.matched
+                ? '<td class="asset-match-cell"><span class="asset-match-badge" title="'+esc(matchTitle)+'">ASSET MATCH ('+Number(match.asset_match_count || matchAssets.length)+')</span><small class="asset-match-assets" title="'+esc(matchTitle)+'">'+visibleNames+(match.asset_match_count>2?", and more":"")+'</small></td>'
+                : '<td class="asset-match-cell"><span class="asset-match-none">—</span></td>';
+            return '<tr'+(match.matched?' class="scan-result-asset-match"':'')+'>'+
                 '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
-                '<td>'+esc(x.severity || "Data not found in NVD")+'</td>'+
+                matchCell+
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_product || "Data not found in NVD")+'">'+esc(shortValue(x.affected_product,"Data not found in NVD"))+'</td>'+
-                '<td class="result-cell" title="'+esc(x.affected_versions || "Data not found in NVD")+'">'+esc(shortValue(x.affected_versions,"Data not found in NVD"))+'</td>'+
-                '<td class="result-cell" title="'+esc(x.remediation || "NVD does not provide a dedicated remediation field for every CVE.")+'">'+esc(shortValue(x.remediation,"Not available"))+'</td>'+
+                '<td class="result-cell"><div class="affected-combined" title="'+esc((x.affected_product || "Not available from enabled sources")+" | Version: "+(x.affected_versions || "Not specified"))+'"><strong>'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</strong><small>Version: '+esc(shortValue(x.affected_versions,"Not specified"))+'</small></div></td>'+
                 '<td>'+actions+'</td></tr>';
         }).join("");
         $("select-all-results").checked = rows.length > 0 && rows.every(x=>selected.has(x.id));
@@ -97,7 +105,7 @@
     async function loadResults() {
         const query = new URLSearchParams({status:"all",q:$("result-search").value.trim(),limit:"500"});
         const data = await req("/api/threat-intelligence/scan-results?"+query.toString());
-        matchingRows = sortNewestFirst(data.items || []);
+        matchingRows = sortCveAscending(data.items || []);
         for (const status of ["new","under_review","approved","rejected"]) {
             const count = matchingRows.filter(item => item.review_status === status).length;
             const badge = document.querySelector('[data-status-count="'+status+'"]');
@@ -120,6 +128,26 @@
     }
     function fillModal(x) {
         active = x;
+        const assetMatch = x.asset_match || {matched:false,asset_match_count:0,asset_matches:[]};
+        const matchPanel = $("result-asset-match-panel");
+        matchPanel.hidden = !assetMatch.matched;
+        const matchItems = assetMatch.asset_matches || [];
+        $("result-asset-match-summary").textContent = assetMatch.matched
+            ? "Found " + assetMatch.asset_match_count + " potential match(es) among currently registered assets."
+            : "";
+        const matchList = $("result-asset-match-list");
+        matchList.replaceChildren();
+        for (const asset of matchItems) {
+            const item = document.createElement("li");
+            const termSummary = (asset.matched_terms || []).map(term => term.term + " — " + (term.fields || []).join(", ")).join("; ");
+            item.textContent = asset.asset_name + " (" + asset.asset_type_label + ") · " + termSummary;
+            matchList.appendChild(item);
+        }
+        if (assetMatch.asset_match_count > matchItems.length) {
+            const item = document.createElement("li");
+            item.textContent = "And " + (assetMatch.asset_match_count - matchItems.length) + " more matching asset(s).";
+            matchList.appendChild(item);
+        }
         $("result-modal-title").textContent = x.cve_id;
         $("result-modal-subtitle").textContent = "Collected "+dt(x.date)+" · @"+(x.channel_username||"Telegram")+" · Status: "+human(x.review_status);
         $("result-original-message").textContent = x.message_text || "No original message text is available.";
@@ -129,13 +157,22 @@
         $("result-cvss").value = x.cvss_score ?? "";
         $("result-product").value = x.affected_product || "";
         $("result-versions").value = x.affected_versions || "";
-        $("result-remediation").value = x.remediation || "";
         $("result-description").value = x.nvd_description || "";
         $("result-references").value = x.references_text || "";
-        $("result-nvd-message").textContent = x.nvd_status === "not_found"
-            ? "No NVD Detected"
-            : (x.nvd_missing_fields ? "NVD missing fields: "+x.nvd_missing_fields : "NVD status: "+nvdLabel(x));
+        let missingFields = [];
+        try {
+            const parsed = JSON.parse(x.nvd_missing_fields || "[]");
+            if (Array.isArray(parsed)) missingFields = parsed;
+        } catch (_) {
+            // Older or malformed stored values should not prevent the detail dialog from opening.
+        }
+        $("result-nvd-message").textContent = missingFields.length
+            ? "Missing fields across enabled sources: "+missingFields.join(", ")+" · See References / Sources for provider details."
+            : "Lookup status: "+nvdLabel(x)+" · See References / Sources for provider details.";
         $("result-modal-error").textContent = x.nvd_error || "";
+        $("refresh-result-sources").hidden = x.review_status === "rejected";
+        $("refresh-result-sources").disabled = false;
+        $("refresh-result-sources").textContent = "Refresh Sources";
         $("accept-result-button").hidden = x.review_status === "approved";
         $("reject-result-button").hidden = ["approved","rejected"].includes(x.review_status);
         $("result-modal").classList.add("is-open");
@@ -149,10 +186,28 @@
             cvss_score:$("result-cvss").value===""?null:Number($("result-cvss").value),
             affected_product:$("result-product").value.trim()||null,
             affected_versions:$("result-versions").value.trim()||null,
-            remediation:$("result-remediation").value.trim()||null,
             description:$("result-description").value.trim()||null,
             references_text:$("result-references").value.trim()||null
         };
+    }
+    async function refreshSources() {
+        if (!active || active.review_status === "rejected") return;
+        const button = $("refresh-result-sources");
+        const id = active.id;
+        button.disabled = true;
+        button.textContent = "Checking Sources...";
+        $("result-modal-error").textContent = "";
+        try {
+            active = await req("/api/threat-intelligence/scan-results/"+id+"/enrich",{method:"POST"});
+            fillModal(active);
+            await loadResults();
+            showMessage("Source lookup finished for "+active.cve_id+". Review References / Sources and missing fields.");
+        } catch (error) {
+            $("result-modal-error").textContent = error.message || String(error);
+        } finally {
+            button.disabled = false;
+            button.textContent = "Refresh Sources";
+        }
     }
     async function saveDetails() {
         if (!active) return;
@@ -262,6 +317,7 @@
         $("close-result-modal").addEventListener("click",closeModal);
         $("result-modal").addEventListener("click",e=>{if(e.target===$("result-modal"))closeModal();});
         $("save-result-details").addEventListener("click",()=>saveDetails().catch(e=>$("result-modal-error").textContent=e.message));
+        $("refresh-result-sources").addEventListener("click",()=>refreshSources());
         $("accept-result-button").addEventListener("click",()=>{if(active)accept(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         $("reject-result-button").addEventListener("click",()=>{if(active)reject(active.id).catch(e=>$("result-modal-error").textContent=e.message);});
         loadResults().catch(e=>showMessage(e.message,true));

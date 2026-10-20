@@ -78,7 +78,7 @@
         return Array.from(table.querySelectorAll("thead tr:first-child th")).map((th, index) => {
             let label = (th.innerText || th.textContent || "").trim().replace(/\s+/g, " ");
             if (!label && th.querySelector("input[type=checkbox]")) label = "Selection";
-            return { index, label: label || ("Column " + (index + 1)), key: "col-" + index };
+            return { index, label: label || ("Column " + (index + 1)), key: th.dataset.columnKey || ("col-" + index) };
         });
     }
 
@@ -233,10 +233,110 @@
         });
     }
 
+    function migrateLegacyColumnSettings(saved) {
+        const layouts = {
+            "scan-results": {
+                0: "selection",
+                1: "row-number",
+                2: "scan-date",
+                3: "cve",
+                5: "score",
+                6: "affected",
+                7: "affected-version",
+                8: "actions"
+            },
+            "vulnerabilities": {
+                0: "selection",
+                1: "row-number",
+                2: "cve",
+                4: "cvss",
+                5: "affected-product",
+                6: "affected-version",
+                7: "mitigation",
+                8: "date",
+                9: "jira",
+                10: "actions"
+            }
+        };
+        const layout = layouts[tableKey];
+        if (!layout) return saved;
+
+        const originalColumns = { ...(saved?.columns || {}) };
+        const originalWidths = { ...(saved?.widths || {}) };
+        const allKeys = [...Object.keys(originalColumns), ...Object.keys(originalWidths)];
+        const hasLegacyKeys = allKeys.some(key => /^col-\d+$/.test(key));
+        if (!allKeys.length && !("columns" in (saved || {})) && !("widths" in (saved || {}))) return saved;
+
+        const migrate = (source, isWidth = false) => {
+            const target = {};
+            for (const [key, value] of Object.entries(source)) {
+                if (!/^col-\d+$/.test(key)) target[key] = value;
+            }
+            if (hasLegacyKeys) {
+                for (const [legacyIndex, stableKey] of Object.entries(layout)) {
+                    const legacyKey = "col-" + legacyIndex;
+                    if (Object.prototype.hasOwnProperty.call(source, legacyKey)) {
+                        target[stableKey] = source[legacyKey];
+                    }
+                }
+            }
+
+            if (tableKey === "scan-results" && Object.prototype.hasOwnProperty.call(target, "affected-version")) {
+                if (isWidth) {
+                    if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
+                        target.affected = target["affected-version"];
+                    }
+                } else {
+                    const affectedProvided = Object.prototype.hasOwnProperty.call(target, "affected");
+                    const versionProvided = Object.prototype.hasOwnProperty.call(target, "affected-version");
+                    const affectedVisible = affectedProvided ? target.affected !== false : true;
+                    const versionVisible = versionProvided ? target["affected-version"] !== false : true;
+                    target.affected = affectedVisible || versionVisible;
+                }
+                delete target["affected-version"];
+            }
+
+            if (tableKey === "vulnerabilities") {
+                const aliases = ["affected-product", "affected-version"];
+                const providedAliases = aliases.filter(key => Object.prototype.hasOwnProperty.call(target, key));
+                if (providedAliases.length) {
+                    if (isWidth) {
+                        if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
+                            target.affected = target["affected-product"] ?? target["affected-version"];
+                        }
+                    } else {
+                        const productProvided = Object.prototype.hasOwnProperty.call(target, "affected-product");
+                        const versionProvided = Object.prototype.hasOwnProperty.call(target, "affected-version");
+                        const productVisible = productProvided ? target["affected-product"] !== false : true;
+                        const versionVisible = versionProvided ? target["affected-version"] !== false : true;
+                        const existingVisible = Object.prototype.hasOwnProperty.call(target, "affected")
+                            ? target.affected !== false
+                            : false;
+                        target.affected = existingVisible || productVisible || versionVisible;
+                    }
+                    delete target["affected-product"];
+                    delete target["affected-version"];
+                }
+            }
+            return target;
+        };
+
+        const columns = migrate(originalColumns);
+        const widths = migrate(originalWidths, true);
+
+        const migrated = { ...(saved || {}), columns, widths };
+        return JSON.stringify(migrated) === JSON.stringify(saved || {}) ? saved : migrated;
+    }
+
     async function loadSettings() {
         try {
             const data = await apiRequest("/api/table-preferences/" + encodeURIComponent(tableKey));
-            settings = { ...structuredClone(defaults), ...(data.settings || {}), columns: { ...(data.settings?.columns || {}) }, widths: { ...(data.settings?.widths || {}) } };
+            const original = data.settings || {};
+            const saved = migrateLegacyColumnSettings(original);
+            settings = { ...structuredClone(defaults), ...saved, columns: { ...(saved.columns || {}) }, widths: { ...(saved.widths || {}) } };
+            if (saved !== original) {
+                await saveSettings();
+            }
         } catch (error) {
             console.error("Could not load table settings:", error);
         }

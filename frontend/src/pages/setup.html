@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initial setup - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body class="auth-page">
+    <main class="auth-card auth-card-wide">
+        <div class="auth-brand-mark">V</div>
+        <p class="auth-eyebrow">VULNERABILITY MANAGEMENT PLATFORM</p>
+        <h1>Initial administrator setup</h1>
+        <p class="auth-subtitle">Create the first administrator account. This one-time setup closes automatically after the account is created.</p>
+        <form id="setup-form" class="auth-form" autocomplete="on">
+            <div class="form-field">
+                <label for="display_name">Full name</label>
+                <input id="display_name" name="display_name" type="text" autocomplete="name"
+                    maxlength="120" required autofocus>
+            </div>
+            <div class="form-field">
+                <label for="username">Administrator username</label>
+                <input id="username" name="username" type="text" autocomplete="username"
+                    minlength="3" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._-]*" required>
+                <small class="auth-hint">Use 3–64 letters, numbers, dots, underscores, or hyphens.</small>
+            </div>
+            <div class="form-field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="new-password"
+                    minlength="12" maxlength="128" required>
+                <small class="auth-hint">Use at least 12 characters.</small>
+            </div>
+            <div class="form-field">
+                <label for="confirm_password">Confirm password</label>
+                <input id="confirm_password" name="confirm_password" type="password"
+                    autocomplete="new-password" minlength="12" maxlength="128" required>
+            </div>
+            <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+            <button id="setup-button" class="primary-button auth-submit" type="submit">Create administrator</button>
+        </form>
+        <p class="auth-footnote">For initial setup, keep the application reachable only from your trusted machine or network.</p>
+    </main>
+    <script src="../services/api.js"></script>
+    <script src="../services/auth-pages.js"></script>
+</body>
+</html>

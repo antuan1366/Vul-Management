@@ -1,20 +1,22 @@
 from pathlib import Path
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_name: str = "Vul-Management"
-    app_version: str = "3.2.0"
+    app_version: str = "3.6.5"
     debug: bool = True
 
     # DATA_DIR is resolved from the process working directory when relative.
     # DATABASE_URL can still explicitly override the default SQLite location.
     data_dir: Path = Path("./data")
     database_url: str | None = None
+    session_secret: str | None = Field(default=None, validation_alias="VULM_SESSION_SECRET")
+    bootstrap_admin_username: str = Field(default="admin", validation_alias="VULM_BOOTSTRAP_ADMIN_USERNAME")
 
     db_schema_min: int = 1
-    db_schema_max: int = 8
+    db_schema_max: int = 11
 
     telegram_api_id: str | None = None
     telegram_api_hash: str | None = None

@@ -12,8 +12,10 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.api.auth import require_admin
 from app.database import SessionLocal, get_db
 from app.services.application_events import record_event, exception_details
+from app.services.asset_message_matching import annotate_scan_results_with_asset_matches
 from app.models.feed import Feed
 from app.models.threat_intelligence import (
     TelegramFeed,
@@ -21,10 +23,14 @@ from app.models.threat_intelligence import (
     TelegramScanRun,
     TelegramScanSchedule,
     ThreatIntelligence,
+    VulnerabilityCustomField,
 )
 from app.schemas.threat_intelligence import (
     IntelligenceCreate,
+    IntelligenceRegisterUpdate,
     IntelligenceUpdate,
+    VulnerabilityCustomFieldCreate,
+    VulnerabilityCustomFieldUpdate,
     ReviewRequest,
     TelegramFeedCreate,
     TelegramFeedUpdate,
@@ -33,7 +39,7 @@ from app.schemas.threat_intelligence import (
 )
 from app.services.threat_intelligence import (
     collect_telegram_scan,
-    enrich_scan_result_from_nvd,
+    enrich_scan_result_from_sources,
     serialize_feed,
     serialize_intelligence,
     serialize_scan_result,
@@ -182,13 +188,25 @@ def _scan_run_progress(db: Session, item: TelegramScanRun) -> dict:
         if statuses and all(status in processed_statuses for status in statuses)
     )
     remaining = max(0, result_total - result_processed)
+    github_feed = db.scalar(
+        select(Feed).where(Feed.feed_type == "github_advisory", Feed.enabled.is_(True)).order_by(Feed.id)
+    )
+    nvd_feed = db.scalar(
+        select(Feed).where(Feed.feed_type == "nvd_cve", Feed.enabled.is_(True)).order_by(Feed.id)
+    )
+    # Conservative estimate: anonymous GitHub can add about 62 seconds per CVE
+    # only when the NVD/CVE Program records leave core fields missing.
+    estimated_seconds_per_cve = (
+        62 if github_feed and not github_feed.api_key
+        else 2.5 if nvd_feed and nvd_feed.api_key
+        else 7
+    )
     return {
         **serialize_scan_run(item),
         "nvd_total": result_total,
         "nvd_processed": result_processed,
         "nvd_remaining": remaining,
-        # Conservative estimate assumes at least six seconds per remaining public NVD request.
-        "nvd_estimated_seconds": remaining * 6 if item.status == "nvd_scanning" else 0,
+        "nvd_estimated_seconds": remaining * estimated_seconds_per_cve if item.status == "nvd_scanning" else 0,
     }
 
 
@@ -214,7 +232,7 @@ def list_scan_results(
     run_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    query = select(TelegramScanResult).order_by(TelegramScanResult.date.desc(), TelegramScanResult.id.desc()).limit(limit)
+    query = select(TelegramScanResult).order_by(TelegramScanResult.cve_id.asc(), TelegramScanResult.id.asc()).limit(limit)
     if run_id is not None:
         query = query.where(TelegramScanResult.scan_run_id == run_id)
     if status != "all":
@@ -227,7 +245,9 @@ def list_scan_results(
             | TelegramScanResult.message_text.ilike(needle)
         )
     items = db.scalars(query).all()
-    return {"items": [serialize_scan_result(item) for item in items], "total": len(items)}
+    serialized = [serialize_scan_result(item) for item in items]
+    annotated = annotate_scan_results_with_asset_matches(db, serialized)
+    return {"items": annotated, "total": len(items)}
 
 
 @router.get("/scan-results/{result_id}")
@@ -235,7 +255,8 @@ def get_scan_result(result_id: int, db: Session = Depends(get_db)):
     item = db.get(TelegramScanResult, result_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
-    return serialize_scan_result(item)
+    serialized = serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialized])[0]
 
 
 @router.delete("/scan-results/{result_id}", status_code=204)
@@ -284,7 +305,7 @@ def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depend
                  f"{item.cve_id} review status changed to {item.review_status}.",
                  cve_id=item.cve_id, scan_run_id=item.scan_run_id,
                  details={"review_notes": item.review_notes})
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 @router.post("/scan-results/{result_id}/enrich")
@@ -295,7 +316,7 @@ def enrich_scan_result(result_id: int, db: Session = Depends(get_db)):
     if item.review_status == "rejected":
         raise HTTPException(status_code=409, detail="Rejected results cannot be enriched.")
     try:
-        enrich_scan_result_from_nvd(db, item)
+        enrich_scan_result_from_sources(db, item)
     except LookupError as error:
         raise HTTPException(status_code=404, detail=str(error))
     except (httpx.HTTPError, ValueError) as error:
@@ -304,7 +325,7 @@ def enrich_scan_result(result_id: int, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(status_code=502, detail=item.nvd_error)
     db.refresh(item)
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 
@@ -322,8 +343,6 @@ def update_scan_result(result_id: int, data: IntelligenceUpdate, db: Session = D
         "cvss_score": "cvss_score",
         "affected_product": "affected_product",
         "affected_versions": "affected_versions",
-        "remediation": "remediation",
-        "mitigation": "mitigation",
         "description": "nvd_description",
         "references_text": "references_text",
     }
@@ -332,7 +351,7 @@ def update_scan_result(result_id: int, data: IntelligenceUpdate, db: Session = D
     item.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 @router.post("/scan-results/{result_id}/approve", status_code=201)
@@ -355,8 +374,8 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
         cvss_score=item.cvss_score,
         affected_product=item.affected_product,
         affected_versions=item.affected_versions,
-        remediation=item.remediation,
-        mitigation=item.mitigation,
+        # Remediation and mitigation are deliberately left for the administrator
+        # to define in the Vulnerability Register after accepting the finding.
         description=item.nvd_description or item.message_text,
         references_text=item.references_text,
         nvd_url=f"https://nvd.nist.gov/vuln/detail/{item.cve_id}",
@@ -380,6 +399,195 @@ def approve_scan_result(result_id: int, db: Session = Depends(get_db)):
     return {"status": "approved", "intelligence_id": record.id, "cve_id": record.cve_id}
 
 
+def _serialize_custom_field(item: VulnerabilityCustomField) -> dict:
+    return {
+        "id": item.id,
+        "name": item.name,
+        "field_key": item.field_key,
+        "is_required": item.is_required,
+        "show_in_table": item.show_in_table,
+        "sort_order": item.sort_order,
+        "created_at": item.created_at,
+        "updated_at": item.updated_at,
+    }
+
+
+def _custom_field_values(item: ThreatIntelligence | None) -> dict[str, str | None]:
+    if item is None:
+        return {}
+    try:
+        values = json.loads(item.custom_fields_json or "{}")
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    if not isinstance(values, dict):
+        return {}
+    return {
+        str(key): (None if value is None else str(value))
+        for key, value in values.items()
+    }
+
+
+def _validated_custom_field_values(
+    db: Session,
+    supplied: dict[str, str | None] | None,
+    current: dict[str, str | None] | None = None,
+) -> dict[str, str | None]:
+    definitions = db.scalars(
+        select(VulnerabilityCustomField).order_by(
+            VulnerabilityCustomField.sort_order, VulnerabilityCustomField.id
+        )
+    ).all()
+    by_key = {item.field_key: item for item in definitions}
+    values = dict(current or {})
+    incoming = supplied or {}
+    unknown_keys = set(incoming) - set(by_key)
+    if unknown_keys:
+        raise HTTPException(
+            status_code=422,
+            detail="Unknown custom field key(s): " + ", ".join(sorted(unknown_keys)),
+        )
+
+    for key, raw_value in incoming.items():
+        if raw_value is not None and len(raw_value) > 5000:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Custom field '{by_key[key].name}' must be 5,000 characters or fewer.",
+            )
+        normalized = raw_value.strip() if isinstance(raw_value, str) else None
+        values[key] = normalized or None
+
+    clean = {key: value for key, value in values.items() if key in by_key}
+    missing = [
+        definition.name
+        for definition in definitions
+        if definition.is_required and not (clean.get(definition.field_key) or "").strip()
+    ]
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail="Complete the required custom field(s): " + ", ".join(missing),
+        )
+    return clean
+
+
+def _new_custom_field_key(db: Session, name: str) -> str:
+    base = re.sub(r"[^a-z0-9]+", "_", name.casefold()).strip("_")
+    if not base:
+        base = "custom_field"
+    base = base[:64].rstrip("_") or "custom_field"
+    candidate = base
+    suffix = 2
+    while db.scalar(
+        select(VulnerabilityCustomField.id).where(
+            VulnerabilityCustomField.field_key == candidate
+        )
+    ) is not None:
+        tail = "_" + str(suffix)
+        candidate = base[: 80 - len(tail)].rstrip("_") + tail
+        suffix += 1
+    return candidate
+
+
+@router.get("/intelligence/custom-fields")
+def list_vulnerability_custom_fields(db: Session = Depends(get_db)):
+    items = db.scalars(
+        select(VulnerabilityCustomField).order_by(
+            VulnerabilityCustomField.sort_order, VulnerabilityCustomField.id
+        )
+    ).all()
+    return {"items": [_serialize_custom_field(item) for item in items], "total": len(items)}
+
+
+@router.post("/intelligence/custom-fields", status_code=201)
+def create_vulnerability_custom_field(
+    data: VulnerabilityCustomFieldCreate,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin),
+):
+    name = data.name.strip()
+    duplicate = db.scalar(
+        select(VulnerabilityCustomField).where(
+            func.lower(VulnerabilityCustomField.name) == name.lower()
+        )
+    )
+    if duplicate:
+        raise HTTPException(status_code=409, detail="A custom field with that name already exists.")
+
+    last_order = db.scalar(select(func.max(VulnerabilityCustomField.sort_order)))
+    now = datetime.utcnow()
+    item = VulnerabilityCustomField(
+        name=name,
+        field_key=_new_custom_field_key(db, name),
+        is_required=data.is_required,
+        show_in_table=data.show_in_table,
+        sort_order=(last_order if last_order is not None else -1) + 1,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(item)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="A custom field with that name already exists.")
+    db.refresh(item)
+    return _serialize_custom_field(item)
+
+
+@router.put("/intelligence/custom-fields/{field_id}")
+def update_vulnerability_custom_field(
+    field_id: int,
+    data: VulnerabilityCustomFieldUpdate,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin),
+):
+    item = db.get(VulnerabilityCustomField, field_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Custom field not found.")
+    changes = data.model_dump(exclude_unset=True)
+    new_name = changes.get("name")
+    if new_name is not None:
+        new_name = new_name.strip()
+        duplicate = db.scalar(
+            select(VulnerabilityCustomField).where(
+                func.lower(VulnerabilityCustomField.name) == new_name.lower(),
+                VulnerabilityCustomField.id != field_id,
+            )
+        )
+        if duplicate:
+            raise HTTPException(status_code=409, detail="A custom field with that name already exists.")
+        item.name = new_name
+    if "is_required" in changes and changes["is_required"] is not None:
+        item.is_required = changes["is_required"]
+    if "show_in_table" in changes and changes["show_in_table"] is not None:
+        item.show_in_table = changes["show_in_table"]
+    item.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(item)
+    return _serialize_custom_field(item)
+
+
+@router.delete("/intelligence/custom-fields/{field_id}", status_code=204)
+def delete_vulnerability_custom_field(
+    field_id: int,
+    db: Session = Depends(get_db),
+    _admin=Depends(require_admin),
+):
+    item = db.get(VulnerabilityCustomField, field_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Custom field not found.")
+
+    field_key = item.field_key
+    for record in db.scalars(select(ThreatIntelligence)).all():
+        values = _custom_field_values(record)
+        if field_key in values:
+            values.pop(field_key, None)
+            record.custom_fields_json = json.dumps(values, ensure_ascii=False)
+            record.updated_at = datetime.utcnow()
+    db.delete(item)
+    db.commit()
+
+
 @router.get("/intelligence")
 def list_intelligence(q: str | None = None, limit: int = Query(default=200, ge=1, le=500), db: Session = Depends(get_db)):
     query = select(ThreatIntelligence).order_by(ThreatIntelligence.date.desc(), ThreatIntelligence.id.desc()).limit(limit)
@@ -401,7 +609,8 @@ def create_intelligence(data: IntelligenceCreate, db: Session = Depends(get_db))
     existing = db.scalar(select(ThreatIntelligence).where(ThreatIntelligence.cve_id == cve_id))
     if existing:
         raise HTTPException(status_code=409, detail="This CVE already exists in Vulnerabilities.")
-    values = data.model_dump(exclude={"cve_id"})
+    values = data.model_dump(exclude={"cve_id", "custom_fields"})
+    custom_values = _validated_custom_field_values(db, data.custom_fields)
     item = ThreatIntelligence(
         cve_id=cve_id,
         severity=values.get("severity"),
@@ -412,6 +621,7 @@ def create_intelligence(data: IntelligenceCreate, db: Session = Depends(get_db))
         mitigation=values.get("mitigation"),
         description=values.get("description"),
         references_text=values.get("references_text"),
+        custom_fields_json=json.dumps(custom_values, ensure_ascii=False),
         nvd_url=f"https://nvd.nist.gov/vuln/detail/{cve_id}",
         source_message="Manually added by administrator",
     )
@@ -434,12 +644,20 @@ def get_intelligence(record_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/intelligence/{record_id}")
-def update_intelligence(record_id: int, data: IntelligenceUpdate, db: Session = Depends(get_db)):
+def update_intelligence(record_id: int, data: IntelligenceRegisterUpdate, db: Session = Depends(get_db)):
     item = db.get(ThreatIntelligence, record_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Intelligence record not found.")
-    for key, value in data.model_dump(exclude_unset=True).items():
+
+    values = data.model_dump(exclude_unset=True, exclude={"custom_fields"})
+    for key, value in values.items():
         setattr(item, key, value)
+
+    if "custom_fields" in data.model_fields_set:
+        current = _custom_field_values(item)
+        custom_values = _validated_custom_field_values(db, data.custom_fields, current=current)
+        item.custom_fields_json = json.dumps(custom_values, ensure_ascii=False)
+
     item.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(item)

@@ -89,6 +89,24 @@ class ThreatIntelligence(Base):
     jira_issue_key: Mapped[str | None] = mapped_column(String(100), nullable=True)
     jira_issue_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     jira_status: Mapped[str] = mapped_column(String(30), nullable=False, default="not_sent")
+    custom_fields_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class VulnerabilityCustomField(Base):
+    __tablename__ = "vulnerability_custom_fields"
+    __table_args__ = (
+        UniqueConstraint("name", name="uq_vulnerability_custom_fields_name"),
+        UniqueConstraint("field_key", name="uq_vulnerability_custom_fields_key"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    field_key: Mapped[str] = mapped_column(String(80), nullable=False)
+    is_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    show_in_table: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
