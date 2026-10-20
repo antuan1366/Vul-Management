@@ -71,7 +71,7 @@
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="8">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="7">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
