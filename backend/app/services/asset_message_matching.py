@@ -74,7 +74,7 @@ FIELD_LABELS = {
 
 def _normalize(value: Any) -> str:
     text = unicodedata.normalize("NFKC", str(value or "")).casefold()
-    text = re.sub(r"[^\w]+", " ", text, flags=re.UNICODE)
+    text = re.sub(r"[\W_]+", " ", text, flags=re.UNICODE)
     return re.sub(r"\s+", " ", text).strip()
 
 
