@@ -1,10 +1,10 @@
 # SESSION
 
 ## Current work
-- Preparing the user-requested 3.6.5 promotion from develop to main.
+- The user-requested 3.6.5 promotion has completed through pull request #19, merged to main at commit a7e3f9b2eb5d525bb4e7c3067a4718963d518317.
 - Version declarations are aligned across backend configuration, sidebar and outbound service User-Agent headers.
 - Database schema remains 11; latest migration is 0011. No migration is introduced for the 3.6.5 version update or asset matching.
-- The user explicitly authorized merging develop into main for this version. Use a pull request and confirm the actual GitHub merge result before reporting success.
+- Pull request #19 was confirmed merged successfully. Future merges still require separate explicit user authorization.
 - Keep future work on develop unless the user specifies otherwise.
 
 ## Authentication / account administration
@@ -29,7 +29,7 @@
 - For the user's local test copy, use E:\Vul and port 8000. Do not touch the separate E:\Vul-Management application on port 8001 unless the user explicitly asks.
 
 ## Immediate verification
-1. Inspect the PR result and verify main contains the intended develop changes and version 3.6.5.
+1. The GitHub merge is confirmed; continue with local runtime tests and record their actual results.
 2. Run the matching unit tests in the user's test copy and record the actual result.
 3. Check /api/info for version 3.6.5 and schema values.
 4. Back up a test DB before migration/upgrade tests.
