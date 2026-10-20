@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from urllib.parse import quote
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect
-from app.api.auth import active_session_user_id, router as auth_router, users_exist
+from app.api.auth import active_session_user_id, router as auth_router, seed_default_admin, users_exist
 from app.api.users import router as users_router
 from app.api.application_events import router as application_events_router
 from app.api.asset_fields import router as asset_fields_router
@@ -69,6 +69,7 @@ def initialize_database():
         seed_default_fields(db);seed_managed_asset_fields(db);seed_default_feeds(db)
     finally:db.close()
 initialize_database()
+seed_default_admin()
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -119,6 +120,32 @@ async def enforce_authentication(request: Request, call_next):
 
     signed_in_user_id = active_session_user_id(request)
     has_users = users_exist()
+
+    must_change_password = False
+    if signed_in_user_id is not None:
+        with SessionLocal() as auth_db:
+            session_user = auth_db.get(User, signed_in_user_id)
+            must_change_password = bool(session_user and session_user.must_change_password)
+
+    if must_change_password:
+        if path == "/src/pages/change-password.html":
+            return await call_next(request)
+        if path in {"/api/auth/me", "/api/auth/change-password"}:
+            return await call_next(request)
+        if path == "/":
+            return RedirectResponse("/src/pages/change-password.html", status_code=303)
+        if path.startswith("/api/"):
+            return JSONResponse(
+                {"detail": "Change the temporary password before using the application."},
+                status_code=403,
+            )
+        if path in {"/docs", "/redoc", "/openapi.json"}:
+            return RedirectResponse("/src/pages/change-password.html", status_code=303)
+        if path.startswith("/src/pages/") and path.endswith(".html"):
+            return RedirectResponse("/src/pages/change-password.html", status_code=303)
+
+    if path == "/src/pages/change-password.html" and not must_change_password:
+        return RedirectResponse("/src/pages/dashboard.html", status_code=303)
 
     if path == "/":
         if not has_users:

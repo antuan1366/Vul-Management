@@ -46,6 +46,7 @@ class UserResponse(BaseModel):
     display_name: str
     role: Literal["admin", "user"]
     is_active: bool
+    must_change_password: bool = False
     created_at: datetime
     updated_at: datetime
     last_login_at: datetime | None

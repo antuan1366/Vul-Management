@@ -1,5 +1,13 @@
 # Application / Database Compatibility
 
+## Release 3.4.0 (in development on develop)
+- Application version declaration: 3.4.0.
+- Declared database schema range: 1–10; latest migration: 0010.
+- Migration 0010 adds `users.must_change_password` with a safe false default for existing accounts.
+- When no users exist after migrations, startup creates an `admin` account with a random temporary password recorded in `backend/data/INITIAL_ADMIN_CREDENTIALS.txt` (ignored by Git). The first successful login must change it; successful change removes the credential file.
+- Existing user accounts are retained; the default account is not created if any user already exists.
+- Runtime migration and login tests remain unverified until run against a backed-up test database.
+
 ## Release 3.3.0 (in development on develop)
 - Application version declaration: 3.3.0.
 - Declared database schema range: 1–9; latest migration: 0009.

@@ -4,7 +4,7 @@
 - Name: Vul-Management
 - Repository: `antuan1366/Vul-Management`
 - Active development branch: `develop`
-- Current backend/sidebar version declaration in source: 3.3.0 (authentication work on develop)
+- Current backend/sidebar version declaration in source: 3.4.0 (development)
 
 ## Goal
 Build a modular web application for vulnerability management and threat intelligence, with an asset inventory, vulnerability discovery, human review, NVD enrichment, remediation workflow and reporting. The application should remain understandable and maintainable by another developer or AI using the documentation in `.ai/`.
@@ -57,7 +57,7 @@ Target workflow:
 Do not mark each step as implemented based only on this description. Inspect backend routes, models, services and frontend handlers.
 
 ## Authentication and account administration
-- First-run setup creates the first administrator once; no default credentials are shipped.
+- If the users table is empty, startup creates the default `admin` account and writes a random temporary password to the ignored local `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`. The first login requires password change and removes the file. Existing accounts are not overwritten.
 - Administrators can create, edit, disable, reset passwords for and delete accounts; the last active administrator cannot be locked out through normal UI/API operations.
 - Sessions use signed, HTTP-only cookies; password hashes use PBKDF2-HMAC-SHA256.
 - The Admin role manages accounts. The User role cannot access user-management endpoints; finer permissions for other application actions remain future work and must be reviewed before production exposure.

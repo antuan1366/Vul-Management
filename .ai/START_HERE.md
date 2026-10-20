@@ -1,7 +1,7 @@
 # START HERE
 
 ## Project
-Vul-Management — version 3.3.0 (development)
+Vul-Management — version 3.4.0 (development)
 
 - Repository: `antuan1366/Vul-Management`
 - Development branch: `develop`
@@ -49,7 +49,7 @@ The user reports the app starts and six page groups open successfully. This is n
 - Keep releases retrievable using immutable version tags/releases after verification and release approval.
 
 ## Authentication feature note
-The first-run setup page is only for creating the first administrator and closes once a user exists. No default password is present. Verify migration 0009 and every login/authorization behavior on a backed-up test database before production deployment.
+If the users table is empty, startup creates `admin` and writes a random temporary password to `backend/data/INITIAL_ADMIN_CREDENTIALS.txt` (inside the ignored data folder). First login forces a password change and successful change removes that file. Verify migrations 0009–0010 and login/authorization behavior on a backed-up test database before production deployment.
 
 ## Current priority
 Finish end-to-end workflow testing, then create a clean customer deployment package and test it on a separate machine. Keep claims about verification precise.

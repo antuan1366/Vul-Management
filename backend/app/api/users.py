@@ -3,7 +3,8 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.api.auth import require_admin
+from app.api.auth import BOOTSTRAP_CREDENTIALS_FILENAME, require_admin
+from app.core.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
@@ -128,5 +129,11 @@ def delete_user(
         )
 
     _prevent_last_admin_lockout(db, user, new_role="user", new_active=False)
+    username = user.username
     db.delete(user)
     db.commit()
+    if username == settings.bootstrap_admin_username.strip().lower():
+        try:
+            (settings.data_dir / BOOTSTRAP_CREDENTIALS_FILENAME).unlink(missing_ok=True)
+        except OSError:
+            pass

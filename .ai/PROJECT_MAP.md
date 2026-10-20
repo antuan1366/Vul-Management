@@ -24,7 +24,7 @@ Inspect the live repository tree before assuming exact module filenames.
 - Table preferences: `frontend/src/services/table-preferences.js`
 
 ## Known frontend pages
-- `login.html`, `setup.html`, `users.html`
+- `login.html`, `setup.html`, `change-password.html`, `users.html`
 - `dashboard.html`
 - `equipment.html`
 - `operating-systems.html`

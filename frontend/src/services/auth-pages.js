@@ -106,8 +106,58 @@
         });
     }
 
+
+
+    async function initializeChangePassword() {
+        const form = document.getElementById("change-password-form");
+        if (!form) return;
+
+        try {
+            const user = await apiRequest("/api/auth/me");
+            if (!user.must_change_password) {
+                window.location.replace("/src/pages/dashboard.html");
+                return;
+            }
+        } catch (error) {
+            window.location.replace("/src/pages/login.html");
+            return;
+        }
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const currentPassword = document.getElementById("current_password").value;
+            const newPassword = document.getElementById("new_password").value;
+            if (newPassword !== document.getElementById("confirm_password").value) {
+                showMessage("The new passwords do not match.", true);
+                return;
+            }
+
+            const button = document.getElementById("change-password-button");
+            button.disabled = true;
+            button.textContent = "Updating password...";
+            showMessage("");
+
+            try {
+                const result = await apiRequest("/api/auth/change-password", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                showMessage("Password updated successfully.", false);
+                window.location.replace(safeNext(result.redirect_to));
+            } catch (error) {
+                showMessage(error.message || "The password could not be changed.", true);
+                button.disabled = false;
+                button.textContent = "Update password";
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         initializeLogin();
         initializeSetup();
+        initializeChangePassword();
     });
 })();

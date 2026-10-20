@@ -1,3 +1,6 @@
+import os
+import re
+import secrets
 import threading
 import time
 from datetime import datetime
@@ -12,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.database import SessionLocal, engine, get_db
 from app.models.user import User
-from app.schemas.auth import InitialAdminSetup, LoginRequest
+from app.schemas.auth import ChangePasswordRequest, InitialAdminSetup, LoginRequest
 from app.schemas.user import UserResponse
 from app.services.auth_security import (
     SESSION_COOKIE_NAME,
@@ -78,6 +81,93 @@ def users_exist() -> bool:
         return db.query(User.id).first() is not None
     finally:
         db.close()
+
+
+
+
+BOOTSTRAP_CREDENTIALS_FILENAME = "INITIAL_ADMIN_CREDENTIALS.txt"
+
+
+def _bootstrap_credentials(username: str) -> tuple[str, str]:
+    settings.data_dir.mkdir(parents=True, exist_ok=True)
+    credentials_path = settings.data_dir / BOOTSTRAP_CREDENTIALS_FILENAME
+
+    if credentials_path.exists():
+        try:
+            values = {}
+            for line in credentials_path.read_text(encoding="utf-8").splitlines():
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    values[key.strip().lower()] = value.strip()
+            stored_username = values.get("username", "").lower()
+            stored_password = values.get("temporary password", "")
+            if stored_username == username and stored_password:
+                return stored_username, stored_password
+        except OSError:
+            pass
+
+    temporary_password = secrets.token_urlsafe(24)
+    contents = (
+        "Vul-Management initial administrator credentials\n"
+        "===============================================\n"
+        f"Username: {username}\n"
+        f"Temporary password: {temporary_password}\n\n"
+        "This password is temporary. Sign in once and change it immediately.\n"
+        "Keep this file private and do not send it to anyone.\n"
+    )
+    credentials_path.write_text(contents, encoding="utf-8")
+    try:
+        os.chmod(credentials_path, 0o600)
+    except OSError:
+        # Windows applies inherited filesystem ACLs rather than POSIX modes.
+        pass
+    return username, temporary_password
+
+
+def seed_default_admin() -> None:
+    """Create a one-time admin account and local onboarding credential file if no users exist."""
+    username = settings.bootstrap_admin_username.strip().lower()
+    if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{2,63}", username):
+        raise RuntimeError(
+            "VULM_BOOTSTRAP_ADMIN_USERNAME must be 3–64 letters, digits, dots, underscores, or hyphens."
+        )
+
+    connection = engine.connect()
+    try:
+        if settings.database_url and settings.database_url.startswith("sqlite"):
+            # Prevent two local workers from both generating bootstrap passwords.
+            connection.exec_driver_sql("BEGIN IMMEDIATE")
+        else:
+            connection.begin()
+
+        user_count = connection.execute(
+            select(func.count()).select_from(User.__table__)
+        ).scalar_one()
+        if user_count:
+            connection.rollback()
+            return
+
+        username, temporary_password = _bootstrap_credentials(username)
+        now = datetime.utcnow()
+        connection.execute(
+            insert(User.__table__).values(
+                username=username,
+                display_name="Vul-Management Administrator",
+                password_hash=hash_password(temporary_password),
+                role="admin",
+                is_active=True,
+                must_change_password=True,
+                created_at=now,
+                updated_at=now,
+                last_login_at=None,
+            )
+        )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def set_session_cookie(response: Response, request: Request, user_id: int) -> None:
@@ -174,6 +264,7 @@ def _create_first_admin(data: InitialAdminSetup) -> int:
                 password_hash=password_hash,
                 role="admin",
                 is_active=True,
+                must_change_password=False,
                 created_at=now,
                 updated_at=now,
                 last_login_at=now,
@@ -250,7 +341,11 @@ def login(data: LoginRequest, request: Request):
         response = JSONResponse(
             {
                 "user": UserResponse.model_validate(user).model_dump(mode="json"),
-                "redirect_to": _safe_redirect_target(data.next),
+                "redirect_to": (
+                    "/src/pages/change-password.html"
+                    if user.must_change_password
+                    else _safe_redirect_target(data.next)
+                ),
             }
         )
         set_session_cookie(response, request, user.id)
@@ -258,6 +353,41 @@ def login(data: LoginRequest, request: Request):
         return response
     finally:
         db.close()
+
+
+
+
+@router.post("/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect.",
+        )
+    if data.current_password == data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The new password must be different from the current password.",
+        )
+
+    user.password_hash = hash_password(data.new_password)
+    user.must_change_password = False
+    user.updated_at = datetime.utcnow()
+    db.commit()
+
+    if user.username == settings.bootstrap_admin_username.strip().lower():
+        credentials_path = settings.data_dir / BOOTSTRAP_CREDENTIALS_FILENAME
+        try:
+            credentials_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    return {"status": "password_changed", "redirect_to": "/src/pages/dashboard.html"}
 
 
 @router.post("/logout")
