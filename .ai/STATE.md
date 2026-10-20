@@ -2,14 +2,14 @@
 
 ## Snapshot
 - Project: Vul-Management
-- Version declaration: 3.4.0 (automatic first-admin bootstrap and forced password change added on develop)
+- Version declaration: 3.4.0 (default administrator bootstrap configured on develop)
 - Active development branch: `develop`
 - Declared schema range: 1–10
 - Latest known migration: 0010
 - Backend and sidebar version declarations are 3.4.0.
 - Local login and user administration are implemented on develop: automatic first-admin bootstrap when no users exist, forced initial password change, sign-in/sign-out, signed HTTP-only session cookie, PBKDF2 password hashes, account enable/disable, Admin/User roles, password reset, and last-active-admin safeguards.
 - Authenticated access is enforced server-side for app HTML pages, data APIs, and API documentation. Login attempts are throttled in-process after 10 failed attempts within five minutes.
-- Migration 0009 adds the users table; migration 0010 adds `must_change_password`. If no users exist at startup, a default `admin` account is created with a cryptographically random temporary password stored in the ignored local file `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`; the first login forces password change and then deletes that credential file. Existing accounts are not overwritten. When VULM_SESSION_SECRET is not set, a signing key is generated under the ignored local data directory.
+- Migration 0009 adds the users table; migration 0010 adds `must_change_password`. If no users exist at startup, a default `admin` account is created with password `vulmgm` and does not require a forced password change. A previous bootstrap account is converted to the configured default only if it is still marked as requiring its first password change; established passwords are preserved. When VULM_SESSION_SECRET is not set, a signing key is generated under the ignored local data directory.
 - Multi-source CVE lookup code is committed on `develop`: NVD first, then the official CVE Program record and GitHub Security Advisories when description/severity/product/version fields remain missing.
 - Two new built-in feed types are seeded at application startup: `cve_program` and `github_advisory`. Feed enablement is respected.
 - Supplemental provider references are labelled in Scan Result details. Remediation and Mitigation remain administrator-managed in Vulnerabilities and are not part of automated source completeness.
@@ -38,7 +38,7 @@ This confirms basic navigation/page rendering only. The following remain unverif
 
 ## Next steps
 1. Back up a test database, upgrade it through migrations 0009–0010, and verify existing asset and intelligence records remain intact.
-2. Confirm the first-run `admin` account and local temporary credential file are created only when the users table is empty.
+2. Confirm the first-run `admin` account is created with the configured default password only when the users table is empty.
 3. Verify first login is forced to the change-password page; after change, access is restored and the temporary credential file is deleted.
 2. Test first-admin setup, sign-in/sign-out, eight-hour session expiry, disabled-user rejection, and protected page/API/docs routes.
 5. Test user creation, duplicate usernames, role changes, password reset, disabling/deleting users, and protection against locking out the last active administrator.
