@@ -92,7 +92,7 @@
             <div class="sidebar-footer">
                 <div class="sidebar-session-user"><strong id="sidebar-current-user">Signed in</strong><span id="sidebar-current-role"></span></div>
                 <button type="button" id="sidebar-logout" class="sidebar-logout-button">Log out</button>
-                <div class="sidebar-footer-version"><span>Vul-Management</span><span>v3.5.0</span></div>
+                <div class="sidebar-footer-version"><span>Vul-Management</span><span>v3.6.0</span></div>
             </div>
         `;
 
