@@ -71,7 +71,7 @@
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="7">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="8">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
@@ -80,11 +80,22 @@
                 '<button class="secondary-button small-button review-action-control" data-action="details" data-id="'+x.id+'">Details</button>'+
                 '<select class="review-status-select review-action-control" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
                 '</div>';
-            return '<tr>'+
+            const match = x.asset_match || {matched:false,asset_match_count:0,asset_matches:[]};
+            const matchAssets = match.asset_matches || [];
+            const matchTitle = matchAssets.map(asset => {
+                const terms = (asset.matched_terms || []).map(term => term.term + " (" + (term.fields || []).join(", ") + ")").join(", ");
+                return asset.asset_name + " [" + asset.asset_type_label + "] — matched: " + terms;
+            }).join("\n") + (match.asset_match_count > matchAssets.length ? "\nAnd " + (match.asset_match_count-matchAssets.length) + " more asset(s)." : "");
+            const visibleNames = matchAssets.slice(0,2).map(asset => esc(asset.asset_name)).join(", ");
+            const matchCell = match.matched
+                ? '<td class="asset-match-cell"><span class="asset-match-badge" title="'+esc(matchTitle)+'">ASSET MATCH ('+Number(match.asset_match_count || matchAssets.length)+')</span><small class="asset-match-assets" title="'+esc(matchTitle)+'">'+visibleNames+(match.asset_match_count>2?", and more":"")+'</small></td>'
+                : '<td class="asset-match-cell"><span class="asset-match-none">—</span></td>';
+            return '<tr'+(match.matched?' class="scan-result-asset-match"':'')+'>'+
                 '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
+                matchCell+
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
                 '<td class="result-cell"><div class="affected-combined" title="'+esc((x.affected_product || "Not available from enabled sources")+" | Version: "+(x.affected_versions || "Not specified"))+'"><strong>'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</strong><small>Version: '+esc(shortValue(x.affected_versions,"Not specified"))+'</small></div></td>'+
                 '<td>'+actions+'</td></tr>';
@@ -117,6 +128,26 @@
     }
     function fillModal(x) {
         active = x;
+        const assetMatch = x.asset_match || {matched:false,asset_match_count:0,asset_matches:[]};
+        const matchPanel = $("result-asset-match-panel");
+        matchPanel.hidden = !assetMatch.matched;
+        const matchItems = assetMatch.asset_matches || [];
+        $("result-asset-match-summary").textContent = assetMatch.matched
+            ? "Found " + assetMatch.asset_match_count + " potential match(es) among currently registered assets."
+            : "";
+        const matchList = $("result-asset-match-list");
+        matchList.replaceChildren();
+        for (const asset of matchItems) {
+            const item = document.createElement("li");
+            const termSummary = (asset.matched_terms || []).map(term => term.term + " — " + (term.fields || []).join(", ")).join("; ");
+            item.textContent = asset.asset_name + " (" + asset.asset_type_label + ") · " + termSummary;
+            matchList.appendChild(item);
+        }
+        if (assetMatch.asset_match_count > matchItems.length) {
+            const item = document.createElement("li");
+            item.textContent = "And " + (assetMatch.asset_match_count - matchItems.length) + " more matching asset(s).";
+            matchList.appendChild(item);
+        }
         $("result-modal-title").textContent = x.cve_id;
         $("result-modal-subtitle").textContent = "Collected "+dt(x.date)+" · @"+(x.channel_username||"Telegram")+" · Status: "+human(x.review_status);
         $("result-original-message").textContent = x.message_text || "No original message text is available.";
