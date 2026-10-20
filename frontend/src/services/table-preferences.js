@@ -261,22 +261,61 @@
         const layout = layouts[tableKey];
         if (!layout) return saved;
 
-        const columns = { ...(saved?.columns || {}) };
-        const widths = { ...(saved?.widths || {}) };
-        const allKeys = [...Object.keys(columns), ...Object.keys(widths)];
-        if (!allKeys.length || allKeys.some(key => !/^col-\d+$/.test(key))) return saved;
+        const originalColumns = { ...(saved?.columns || {}) };
+        const originalWidths = { ...(saved?.widths || {}) };
+        const allKeys = [...Object.keys(originalColumns), ...Object.keys(originalWidths)];
+        const hasLegacyKeys = allKeys.some(key => /^col-\d+$/.test(key));
+        if (!allKeys.length && !("columns" in (saved || {})) && !("widths" in (saved || {}))) return saved;
 
         const migrate = (source) => {
             const target = {};
-            for (const [legacyIndex, stableKey] of Object.entries(layout)) {
-                const legacyKey = "col-" + legacyIndex;
-                if (Object.prototype.hasOwnProperty.call(source, legacyKey)) {
-                    target[stableKey] = source[legacyKey];
+            for (const [key, value] of Object.entries(source)) {
+                if (!/^col-\d+$/.test(key)) target[key] = value;
+            }
+            if (hasLegacyKeys) {
+                for (const [legacyIndex, stableKey] of Object.entries(layout)) {
+                    const legacyKey = "col-" + legacyIndex;
+                    if (Object.prototype.hasOwnProperty.call(source, legacyKey)) {
+                        target[stableKey] = source[legacyKey];
+                    }
+                }
+            }
+
+            if (tableKey === "scan-results" && Object.prototype.hasOwnProperty.call(target, "affected-version")) {
+                if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
+                    target.affected = target["affected-version"];
+                }
+                delete target["affected-version"];
+            }
+
+            if (tableKey === "vulnerabilities") {
+                const aliases = ["affected-product", "affected-version"];
+                const providedAliases = aliases.filter(key => Object.prototype.hasOwnProperty.call(target, key));
+                if (providedAliases.length) {
+                    if (!Object.prototype.hasOwnProperty.call(target, "affected")) {
+                        target.affected = providedAliases.some(key => target[key] !== false);
+                    }
+                    delete target["affected-product"];
+                    delete target["affected-version"];
                 }
             }
             return target;
         };
-        return { ...(saved || {}), columns: migrate(columns), widths: migrate(widths) };
+
+        const columns = migrate(originalColumns);
+        const widths = migrate(originalWidths);
+
+        // Preserve the width of the previous product field when merging product/version.
+        if (tableKey === "vulnerabilities" && !Object.prototype.hasOwnProperty.call(widths, "affected")) {
+            if (Object.prototype.hasOwnProperty.call(originalWidths, "affected-product")) {
+                widths.affected = originalWidths["affected-product"];
+            } else if (Object.prototype.hasOwnProperty.call(originalWidths, "affected-version")) {
+                widths.affected = originalWidths["affected-version"];
+            }
+        }
+
+        const migrated = { ...(saved || {}), columns, widths };
+        return JSON.stringify(migrated) === JSON.stringify(saved || {}) ? saved : migrated;
     }
 
     async function loadSettings() {
