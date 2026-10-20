@@ -282,9 +282,10 @@
     async function loadSettings() {
         try {
             const data = await apiRequest("/api/table-preferences/" + encodeURIComponent(tableKey));
-            const saved = migrateLegacyColumnSettings(data.settings || {});
+            const original = data.settings || {};
+            const saved = migrateLegacyColumnSettings(original);
             settings = { ...structuredClone(defaults), ...saved, columns: { ...(saved.columns || {}) }, widths: { ...(saved.widths || {}) } };
-            if (saved !== (data.settings || {})) {
+            if (saved !== original) {
                 await saveSettings();
             }
         } catch (error) {
