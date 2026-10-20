@@ -14,6 +14,22 @@
         .vulnerability-heading p:not(.vulnerability-eyebrow){max-width:680px;line-height:1.5;font-size:14px}
         .vulnerability-header-actions{display:flex;gap:8px;flex-wrap:wrap}
         .vulnerability-header-actions button{min-height:40px}
+        .custom-field-manager-dialog{width:min(820px,100%)}
+        .custom-field-create-form{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:end;gap:12px;padding:16px;border:1px solid #e3e5e9;border-radius:8px;background:#fafbfc}
+        .custom-field-create-form .form-field{min-width:0}
+        .custom-field-create-options{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:40px}
+        .custom-field-create-options label,.custom-field-editor-options label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:12px;color:#4b515b}
+        .custom-field-create-options input,.custom-field-editor-options input{width:15px;height:15px;margin:0}
+        .custom-field-manager-list{display:grid;gap:10px;margin-top:16px}
+        .custom-field-manager-empty{padding:20px;text-align:center;border:1px dashed #d4d7dd;border-radius:8px;color:#6c727c}
+        .custom-field-editor{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:end;gap:10px;padding:12px;border:1px solid #e3e5e9;border-radius:8px;background:#fff}
+        .custom-field-editor .form-field{min-width:0}
+        .custom-field-editor-options{display:flex;gap:10px;flex-wrap:wrap;align-items:center;min-height:38px}
+        .custom-field-manager-message{margin:12px 0 0;color:#606671;font-size:12px;white-space:pre-wrap}
+        .custom-field-manager-message.error{color:#b42318}
+        #vulnerability-custom-field-inputs{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+        #vulnerability-custom-field-inputs:empty{display:none}
+        @media(max-width:760px){.custom-field-create-form,.custom-field-editor{grid-template-columns:minmax(0,1fr)}.custom-field-create-options,.custom-field-editor-options{min-height:auto}}
         .vulnerability-card{padding:0;overflow:hidden}
         .vulnerability-card-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:22px 24px;border-bottom:1px solid #e8e9ec}
         .vulnerability-card-header h2{margin:0 0 5px;font-size:20px;color:#20242a}
@@ -28,7 +44,7 @@
         #vulnerability-search{height:40px;padding:9px 12px 9px 38px;border-color:#dfe1e5;border-radius:7px;background:#fff;color:#20242a}
         #vulnerability-search:focus{border-color:#747b86;box-shadow:0 0 0 3px rgba(60,70,85,.08)}
         .vulnerability-table-wrap{overflow:auto;border:0;border-bottom:1px solid #e8e9ec;border-radius:0;margin:0 24px 18px;width:calc(100% - 52px);box-sizing:border-box}
-        #vulnerabilities-table{min-width:1080px;width:100%}
+        #vulnerabilities-table{min-width:1020px;width:100%}
         #vulnerabilities-table th{padding:12px 14px;background:#f8f8f8;color:#333;font-family:inherit;font-size:14px;font-weight:600;line-height:1.4;letter-spacing:normal;text-align:left;text-transform:none;border-bottom:1px solid #ddd;white-space:nowrap}
         #vulnerabilities-table td{padding:14px;border-bottom:1px solid #eff0f2;color:#414650;font-size:14px;vertical-align:middle}
         #vulnerabilities-table tbody tr:hover{background:#fafbfc}
@@ -71,6 +87,7 @@
             <p>Review accepted CVEs, maintain remediation details, and create Jira issues for follow-up.</p>
         </div>
         <div class="vulnerability-header-actions">
+            <button id="manage-vulnerability-fields-button" class="secondary-button" type="button" hidden>Custom Fields</button>
             <button id="add-vulnerability-button" class="primary-button" type="button">Add Vulnerability</button>
         </div>
     </section>
@@ -94,10 +111,10 @@
         <div class="vulnerability-table-wrap">
             <table id="vulnerabilities-table">
                 <thead>
-                    <tr><th data-column-key="selection"><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th data-column-key="row-number">#</th><th data-column-key="cve">CVE ID</th><th data-column-key="cvss">CVSS</th><th data-column-key="affected-product">Affected Product</th><th data-column-key="affected-version">Affected Version</th><th data-column-key="mitigation">Mitigation</th><th data-column-key="date">DATE</th><th data-column-key="jira">Jira</th><th data-column-key="actions">Actions</th></tr>
+                    <tr><th data-column-key="selection"><input id="select-all-vulnerabilities" type="checkbox" aria-label="Select all vulnerabilities"></th><th data-column-key="row-number">#</th><th data-column-key="cve">CVE ID</th><th data-column-key="cvss">CVSS</th><th data-column-key="affected">Affected Product / Version</th><th data-column-key="mitigation">Mitigation</th><th data-column-key="date">DATE</th><th data-column-key="jira">Jira</th><th data-column-key="actions">Actions</th></tr>
                 </thead>
                 <tbody id="vulnerabilities-table-body">
-                    <tr><td class="vulnerability-table-empty" colspan="10">Loading vulnerability records…</td></tr>
+                    <tr><td class="vulnerability-table-empty" colspan="9">Loading vulnerability records…</td></tr>
                 </tbody>
             </table>
         </div>
@@ -125,6 +142,7 @@
                 <div class="form-field full"><label for="vul-mitigation">Mitigation</label><textarea id="vul-mitigation" rows="2" placeholder="Temporary risk-reduction steps"></textarea></div>
                 <div class="form-field full"><label for="vul-description">Description</label><textarea id="vul-description" rows="3" placeholder="Short vulnerability summary"></textarea></div>
                 <div class="form-field full"><label for="vul-references">References</label><textarea id="vul-references" rows="2" placeholder="Advisory URLs or references"></textarea></div>
+                <div id="vulnerability-custom-field-inputs" class="form-full-width"></div>
                 <div class="form-field full"><p id="vulnerability-form-message" role="status" aria-live="polite"></p></div>
             </div>
             <div class="form-actions">
@@ -134,6 +152,37 @@
         </form>
     </div>
 </div>
+
+<div id="custom-fields-modal" class="modal-overlay" aria-hidden="true">
+    <section class="modal-dialog equipment-modal-dialog custom-field-manager-dialog" role="dialog" aria-modal="true" aria-labelledby="custom-fields-modal-title">
+        <div class="modal-header">
+            <div>
+                <h2 id="custom-fields-modal-title">Manage Vulnerability Fields</h2>
+                <p class="section-description">Create any text field needed for the Vulnerability Register. Required fields are enforced when records are saved.</p>
+            </div>
+            <button id="close-custom-fields-modal" class="modal-close-button" type="button" aria-label="Close dialog">×</button>
+        </div>
+        <form id="custom-field-create-form" class="custom-field-create-form">
+            <div class="form-field">
+                <label for="new-custom-field-name">New field name</label>
+                <input id="new-custom-field-name" name="name" type="text" maxlength="100" placeholder="For example: Business Owner" required>
+            </div>
+            <div class="custom-field-create-options">
+                <label><input id="new-custom-field-required" type="checkbox"> Required</label>
+                <label><input id="new-custom-field-show-in-table" type="checkbox" checked> Show in table</label>
+            </div>
+            <button id="create-custom-field-button" class="primary-button" type="submit">Add Field</button>
+        </form>
+        <p id="custom-field-manager-message" class="custom-field-manager-message" role="status" aria-live="polite"></p>
+        <div id="custom-field-manager-list" class="custom-field-manager-list">
+            <div class="custom-field-manager-empty">Loading custom fields…</div>
+        </div>
+        <div class="form-actions">
+            <button id="close-custom-fields-modal-footer" class="secondary-button" type="button">Close</button>
+        </div>
+    </section>
+</div>
+
 <script src="../services/api.js"></script>
 <script src="../services/threat-intelligence.js"></script>
 <script src="../services/sidebar.js"></script>
