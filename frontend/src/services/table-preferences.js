@@ -264,7 +264,7 @@
         const columns = { ...(saved?.columns || {}) };
         const widths = { ...(saved?.widths || {}) };
         const allKeys = [...Object.keys(columns), ...Object.keys(widths)];
-        if (allKeys.some(key => !/^col-\\d+$/.test(key))) return saved;
+        if (!allKeys.length || allKeys.some(key => !/^col-\d+$/.test(key))) return saved;
 
         const migrate = (source) => {
             const target = {};
