@@ -305,7 +305,7 @@ def review_scan_result(result_id: int, data: ReviewRequest, db: Session = Depend
                  f"{item.cve_id} review status changed to {item.review_status}.",
                  cve_id=item.cve_id, scan_run_id=item.scan_run_id,
                  details={"review_notes": item.review_notes})
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 @router.post("/scan-results/{result_id}/enrich")
@@ -325,7 +325,7 @@ def enrich_scan_result(result_id: int, db: Session = Depends(get_db)):
         db.commit()
         raise HTTPException(status_code=502, detail=item.nvd_error)
     db.refresh(item)
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 
@@ -351,7 +351,7 @@ def update_scan_result(result_id: int, data: IntelligenceUpdate, db: Session = D
     item.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
-    return serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialize_scan_result(item)])[0]
 
 
 @router.post("/scan-results/{result_id}/approve", status_code=201)
