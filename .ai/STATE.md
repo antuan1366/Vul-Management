@@ -5,9 +5,9 @@
 - Version declaration: 3.5.0 (admin-managed vulnerability custom fields and merged affected-product/version columns)
 - Active development branch: `develop`
 - Declared schema range: 1–11
-- Latest known migration: 0010
+- Latest known migration: 0011
 - Backend and sidebar version declarations are 3.5.0.
-- Local login and user administration are implemented on develop: automatic first-admin bootstrap when no users exist, forced initial password change, sign-in/sign-out, signed HTTP-only session cookie, PBKDF2 password hashes, account enable/disable, Admin/User roles, password reset, and last-active-admin safeguards.
+- Local login and user administration are implemented on develop: automatic first-admin bootstrap when no users exist, sign-in/sign-out, signed HTTP-only session cookie, PBKDF2 password hashes, account enable/disable, Admin/User roles, password reset, and last-active-admin safeguards.
 - Authenticated access is enforced server-side for app HTML pages, data APIs, and API documentation. Login attempts are throttled in-process after 10 failed attempts within five minutes.
 - Vulnerability Register custom fields are stored per record in `threat_intelligence.custom_fields_json`; definitions are admin-managed in `vulnerability_custom_fields` and added by migration 0011. Field names can be edited, fields can be required, and table visibility is configurable. Vulnerability Register and Scan Result display affected product and version in one column each.
 - Vulnerability Register and Scan Result tables now omit their Severity column while retaining CVSS/Score. Scan Result Details and status controls share aligned control styling. Table preferences use stable keys for these two changed layouts and migrate prior index-based column/width preferences without shifting settings onto the wrong columns.
