@@ -57,7 +57,7 @@ Target workflow:
 Do not mark each step as implemented based only on this description. Inspect backend routes, models, services and frontend handlers.
 
 ## Authentication and account administration
-- If the users table is empty, startup creates the default `admin` account and writes a random temporary password to the ignored local `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`. The first login requires password change and removes the file. Existing accounts are not overwritten.
+- If the users table is empty, startup creates the default `admin` account with password `vulmgm`; first login is not forced to change it. A previous bootstrap account is converted to the requested default only if it is still marked as requiring its first password change. Established passwords are preserved. The shared default is for local/testing only and must be changed before exposing the app to an untrusted network.
 - Administrators can create, edit, disable, reset passwords for and delete accounts; the last active administrator cannot be locked out through normal UI/API operations.
 - Sessions use signed, HTTP-only cookies; password hashes use PBKDF2-HMAC-SHA256.
 - The Admin role manages accounts. The User role cannot access user-management endpoints; finer permissions for other application actions remain future work and must be reviewed before production exposure.
