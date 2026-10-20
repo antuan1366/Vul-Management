@@ -1,5 +1,13 @@
 # Application / Database Compatibility
 
+## Release 3.5.0 (in development on develop)
+- Application version declaration: 3.5.0.
+- Declared database schema range: 1–11; latest migration: 0011.
+- Migration 0011 adds `threat_intelligence.custom_fields_json` and the `vulnerability_custom_fields` definitions table. Existing vulnerability records receive an empty JSON object by default; existing CVE data is not intentionally rewritten.
+- Admins can create, rename, require, toggle table visibility for, and delete custom text fields in the Vulnerability Register. Values are saved per CVE; deleting a field also removes that field's values from existing records.
+- Vulnerability Register and Scan Result now display Affected Product and Affected Version together in one column. Table preferences are migrated to preserve column visibility/width where possible.
+- Schema migration and UI/API behavior are not runtime-verified until tested against a backed-up test database.
+
 ## Release 3.4.0 (in development on develop)
 - Application version declaration: 3.4.0.
 - Declared database schema range: 1–10; latest migration: 0010.
