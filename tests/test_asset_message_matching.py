@@ -64,6 +64,19 @@ class AssetMessageMatchingTests(unittest.TestCase):
         self.assertEqual(_normalize("edge_switch-1"), "edge switch 1")
         self.assertEqual(_normalize("FortiGate/100F"), "fortigate 100f")
 
+    def test_ipv4_is_preserved_as_a_single_match_phrase(self):
+        self.assertIn("192 168 1 10", _term_variants("192.168.1.10"))
+        index = [
+            {
+                "asset_id": 4,
+                "asset_type": "equipment",
+                "asset_type_label": "Equipment",
+                "asset_name": "Core Router",
+                "terms": {"192 168 1 10": ["IP Address"]},
+            }
+        ]
+        self.assertTrue(match_message_to_assets("Alert for 192.168.1.10", index)["matched"])
+
 
 if __name__ == "__main__":
     unittest.main()
