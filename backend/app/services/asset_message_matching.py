@@ -42,7 +42,7 @@ GENERIC_TERMS = {
     "production", "prod", "test", "testing", "development", "dev", "staging",
     "critical", "high", "medium", "low", "unknown", "none", "null",
     "active", "inactive", "enabled", "disabled", "true", "false",
-    "yes", "no", "other", "general", "default", "cpe", "purl", "database",
+    "yes", "no", "other", "general", "default", "cpe", "purl", "pkg", "database",
 }
 
 NON_IDENTIFYING_CUSTOM_KEYS = {
