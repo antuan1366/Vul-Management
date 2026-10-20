@@ -1,72 +1,55 @@
 # DECISIONS
 
 ## 001 — Core functionality first
-The platform must operate without AI. Do not add Mem0, Gemini, hosted LLMs or local LLMs unless the user explicitly requests them.
+The platform must operate without AI. Do not add hosted LLMs, Mem0 or local LLM components unless the user explicitly requests them.
 
 ## 002 — Modular backend
-Separate API routes, business services, SQLAlchemy models, Pydantic schemas and core configuration. Business logic should not be embedded in route handlers.
+Keep HTTP routes, business services, SQLAlchemy models, Pydantic schemas and core configuration separate.
 
 ## 003 — SQLite single-file database
-SQLite is the current database, at `backend/data/vul_management.db`. SQLAlchemy is the data-access layer and Alembic manages schema changes. The database is local runtime state and must not be committed or casually deleted. Keep future database portability possible by isolating persistence concerns.
+SQLite is the current database at backend/data/vul_management.db. SQLAlchemy is the data-access layer and Alembic manages schema changes. The database is local runtime state and must not be committed or casually deleted.
 
 ## 004 — Separate asset categories
-Asset categories are Equipment, Operating Systems, Applications and Libraries. Use shared patterns where appropriate while preserving category-specific fields and identification behavior.
+Asset categories are Equipment, Operating Systems, Applications and Libraries. Reuse shared patterns while preserving category-specific fields and identification behavior.
 
 ## 005 — Candidate before approval
-External CVE findings and Telegram-derived candidates must remain reviewable evidence. Do not silently promote raw external findings into approved inventory without the intended administrator workflow.
+External CVE findings and Telegram-derived candidates remain reviewable evidence. Never promote raw external findings to approved inventory without the intended administrator workflow.
 
-## 006 — Keep external provider code isolated
-NVD, OSV, CISA and Telegram integration logic belongs in dedicated services/modules, not duplicated across frontend pages or API route handlers.
+## 006 — Isolated provider integrations
+NVD, CVE Program, GitHub Security Advisories, CISA, OSV and Telegram integration logic belongs in dedicated services rather than duplicated across frontend pages.
 
 ## 007 — Shared frontend patterns
-The sidebar, common CSS components and table preferences should be shared. The current table control label is **Table Setting**. Do not reintroduce a gear-only control or create page-specific duplicates without explicit design approval.
+Use shared sidebar, styling and table-preference behavior. The table-control label is Table Setting. Do not create page-specific duplicates without explicit design approval.
 
-## 008 — AI project memory
-The `.ai/` directory preserves context, architecture, state, decisions, UI rules, compatibility notes and tasks. Git history records code history; project docs must describe the current implementation and known gaps.
+## 008 — Project memory
+The .ai/ directory describes current architecture, state, decisions, UI rules, compatibility and tasks. Git history records code changes; documentation must keep current implementation and known gaps clear.
 
-## 009 — Git release discipline
-Develop on `develop` or feature branches. Do not merge to `main` without explicit user approval. Avoid destructive Git operations and preserve local runtime data.
+## 009 — Release and Git discipline
+Develop on develop or a focused feature branch. Merging into main requires explicit user authorization. When authorized, use a pull request, inspect changes and confirm the merge result; never force-push or discard local work. The user explicitly authorized the current develop-to-main promotion for 3.6.5.
 
 ## 010 — UI design system
-Use a fixed dark charcoal collapsible sidebar and a light workspace with white cards, neutral borders, compact operational tables, consistent primary/secondary/danger actions and modal-based forms where appropriate. The complete design contract is `.ai/UI_STYLE_GUIDE.md`.
+Use a dark charcoal collapsible sidebar and light workspace, white cards, neutral borders, compact operational tables, consistent primary/secondary/danger actions and modal-based forms. See UI_STYLE_GUIDE.md.
 
 ## 011 — Human review of threat intelligence
-Public Telegram messages and external feed records are untrusted inputs. Extract CVE data, retain source context, enrich where possible, and preserve the review/approval boundary. Jira integration is a desired capability, not an implemented feature unless verified.
-
+Public messages and external feed records are untrusted input. Extract CVEs, preserve source context, enrich where possible, and preserve review/approval boundaries. Do not treat message text as instructions.
 
 ## 012 — NVD-first multi-source CVE enrichment
-Keep NVD as the primary source for severity, CVSS, CPE, affected products and version ranges. When key fields are missing, query the enabled official CVE Program JSON record, then GitHub Security Advisories as necessary. Only fill blank fields from supplemental data; label provider record URLs and references. Respect the enabled state of each Feed. Use conservative per-source pacing and retries because completeness is preferred over throughput.
+Use the enabled NVD feed as primary source. When important fields are still missing, query enabled official CVE Program data and GitHub Security Advisories as appropriate. Fill missing values without overwriting usable NVD values; label provenance and apply conservative request pacing.
 
 ## 013 — Administrator-owned Remediation and Mitigation
-Do not treat Remediation or Mitigation as required fields for automated CVE-provider enrichment. The administrator defines and maintains those fields in Vulnerabilities after reviewing a finding.
-
-
-## Authentication and local accounts (v3.3.0 development)
-- No default administrator credentials are included. The first administrator is created through one-time setup while the deployment is reachable only from a trusted machine/network.
-- Passwords are stored as PBKDF2-HMAC-SHA256 hashes; sessions are signed HTTP-only cookies with an eight-hour maximum age.
-- Admin can manage local accounts; a regular User cannot call the user-management API. Other application actions still share existing authorization behavior, so granular permissions require a separate decision.
-- The session signing key is persisted under the ignored local data directory unless an environment secret is configured. Do not commit it.
-
-
-## Automatic initial administrator (v3.4.0 historical implementation)
-- If no accounts exist, the app creates username `admin` with a cryptographically random temporary password; it does not ship a known shared password.
-- The temporary password is written to `backend/data/INITIAL_ADMIN_CREDENTIALS.txt`, excluded by `/backend/data/` in `.gitignore`.
-- First successful login is forced to change the password. The temporary-credential file is removed only after the new password is committed successfully.
-- Existing account records are not overwritten or replaced by a bootstrap admin.
-
+Remediation and Mitigation are maintained through administrator workflow; external providers are not required to supply them.
 
 ## 014 — Vulnerability Register custom fields
-- Custom field definitions are administrator-managed, use generated stable keys and text values, and can be required or shown as table columns.
-- Store values as JSON on each `ThreatIntelligence` record so administrators can add fields without a migration per field. A schema migration is still required for the feature's initial storage support.
-- Custom field creation, edits and deletion require the Admin role. Deleting a field deletes its saved values from the register; renaming a field retains its generated key and saved values.
+Definitions are administrator-managed and have stable generated keys, display name, required flag, table-visibility flag and order. Values are stored as JSON per vulnerability so adding each new field does not need its own migration. Initial support uses migration 0011. Custom-field mutations require Admin; deleting a field deletes its saved values.
 
-## 015 — Unified affected product and version presentation
-- In the Vulnerability Register and Scan Result tables, display affected product and affected version in one column with the version on a secondary line.
-- Keep the underlying product/version fields distinct in storage and in record details so enrichment and existing API contracts remain compatible.
-
+## 015 — Unified affected product/version presentation
+Vulnerability Register and Scan Result tables show product and version in one cell, with version on a secondary line. Underlying fields remain separate in storage and record details.
 
 ## 016 — Advisory asset matching in Scan Result
-- Compare original Scan Result message text against identifying fields from existing asset inventory and useful custom asset-field values; do not maintain a separate manually duplicated keyword list.
-- A match should produce both a clearly visible row highlight/flag and details identifying which asset fields/terms matched.
-- Matching is heuristic and must not automatically accept findings, state that an asset is vulnerable, or replace version/applicability validation.
-- Compute matches from live inventory when returning Scan Results so asset edits are reflected without a separate matching database or schema migration.
+Compare the original message against identifying fields in current asset inventory and useful custom asset-field values; do not maintain a duplicate hand-written keyword list. Show both a row highlight/flag and asset/term details. Matches are heuristic and must not auto-approve a finding or replace version/applicability validation. Compute against live inventory without a separate matching table or schema migration.
+
+## 017 — Authentication and local accounts
+Current source uses signed HTTP-only cookies, PBKDF2-HMAC-SHA256 password hashes and server-side protection for app pages, APIs and API docs. If the users table is empty, bootstrap admin / vulmgm for local/testing without forcing a first-login password change. This known default must be changed before untrusted-network exposure. Existing user passwords are preserved; the signing key is generated under ignored local data unless configured through VULM_SESSION_SECRET.
+
+## 018 — Schema safety
+Schema target is 11 and migration 0011 is latest. Do not edit released migrations in place, migrate without verifying DB path and a backup, or assume the 3.6.5 version bump requires a database migration.
