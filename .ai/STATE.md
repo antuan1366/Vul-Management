@@ -2,13 +2,14 @@
 
 ## Snapshot
 - Project: Vul-Management
-- Version declaration: 3.4.0 (default administrator bootstrap configured on develop)
+- Version declaration: 3.5.0 (admin-managed vulnerability custom fields and merged affected-product/version columns)
 - Active development branch: `develop`
-- Declared schema range: 1–10
+- Declared schema range: 1–11
 - Latest known migration: 0010
-- Backend and sidebar version declarations are 3.4.0.
+- Backend and sidebar version declarations are 3.5.0.
 - Local login and user administration are implemented on develop: automatic first-admin bootstrap when no users exist, forced initial password change, sign-in/sign-out, signed HTTP-only session cookie, PBKDF2 password hashes, account enable/disable, Admin/User roles, password reset, and last-active-admin safeguards.
 - Authenticated access is enforced server-side for app HTML pages, data APIs, and API documentation. Login attempts are throttled in-process after 10 failed attempts within five minutes.
+- Vulnerability Register custom fields are stored per record in `threat_intelligence.custom_fields_json`; definitions are admin-managed in `vulnerability_custom_fields` and added by migration 0011. Field names can be edited, fields can be required, and table visibility is configurable. Vulnerability Register and Scan Result display affected product and version in one column each.
 - Vulnerability Register and Scan Result tables now omit their Severity column while retaining CVSS/Score. Scan Result Details and status controls share aligned control styling. Table preferences use stable keys for these two changed layouts and migrate prior index-based column/width preferences without shifting settings onto the wrong columns.
 - Migration 0009 adds the users table; migration 0010 adds `must_change_password`. If no users exist at startup, a default `admin` account is created with password `vulmgm` and does not require a forced password change. A previous bootstrap account is converted to the configured default only if it is still marked as requiring its first password change; established passwords are preserved. When VULM_SESSION_SECRET is not set, a signing key is generated under the ignored local data directory.
 - Multi-source CVE lookup code is committed on `develop`: NVD first, then the official CVE Program record and GitHub Security Advisories when description/severity/product/version fields remain missing.
@@ -38,7 +39,7 @@ This confirms basic navigation/page rendering only. The following remain unverif
 - Runtime database default: `backend/data/vul_management.db`.
 
 ## Next steps
-1. Back up a test database, upgrade it through migrations 0009–0010, and verify existing asset and intelligence records remain intact.
+1. Back up a test database, upgrade it through migrations 0009–0011, and verify existing asset and intelligence records remain intact.
 2. Confirm the first-run `admin` account is created with the configured default password only when the users table is empty.
 3. Verify first login is forced to the change-password page; after change, access is restored and the temporary credential file is deleted.
 2. Test first-admin setup, sign-in/sign-out, eight-hour session expiry, disabled-user rejection, and protected page/API/docs routes.
