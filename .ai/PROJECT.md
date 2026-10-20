@@ -53,6 +53,7 @@ Target workflow:
 7. Have an administrator define Remediation, Mitigation, and any deployment-specific custom fields in Vulnerabilities; custom field definitions and table visibility are administrator-managed. These fields are not required from external CVE APIs.
 8. Promote approved items into the vulnerability intelligence/register workflow.
 9. Jira issue creation is a desired integration and must be treated as incomplete until implemented and tested.
+10. Compare each Scan Result's original Telegram message with current asset identifying fields and useful custom asset-field values. Visually flag possible matches and expose matched asset/term details for administrator review; this hint must not be treated as confirmation that the asset is vulnerable.
 
 Do not mark each step as implemented based only on this description. Inspect backend routes, models, services and frontend handlers.
 
