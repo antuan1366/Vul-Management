@@ -105,6 +105,19 @@ def serialize_scan_result(item: TelegramScanResult) -> dict:
     }
 
 
+def _custom_field_values(item: ThreatIntelligence) -> dict[str, str | None]:
+    try:
+        values = json.loads(item.custom_fields_json or "{}")
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    if not isinstance(values, dict):
+        return {}
+    return {
+        str(key): (None if value is None else str(value))
+        for key, value in values.items()
+    }
+
+
 def serialize_intelligence(item: ThreatIntelligence) -> dict:
     return {
         "id": item.id,
@@ -113,6 +126,7 @@ def serialize_intelligence(item: ThreatIntelligence) -> dict:
         "cvss_score": item.cvss_score,
         "affected_product": item.affected_product,
         "affected_versions": item.affected_versions,
+        "custom_fields": _custom_field_values(item),
         "remediation": item.remediation,
         "mitigation": item.mitigation,
         "description": item.description,
