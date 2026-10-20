@@ -71,21 +71,20 @@
         $("result-count").textContent = rows.length + " Results";
         const body = $("results-table-body");
         if (!rows.length) {
-            body.innerHTML = '<tr><td colspan="9">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
+            body.innerHTML = '<tr><td colspan="8">No scan results found. Start a scan from Threat Intelligence → Scan.</td></tr>';
             $("select-all-results").checked = false;
             return;
         }
         body.innerHTML = rows.map((x,i) => {
             const actions = '<div class="review-actions">'+
-                '<button class="secondary-button small-button" data-action="details" data-id="'+x.id+'">Details</button>'+
-                '<select class="review-status-select" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
+                '<button class="secondary-button small-button review-action-control" data-action="details" data-id="'+x.id+'">Details</button>'+
+                '<select class="review-status-select review-action-control" data-action="status" data-id="'+x.id+'" aria-label="Change status for '+esc(x.cve_id)+'" '+(x.review_status==="approved"?"disabled":"")+'>'+statusOptions(x.review_status)+'</select>'+
                 '</div>';
             return '<tr>'+
                 '<td><input type="checkbox" class="result-select" data-id="'+x.id+'" '+(selected.has(x.id)?"checked":"")+' aria-label="Select '+esc(x.cve_id)+'"></td>'+
                 '<td>'+(i+1)+'</td>'+
                 '<td title="'+esc(dt(x.date))+'">'+esc(dt(x.date))+'</td>'+
                 '<td><strong>'+esc(x.cve_id)+'</strong></td>'+
-                '<td>'+esc(x.severity || "Not available from enabled sources")+'</td>'+
                 '<td>'+esc(x.cvss_score ?? "—")+'</td>'+
                 '<td class="result-cell" title="'+esc(x.affected_product || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_product,"Not available from enabled sources"))+'</td>'+
                 '<td class="result-cell" title="'+esc(x.affected_versions || "Not available from enabled sources")+'">'+esc(shortValue(x.affected_versions,"Not available from enabled sources"))+'</td>'+
