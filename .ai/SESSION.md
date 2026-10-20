@@ -1,7 +1,7 @@
 # SESSION
 
 ## Current state
-- Current version declaration: 3.5.0 on develop; database schema target is 11 (migration 0011).
+- Current version declaration: 3.6.0 on develop; database schema target remains 11 (migration 0011).
 - Current feature work is on `develop`; do not merge to `main` without explicit approval.
 - The user reports successful local startup and successful page-level smoke checks for Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, and Logs & Events.
 
@@ -17,6 +17,12 @@
 - Admin can create/rename/delete custom text fields, mark them required, and choose whether they appear as table columns. Field values persist per CVE.
 - Affected Product and Affected Version are combined into one column in both Vulnerability Register and Scan Result. Table preference migration was updated for the changed columns.
 - Verify migration 0011 on a backed-up existing database; test custom field CRUD, validation, values on create/edit, dynamic columns, and Admin-only write permissions.
+
+## Scan Result asset matching (new; runtime unverified)
+- `backend/app/services/asset_message_matching.py` builds an in-memory keyword index from live asset records and custom field values for Equipment, Operating Systems, Applications and Libraries.
+- The `/api/threat-intelligence/scan-results` and detail/update/enrich/review responses attach an `asset_match` object based on original Telegram message text. The UI uses a light-amber row highlight, an Asset Match badge/column and a details-panel list of matched assets and terms.
+- This uses existing database fields and schema 11; no migration is required. Matching is heuristic; do not auto-accept a CVE or declare applicability based on a text hit.
+- Run `python -m unittest discover -s tests -p test_asset_message_matching.py` from the repository root using an environment with backend requirements installed. Then start the app on `E:\\Vul`, add representative test assets, and verify true matches, word boundaries, custom fields, IPs, and false-positive behavior in Scan Result.
 
 ## Nessus workflow in source
 - Manual Scan page supports Nessus file upload and a separate analysis action.
