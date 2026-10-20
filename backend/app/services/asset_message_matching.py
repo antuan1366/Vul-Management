@@ -42,13 +42,15 @@ GENERIC_TERMS = {
     "production", "prod", "test", "testing", "development", "dev", "staging",
     "critical", "high", "medium", "low", "unknown", "none", "null",
     "active", "inactive", "enabled", "disabled", "true", "false",
-    "yes", "no", "other", "general", "default",
+    "yes", "no", "other", "general", "default", "cpe", "purl", "database",
 }
 
 NON_IDENTIFYING_CUSTOM_KEYS = {
     "description", "notes", "comment", "comments", "remark", "remarks",
     "criticality", "environment", "lifecycle_status", "status", "state",
     "install_date", "support_end_date", "created_at", "updated_at",
+    "version", "firmware", "revision", "release", "build", "edition",
+    "architecture", "language", "package_manager",
 }
 
 FIELD_LABELS = {
@@ -81,11 +83,14 @@ def _is_useful_term(term: str) -> bool:
         return False
     if len(term) < 2:
         return False
+    tokens = term.split()
+    if len(tokens) > 1 and all(token.isdigit() or token in {"a", "o", "h", "p", "v", "x"} for token in tokens):
+        return False
     if term.isdigit():
         # A bare product/version number is too common unless it is long enough
         # to act as a real model/build identifier.
         return len(term) >= 4
-    if len(term) == 2 and not any(char.isdigit() for char in term):
+    if len(term) == 2 and term not in {"hp"} and not any(char.isdigit() for char in term):
         return False
     return True
 
@@ -173,7 +178,12 @@ def build_asset_match_index(db: Session) -> list[dict[str, Any]]:
             continue
         key = _normalize(field_key).replace(" ", "_")
         normalized_label = _normalize(label).replace(" ", "_")
-        if key in NON_IDENTIFYING_CUSTOM_KEYS or normalized_label in NON_IDENTIFYING_CUSTOM_KEYS:
+        label_words = set(normalized_label.split("_"))
+        non_identifying_label = (
+            normalized_label in NON_IDENTIFYING_CUSTOM_KEYS
+            or bool(label_words.intersection(NON_IDENTIFYING_CUSTOM_KEYS))
+        )
+        if key in NON_IDENTIFYING_CUSTOM_KEYS or non_identifying_label:
             continue
         display_label = str(label or field_key or "Custom Field")
         for term in _term_variants(value):
