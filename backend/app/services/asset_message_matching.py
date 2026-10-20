@@ -104,7 +104,10 @@ def _term_variants(value: Any) -> list[str]:
         return []
 
     variants: list[str] = []
-    if _is_useful_term(normalized):
+    # Preserve a full IPv4 address as a searchable phrase even though its normalized
+    # components are numeric and therefore filtered as standalone keywords.
+    looks_like_ipv4 = bool(re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", raw))
+    if _is_useful_term(normalized) or looks_like_ipv4:
         variants.append(normalized)
 
     # A field such as "Cisco Systems Inc." should also match a message that
