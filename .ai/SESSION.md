@@ -1,8 +1,8 @@
 # SESSION
 
 ## Current state
-- Current version declaration: 3.4.0 on develop; database schema target is 10 (migration 0010).
-- Authentication and user administration changes are being prepared directly on develop. Do not merge to main without explicit approval.
+- Current version declaration: 3.5.0 on develop; database schema target is 11 (migration 0011).
+- Current feature work is on `develop`; do not merge to `main` without explicit approval.
 - The user reports successful local startup and successful page-level smoke checks for Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, and Logs & Events.
 
 ## Authentication and user administration (new; runtime unverified)
@@ -11,6 +11,12 @@
 - Admin-only account management supports create/edit/password reset/disable/delete and protects the last active administrator.
 - App pages, data APIs, and docs are gated by server-side authentication middleware.
 - Verify migration 0009, session behavior, direct API protection and role handling locally before considering this feature validated.
+
+## Vulnerability Register custom fields (new; runtime unverified)
+- Migration 0011 adds a JSON custom-value column to Vulnerability Register records and a table for custom field definitions.
+- Admin can create/rename/delete custom text fields, mark them required, and choose whether they appear as table columns. Field values persist per CVE.
+- Affected Product and Affected Version are combined into one column in both Vulnerability Register and Scan Result. Table preference migration was updated for the changed columns.
+- Verify migration 0011 on a backed-up existing database; test custom field CRUD, validation, values on create/edit, dynamic columns, and Admin-only write permissions.
 
 ## Nessus workflow in source
 - Manual Scan page supports Nessus file upload and a separate analysis action.
