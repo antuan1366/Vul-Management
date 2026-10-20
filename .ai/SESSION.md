@@ -1,9 +1,16 @@
 # SESSION
 
 ## Current state
-- Current version: 3.2.0.
-- Main and develop were synchronized before local testing; this documentation change is prepared separately on `docs/v3.2.0-tested`.
+- Current version declaration: 3.3.0 on develop; database schema target is 9 (migration 0009).
+- Authentication and user administration changes are being prepared directly on develop. Do not merge to main without explicit approval.
 - The user reports successful local startup and successful page-level smoke checks for Asset Management, Nessus Manual Scan, Nessus Scan Results, Threat Intelligence, Administration, and Logs & Events.
+
+## Authentication and user administration (new; runtime unverified)
+- Initial setup creates the first administrator once, without a baked-in default password.
+- Login sessions use signed HTTP-only cookies with an eight-hour maximum age; passwords use PBKDF2-HMAC-SHA256.
+- Admin-only account management supports create/edit/password reset/disable/delete and protects the last active administrator.
+- App pages, data APIs, and docs are gated by server-side authentication middleware.
+- Verify migration 0009, session behavior, direct API protection and role handling locally before considering this feature validated.
 
 ## Nessus workflow in source
 - Manual Scan page supports Nessus file upload and a separate analysis action.

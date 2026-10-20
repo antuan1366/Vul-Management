@@ -1,5 +1,13 @@
 # Application / Database Compatibility
 
+## Release 3.3.0 (in development on develop)
+- Application version declaration: 3.3.0.
+- Declared database schema range: 1–9; latest migration: 0009.
+- Migration 0009 adds the users table for local accounts, roles, password hashes, account status and last-login timestamps.
+- Existing databases must be backed up and upgraded through Alembic before local runtime testing. Migration/runtime execution has not yet been verified after this change.
+- A generated signing key is stored in backend/data/session-signing.key when VULM_SESSION_SECRET is not configured. Retain this file to preserve existing signed sessions across restarts; losing it invalidates sessions but does not delete user accounts.
+- Downgrading migration 0009 drops the users table and all local account records. Do not downgrade unless a verified database backup exists and the resulting access loss is understood.
+
 ## Release 3.2.0
 - Application version declarations: `3.2.0` (backend API and sidebar).
 - Declared Alembic schema range: `1–8`; latest known migration: `0008`.

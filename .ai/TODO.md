@@ -18,6 +18,17 @@
 - [ ] Test Jira issue creation using a non-production project and API token.
 - [ ] Run automated/backend checks available in the repository and record exact results.
 
+## v3.3.0 — authentication and user administration verification
+- [ ] Back up a test database and verify Alembic migration 0009 on a populated schema 0008 database.
+- [ ] Verify a clean database creates the users table and reports schema version 9.
+- [ ] Complete first-admin setup; confirm setup is permanently closed after the first account exists.
+- [ ] Test valid/invalid login, logout, eight-hour session expiry, inactive-user rejection, and login throttling.
+- [ ] Verify unauthenticated browser access is redirected to login/setup and unauthenticated API/docs access is rejected.
+- [ ] Verify Admin can create/edit/reset/delete accounts and User cannot access the User Management API.
+- [ ] Verify duplicate usernames are rejected and the last active administrator cannot be disabled, demoted, or deleted.
+- [ ] Confirm HTTP-only and SameSite cookie attributes, TLS Secure behavior, and that session-signing key/database files remain outside Git.
+- [ ] Review permissions for non-user-management application actions before production deployment; current User role only prevents access to user administration.
+
 ## Customer deployment
 - [ ] Define supported OS and Python version.
 - [ ] Create a clean package excluding local database, credentials, virtual environment, caches, and session files.
@@ -27,7 +38,7 @@
 - [ ] Test install and startup on a separate clean machine.
 - [ ] Verify customer package can initialize a new database without relying on the developer's local DB.
 - [ ] Decide delivery format (source package vs. installer) after clean-machine testing.
-- [ ] Create and verify an immutable `v3.2.0` tag/release only after release approval.
+- [ ] Create and verify an immutable `v3.3.0` tag/release only after release approval.
 
 ## Product backlog
 - [ ] Verify existing Telegram/NVD workflow end-to-end.

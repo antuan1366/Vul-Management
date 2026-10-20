@@ -39,3 +39,10 @@ Keep NVD as the primary source for severity, CVSS, CPE, affected products and ve
 
 ## 013 — Administrator-owned Remediation and Mitigation
 Do not treat Remediation or Mitigation as required fields for automated CVE-provider enrichment. The administrator defines and maintains those fields in Vulnerabilities after reviewing a finding.
+
+
+## Authentication and local accounts (v3.3.0 development)
+- No default administrator credentials are included. The first administrator is created through one-time setup while the deployment is reachable only from a trusted machine/network.
+- Passwords are stored as PBKDF2-HMAC-SHA256 hashes; sessions are signed HTTP-only cookies with an eight-hour maximum age.
+- Admin can manage local accounts; a regular User cannot call the user-management API. Other application actions still share existing authorization behavior, so granular permissions require a separate decision.
+- The session signing key is persisted under the ignored local data directory unless an environment secret is configured. Do not commit it.

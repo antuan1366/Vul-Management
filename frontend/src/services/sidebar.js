@@ -74,11 +74,12 @@
                 <div class="sidebar-divider"></div>
 
                 <div class="sidebar-section">
-                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
+                    <button type="button" class="sidebar-section-toggle sidebar-parent ${["users.html","vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "active" : ""}" data-sidebar-target="administration-menu">
                         <span class="sidebar-section-title"><span class="sidebar-icon">⚙</span><span class="sidebar-label">Administration</span></span>
                         <span class="sidebar-chevron">›</span>
                     </button>
-                    <div id="administration-menu" class="sidebar-submenu ${["vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
+                    <div id="administration-menu" class="sidebar-submenu ${["users.html","vulnerability-feeds.html","telegram-feeds.html","telegram-settings.html","nessus-host-mapping.html","logs-events.html"].includes(currentPage) ? "open" : ""}">
+                        <a href="users.html" data-admin-only="true" class="sidebar-subitem ${currentPage === "users.html" ? "active" : ""}">User Management</a>
                         <a href="vulnerability-feeds.html" class="sidebar-subitem ${currentPage === "vulnerability-feeds.html" ? "active" : ""}">Vulnerability Feeds</a>
                         <a href="telegram-feeds.html" class="sidebar-subitem ${currentPage === "telegram-feeds.html" ? "active" : ""}">Telegram Feeds</a>
                         <a href="telegram-settings.html" class="sidebar-subitem ${currentPage === "telegram-settings.html" ? "active" : ""}">Telegram Settings</a>
@@ -88,11 +89,16 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer"><span>Vul-Management</span><span>v3.2.0</span></div>
+            <div class="sidebar-footer">
+                <div class="sidebar-session-user"><strong id="sidebar-current-user">Signed in</strong><span id="sidebar-current-role"></span></div>
+                <button type="button" id="sidebar-logout" class="sidebar-logout-button">Log out</button>
+                <div class="sidebar-footer-version"><span>Vul-Management</span><span>v3.3.0</span></div>
+            </div>
         `;
 
         document.body.prepend(sidebar);
         initializeSidebar();
+        initializeSessionControls();
     }
 
     function initializeSidebar() {
@@ -118,6 +124,33 @@
         document.querySelectorAll(".sidebar-submenu").forEach((submenu) => {
             const parent = document.querySelector(`[data-sidebar-target="${submenu.id}"]`);
             if (submenu.classList.contains("open") && parent) parent.classList.add("expanded");
+        });
+    }
+
+
+    function initializeSessionControls() {
+        if (typeof apiRequest !== "function") return;
+
+        apiRequest("/api/auth/me").then((user) => {
+            const name = document.getElementById("sidebar-current-user");
+            const role = document.getElementById("sidebar-current-role");
+            if (name) name.textContent = user.display_name || user.username;
+            if (role) role.textContent = user.role === "admin" ? "Administrator" : "User";
+
+            if (user.role !== "admin") {
+                document.querySelectorAll("[data-admin-only]").forEach((item) => item.remove());
+            }
+        }).catch(() => {});
+
+        document.getElementById("sidebar-logout")?.addEventListener("click", async () => {
+            const button = document.getElementById("sidebar-logout");
+            if (button) button.disabled = true;
+            try {
+                await apiRequest("/api/auth/logout", { method: "POST" });
+            } catch (error) {
+                // Redirect to sign-in even if the session has already expired.
+            }
+            window.location.replace("/src/pages/login.html");
         });
     }
 

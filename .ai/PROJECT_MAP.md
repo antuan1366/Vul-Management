@@ -5,10 +5,10 @@
 
 ## Backend
 - App entry: `backend/app/main.py`
-- API routes: `backend/app/api/`
+- API routes: `backend/app/api/` (including auth.py and users.py for authentication/account administration)
 - Core/configuration: `backend/app/core/`
-- SQLAlchemy models: `backend/app/models/`
-- Pydantic schemas: `backend/app/schemas/`
+- SQLAlchemy models: `backend/app/models/` (including user.py)
+- Pydantic schemas: `backend/app/schemas/` (including auth.py and user.py)
 - Business logic/integrations: `backend/app/services/`
 - Database setup: `backend/app/database.py`
 - Migrations: `backend/alembic/versions/`
@@ -24,6 +24,7 @@ Inspect the live repository tree before assuming exact module filenames.
 - Table preferences: `frontend/src/services/table-preferences.js`
 
 ## Known frontend pages
+- `login.html`, `setup.html`, `users.html`
 - `dashboard.html`
 - `equipment.html`
 - `operating-systems.html`

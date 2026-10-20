@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Vul-Management</title>
+    <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+    <main class="page-container">
+        <section class="page-header">
+            <div>
+                <h1>User Management</h1>
+                <p>Create accounts, assign roles, reset passwords, and disable access.</p>
+            </div>
+            <div class="table-actions">
+                <button id="add-user-button" class="primary-button" type="button">Add User</button>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <div class="section-header">
+                <div>
+                    <h2>Application Users</h2>
+                    <p class="section-description">Passwords are stored as one-way PBKDF2 hashes and are never displayed.</p>
+                </div>
+                <div id="user-count" class="item-count">0 users</div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Name</th><th>Username</th><th>Role</th>
+                            <th>Status</th><th>Last Login</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr><td colspan="7" class="loading-cell">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="user-modal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-dialog equipment-modal-dialog" role="dialog" aria-modal="true"
+                aria-labelledby="user-form-title">
+                <div class="modal-header">
+                    <div>
+                        <h2 id="user-form-title">Add User</h2>
+                        <p class="section-description">Choose a role and set an initial or replacement password.</p>
+                    </div>
+                    <button type="button" id="close-user-modal" class="modal-close-button"
+                        aria-label="Close">&times;</button>
+                </div>
+                <form id="user-form">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="user_username">Username *</label>
+                            <input id="user_username" name="username" type="text" minlength="3" maxlength="64"
+                                pattern="[A-Za-z0-9][A-Za-z0-9._-]*" autocomplete="off" required>
+                            <small class="section-description">3–64 letters, numbers, dots, underscores, or hyphens.</small>
+                        </div>
+                        <div class="form-field">
+                            <label for="user_display_name">Display Name *</label>
+                            <input id="user_display_name" name="display_name" type="text" maxlength="120" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="user_password">Password <span id="password-required-marker">*</span></label>
+                            <input id="user_password" name="password" type="password" minlength="12" maxlength="128"
+                                autocomplete="new-password">
+                            <small id="password-help" class="section-description">At least 12 characters.</small>
+                        </div>
+                        <div class="form-field">
+                            <label for="user_role">Role *</label>
+                            <select id="user_role" name="role" required>
+                                <option value="user">User</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="form-field checkbox-field">
+                            <label class="checkbox-label">
+                                <input id="user_is_active" type="checkbox" checked>
+                                <span>Account active</span>
+                            </label>
+                        </div>
+                    </div>
+                    <p class="section-description" style="margin-top: 14px;">
+                        Administrators can manage accounts. Standard users can use the application but cannot manage users.
+                    </p>
+                    <p id="user-form-message" class="auth-message" role="status" aria-live="polite"></p>
+                    <div class="form-actions">
+                        <button id="save-user-button" type="submit" class="primary-button">Save User</button>
+                        <button type="button" id="cancel-user-button" class="secondary-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <script src="../services/api.js"></script>
+    <script src="../services/users.js"></script>
+    <script src="../services/sidebar.js"></script>
+</body>
+</html>

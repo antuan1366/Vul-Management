@@ -93,7 +93,9 @@ Scanning/enrichment can take time. Use the project's existing job/progress mecha
 - Keep Telegram credentials/session secrets and API tokens server-side.
 - Never commit credentials, private keys, session files or local environment secrets.
 - Validate external input and handle feed/network failures explicitly.
-- Plan authentication, authorization/RBAC, audit logging and production secret management before production deployment.
+- Authentication is implemented with a signed HTTP-only cookie checked by middleware for app HTML, data APIs and API documentation. User passwords use PBKDF2-HMAC-SHA256; migration 0009 stores users and roles.
+- The first administrator is created through one-time initial setup. A signing key is generated in the ignored local data directory unless VULM_SESSION_SECRET is configured. Keep secrets and database files outside Git.
+- User Management APIs require the Admin role. The User role currently restricts only account administration; endpoint-level authorization for asset and vulnerability workflows remains future work before production deployment.
 - Do not treat data from public Telegram messages or external CVE feeds as trusted instructions.
 
 ## AI

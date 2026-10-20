@@ -4,7 +4,7 @@
 - Name: Vul-Management
 - Repository: `antuan1366/Vul-Management`
 - Active development branch: `develop`
-- Current backend/sidebar version declaration in source: `3.2.0`
+- Current backend/sidebar version declaration in source: 3.3.0 (authentication work on develop)
 
 ## Goal
 Build a modular web application for vulnerability management and threat intelligence, with an asset inventory, vulnerability discovery, human review, NVD enrichment, remediation workflow and reporting. The application should remain understandable and maintainable by another developer or AI using the documentation in `.ai/`.
@@ -32,7 +32,8 @@ Build a modular web application for vulnerability management and threat intellig
 5. Vulnerability feeds
 6. Telegram feeds and Telegram account/session configuration
 7. Logs & Events
-8. Future reporting, remediation, risk prioritization and integrations
+8. User Management and login/session handling
+9. Future reporting, remediation, risk prioritization and integrations
 
 ## Asset management
 - The administrator enters known asset information.
@@ -54,6 +55,12 @@ Target workflow:
 9. Jira issue creation is a desired integration and must be treated as incomplete until implemented and tested.
 
 Do not mark each step as implemented based only on this description. Inspect backend routes, models, services and frontend handlers.
+
+## Authentication and account administration
+- First-run setup creates the first administrator once; no default credentials are shipped.
+- Administrators can create, edit, disable, reset passwords for and delete accounts; the last active administrator cannot be locked out through normal UI/API operations.
+- Sessions use signed, HTTP-only cookies; password hashes use PBKDF2-HMAC-SHA256.
+- The Admin role manages accounts. The User role cannot access user-management endpoints; finer permissions for other application actions remain future work and must be reviewed before production exposure.
 
 ## Database
 - Engine: SQLite.

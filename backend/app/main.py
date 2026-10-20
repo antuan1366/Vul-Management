@@ -3,9 +3,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI,Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from urllib.parse import quote
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect
+from app.api.auth import active_session_user_id, router as auth_router, users_exist
+from app.api.users import router as users_router
 from app.api.application_events import router as application_events_router
 from app.api.asset_fields import router as asset_fields_router
 from app.api.equipments import router as equipment_router
@@ -40,6 +43,7 @@ from app.models.sync_job import SyncJob
 from app.models.threat_intelligence import TelegramFeed,TelegramScanResult,TelegramScanRun,TelegramScanSchedule,ThreatIntelligence
 from app.models.vulnerability import AssetVulnerability,Vulnerability
 from app.models.vulnerability_candidate import VulnerabilityCandidate
+from app.models.user import User
 from app.services.asset_fields import seed_default_fields
 from app.services.feeds import seed_default_feeds
 from app.services.managed_asset_fields import seed_managed_asset_fields
@@ -89,7 +93,85 @@ async def log_api_activity(request:Request,call_next):
         level="ERROR" if status>=500 else "WARNING" if status>=400 else "INFO"
         record_event(level,"api","HTTP API","request_completed",f"{method} {path} returned HTTP {status}.",duration_ms=duration,details={"method":method,"path":path,"status_code":status})
     return response
-for router in (health_router,application_events_router,equipment_router,asset_fields_router,operating_system_router,application_router,library_router,feeds_router,security_identifiers_router,intelligence_router,remediation_router,sync_jobs_router,vulnerability_candidates_router,vulnerability_scan_router,threat_intelligence_router,telegram_settings_router,table_preferences_router,nessus_router):app.include_router(router)
+
+
+@app.middleware("http")
+async def enforce_authentication(request: Request, call_next):
+    path = request.url.path
+
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
+    public_api_paths = {
+        "/api/health",
+        "/api/auth/status",
+        "/api/auth/login",
+        "/api/auth/setup",
+        "/api/auth/logout",
+    }
+    if path in public_api_paths:
+        return await call_next(request)
+
+    # These files only contain presentation and client-side API wrappers.
+    # Every data API and every page HTML document is protected below.
+    if path.startswith("/src/styles/") or path.startswith("/src/services/"):
+        return await call_next(request)
+
+    signed_in_user_id = active_session_user_id(request)
+    has_users = users_exist()
+
+    if path == "/":
+        if not has_users:
+            return RedirectResponse("/src/pages/setup.html", status_code=303)
+        if signed_in_user_id is not None:
+            return RedirectResponse("/src/pages/dashboard.html", status_code=303)
+        return RedirectResponse("/src/pages/login.html", status_code=303)
+
+    if path == "/src/pages/login.html":
+        if not has_users:
+            return RedirectResponse("/src/pages/setup.html", status_code=303)
+        if signed_in_user_id is not None:
+            return RedirectResponse("/src/pages/dashboard.html", status_code=303)
+        return await call_next(request)
+
+    if path == "/src/pages/setup.html":
+        if has_users:
+            destination = (
+                "/src/pages/dashboard.html"
+                if signed_in_user_id is not None
+                else "/src/pages/login.html"
+            )
+            return RedirectResponse(destination, status_code=303)
+        return await call_next(request)
+
+    protected_api = path.startswith("/api/")
+    protected_page = path.startswith("/src/pages/") and path.endswith(".html")
+    protected_docs = path in {"/docs", "/redoc", "/openapi.json"}
+
+    if (protected_api or protected_page or protected_docs) and path not in public_api_paths:
+        if not has_users:
+            if protected_api:
+                return JSONResponse(
+                    {"detail": "Initial administrator setup is required."},
+                    status_code=401,
+                )
+            return RedirectResponse("/src/pages/setup.html", status_code=303)
+
+        if signed_in_user_id is None:
+            if protected_api:
+                return JSONResponse(
+                    {"detail": "Authentication required. Please sign in."},
+                    status_code=401,
+                )
+            next_target = path
+            if request.url.query:
+                next_target += "?" + request.url.query
+            login_url = "/src/pages/login.html?next=" + quote(next_target, safe="")
+            return RedirectResponse(login_url, status_code=303)
+
+    return await call_next(request)
+
+for router in (auth_router,users_router,health_router,application_events_router,equipment_router,asset_fields_router,operating_system_router,application_router,library_router,feeds_router,security_identifiers_router,intelligence_router,remediation_router,sync_jobs_router,vulnerability_candidates_router,vulnerability_scan_router,threat_intelligence_router,telegram_settings_router,table_preferences_router,nessus_router):app.include_router(router)
 frontend_dir=Path(__file__).resolve().parents[2]/"frontend"/"src"
 app.mount("/src",StaticFiles(directory=frontend_dir),name="frontend")
 @app.get("/api/info")

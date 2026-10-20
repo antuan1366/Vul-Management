@@ -1,11 +1,11 @@
 # START HERE
 
 ## Project
-Vul-Management — version 3.2.0
+Vul-Management — version 3.3.0 (development)
 
 - Repository: `antuan1366/Vul-Management`
 - Development branch: `develop`
-- Documentation update branch: `docs/v3.2.0-tested`
+- Active feature work is on develop; do not merge into main without explicit approval.
 - Stack: FastAPI, SQLAlchemy, Alembic, SQLite, plain HTML/CSS/JavaScript.
 
 ## Read order
@@ -30,7 +30,7 @@ Inspect actual source files relevant to the task. If documentation and code disa
 - Threat Intelligence and scan results.
 - Telegram feed administration and CVE discovery/review.
 - Nessus manual scan, findings review, and host mapping.
-- Administration and Logs & Events.
+- Administration, User Management/Login, and Logs & Events.
 - Jira integration must be verified end-to-end before being presented as production-ready.
 
 ## User-reported local smoke test
@@ -47,6 +47,9 @@ The user reports the app starts and six page groups open successfully. This is n
 - Inspect `git status` before risky operations.
 - Do not force-push, reset local history, use `git clean`, or merge into `main` without explicit approval for that action.
 - Keep releases retrievable using immutable version tags/releases after verification and release approval.
+
+## Authentication feature note
+The first-run setup page is only for creating the first administrator and closes once a user exists. No default password is present. Verify migration 0009 and every login/authorization behavior on a backed-up test database before production deployment.
 
 ## Current priority
 Finish end-to-end workflow testing, then create a clean customer deployment package and test it on a separate machine. Keep claims about verification precise.
