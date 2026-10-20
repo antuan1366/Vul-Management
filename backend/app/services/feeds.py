@@ -175,7 +175,7 @@ def delete_feed(db: Session, feed: Feed) -> None:
 
 def _request_kwargs(feed: Feed) -> dict:
     headers = {
-        "User-Agent": "Vul-Management/3.4.0",
+        "User-Agent": "Vul-Management/3.5.0",
         "Accept": "application/json",
     }
 
