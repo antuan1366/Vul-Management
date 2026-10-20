@@ -40,7 +40,7 @@ from app.models.scan_schedule import ScanSchedule
 from app.models.security_identifier import SecurityIdentifier
 from app.models.security_identifier_check import SecurityIdentifierCheck
 from app.models.sync_job import SyncJob
-from app.models.threat_intelligence import TelegramFeed,TelegramScanResult,TelegramScanRun,TelegramScanSchedule,ThreatIntelligence
+from app.models.threat_intelligence import TelegramFeed,TelegramScanResult,TelegramScanRun,TelegramScanSchedule,ThreatIntelligence,VulnerabilityCustomField
 from app.models.vulnerability import AssetVulnerability,Vulnerability
 from app.models.vulnerability_candidate import VulnerabilityCandidate
 from app.models.user import User
