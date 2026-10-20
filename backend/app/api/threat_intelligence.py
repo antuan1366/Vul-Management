@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api.auth import require_admin
 from app.database import SessionLocal, get_db
 from app.services.application_events import record_event, exception_details
+from app.services.asset_message_matching import annotate_scan_results_with_asset_matches
 from app.models.feed import Feed
 from app.models.threat_intelligence import (
     TelegramFeed,
@@ -244,7 +245,9 @@ def list_scan_results(
             | TelegramScanResult.message_text.ilike(needle)
         )
     items = db.scalars(query).all()
-    return {"items": [serialize_scan_result(item) for item in items], "total": len(items)}
+    serialized = [serialize_scan_result(item) for item in items]
+    annotated = annotate_scan_results_with_asset_matches(db, serialized)
+    return {"items": annotated, "total": len(items)}
 
 
 @router.get("/scan-results/{result_id}")
@@ -252,7 +255,8 @@ def get_scan_result(result_id: int, db: Session = Depends(get_db)):
     item = db.get(TelegramScanResult, result_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Scan result not found.")
-    return serialize_scan_result(item)
+    serialized = serialize_scan_result(item)
+    return annotate_scan_results_with_asset_matches(db, [serialized])[0]
 
 
 @router.delete("/scan-results/{result_id}", status_code=204)
