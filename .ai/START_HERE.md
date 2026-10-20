@@ -49,7 +49,10 @@ The user reports the app starts and six page groups open successfully. This is n
 - Keep releases retrievable using immutable version tags/releases after verification and release approval.
 
 ## Authentication feature note
-If the users table is empty, startup creates `admin` and writes a random temporary password to `backend/data/INITIAL_ADMIN_CREDENTIALS.txt` (inside the ignored data folder). First login forces a password change and successful change removes that file. Verify migrations 0009–0010 and login/authorization behavior on a backed-up test database before production deployment.
+If the users table is empty, startup creates the local/testing default administrator `admin` with password `vulmgm`; first login does not force a password change. Established passwords are not overwritten. Change the shared default before exposing the app to an untrusted network.
+
+## Vulnerability Register custom fields
+Migration 0011 adds admin-managed text custom fields for Vulnerability Register records. Field values are stored per CVE; definitions can be renamed, marked required, shown/hidden from the register table and deleted. Verify migration 0011 on a backed-up test database before production deployment.
 
 ## Current priority
 Finish end-to-end workflow testing, then create a clean customer deployment package and test it on a separate machine. Keep claims about verification precise.
